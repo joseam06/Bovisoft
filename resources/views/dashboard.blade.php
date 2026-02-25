@@ -4,23 +4,33 @@
 
 @section('content')
 
-<!-- Page Header con efecto degradado -->
+<!-- Mensajes de éxito -->
+@if(session('success'))
+<div class="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl shadow-lg animate-slide-up">
+    <div class="flex items-center gap-3">
+        <i class="fa-solid fa-check-circle text-green-600 text-2xl"></i>
+        <p class="text-green-800 font-semibold">{{ session('success') }}</p>
+    </div>
+</div>
+@endif
+
+<!-- Page Header -->
 <div class="mb-8 relative">
     <div class="absolute inset-0 bg-gradient-to-r from-red-600/10 to-black/10 rounded-3xl blur-3xl"></div>
     <div class="relative glass-effect rounded-2xl p-6 shadow-xl border-4 border-white/50">
         <div class="flex items-center justify-between flex-wrap gap-4">
             <div>
                 <span class="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-semibold mb-3">
-                    🐄 Panel de Control
+                    Panel de Control
                 </span>
                 <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">Dashboard Bovisoft</h1>
                 <p class="text-gray-600 text-lg">Gestión inteligente de tu operación ganadera</p>
             </div>
             <div class="flex gap-3">
-                <button class="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:from-red-700 hover:to-red-800 transition-all">
+                <a href="{{ route('fincas.create') }}" class="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:from-red-700 hover:to-red-800 transition-all">
                     <i class="fa-solid fa-plus mr-2"></i>
-                    Nuevo Registro
-                </button>
+                    Nueva Finca
+                </a>
                 <button class="px-6 py-3 bg-white border-2 border-red-200 text-red-700 font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-red-50 transition-all">
                     <i class="fa-solid fa-download mr-2"></i>
                     Exportar
@@ -59,7 +69,7 @@
         <div class="h-2 bg-gradient-to-r from-red-600 to-red-800"></div>
     </div>
 
-    <!-- Fincas Registradas Card -->
+    <!-- Fincas Card -->
     <div class="stat-card rounded-2xl shadow-xl overflow-hidden card-hover border-4 border-white/50 animate-slide-up" style="animation-delay: 0.1s">
         <div class="p-6">
             <div class="flex items-center justify-between mb-4">
@@ -68,19 +78,19 @@
                 </div>
                 <div class="text-right">
                     <p class="text-sm font-semibold text-gray-600 mb-1">Fincas Activas</p>
-                    <h3 class="text-4xl font-extrabold bg-gradient-to-r from-orange-600 to-red-700 bg-clip-text text-transparent">0</h3>
+                    <h3 class="text-4xl font-extrabold bg-gradient-to-r from-orange-600 to-red-700 bg-clip-text text-transparent" id="contador-fincas-card">0</h3>
                 </div>
             </div>
             <div class="flex items-center justify-between pt-4 border-t-2 border-orange-100">
-                <span class="text-xs text-gray-600 flex items-center">
-                    <i class="fa-solid fa-check-circle text-green-500 text-xs mr-2"></i>
-                    Todas operativas
-                </span>
-                <a href="#mapa-fincas" class="text-xs text-orange-700 hover:text-orange-800 font-semibold flex items-center group">
-                    Ver mapa
-                    <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
-                </a>
-            </div>
+    <span class="text-xs text-gray-600 flex items-center">
+        <i class="fa-solid fa-check-circle text-green-500 text-xs mr-2"></i>
+        Todas operativas
+    </span>
+    <a href="{{ route('fincas.index') }}" class="text-xs text-orange-700 hover:text-orange-800 font-semibold flex items-center group">
+        Ver todas
+        <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
+    </a>
+</div>
         </div>
         <div class="h-2 bg-gradient-to-r from-orange-600 to-red-700"></div>
     </div>
@@ -139,7 +149,7 @@
 
 </div>
 
-<!-- Separador decorativo -->
+<!-- Separador -->
 <div class="section-divider my-8"></div>
 
 <!-- Charts and Map Row -->
@@ -209,7 +219,7 @@
                 </span>
                 Ubicación de Fincas
             </h2>
-            <p class="text-sm text-gray-600 mt-1 ml-13">Visualización geográfica</p>
+            <p class="text-sm text-gray-600 mt-1 ml-13">Visualización geográfica - <span id="contador-fincas" class="font-bold text-orange-600">0 fincas</span></p>
         </div>
         
         <div id="map" class="shadow-xl border-4 border-white/50"></div>
@@ -219,13 +229,13 @@
                 <div class="flex items-center gap-3">
                     <i class="fa-solid fa-info-circle text-orange-600 text-2xl"></i>
                     <div>
-                        <p class="font-bold text-gray-900 text-sm">¿No hay fincas registradas?</p>
-                        <p class="text-xs text-gray-600">Agrega tu primera finca para verla en el mapa</p>
+                        <p class="font-bold text-gray-900 text-sm" id="mapa-info-titulo">Agrega tu primera finca</p>
+                        <p class="text-xs text-gray-600" id="mapa-info-desc">Registra fincas para verlas en el mapa</p>
                     </div>
                 </div>
-                <button class="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-700 text-white text-sm font-bold rounded-lg shadow-lg hover:shadow-xl transition-all">
+                <a href="{{ route('fincas.create') }}" class="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-700 text-white text-sm font-bold rounded-lg shadow-lg hover:shadow-xl transition-all">
                     Agregar Finca
-                </button>
+                </a>
             </div>
         </div>
     </div>
@@ -265,7 +275,7 @@
 <!-- Bottom Row -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
     
-    <!-- Alertas y Notificaciones -->
+    <!-- Alertas Recientes -->
     <div class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 card-hover">
         <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
             <span class="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center mr-3 shadow-lg">
@@ -274,14 +284,12 @@
             Alertas Recientes
         </h2>
         
-        <div class="space-y-3">
-            <div class="text-center py-12">
-                <div class="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <i class="fa-solid fa-check-circle text-green-600 text-3xl"></i>
-                </div>
-                <p class="text-gray-600 font-medium mb-2">¡Todo en orden!</p>
-                <p class="text-sm text-gray-500">No hay alertas pendientes por el momento</p>
+        <div class="text-center py-12">
+            <div class="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <i class="fa-solid fa-check-circle text-green-600 text-3xl"></i>
             </div>
+            <p class="text-gray-600 font-medium mb-2">Todo en orden</p>
+            <p class="text-sm text-gray-500">No hay alertas pendientes por el momento</p>
         </div>
     </div>
 
@@ -304,96 +312,80 @@
     </div>
 
     <!-- Acciones Rápidas -->
-    <div class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 card-hover">
-        <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-            <span class="w-8 h-8 bg-gradient-to-br from-red-600 to-red-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-                <i class="fa-solid fa-bolt text-white text-sm"></i>
-            </span>
-            Acciones Rápidas
-        </h2>
-        
-        <div class="grid grid-cols-2 gap-3">
-            <button class="p-4 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border-2 border-red-200 rounded-xl transition-all group">
-                <div class="flex flex-col items-center text-center">
-                    <div class="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                        <i class="fa-solid fa-plus text-white text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold text-gray-800">Nuevo Animal</span>
+<div class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 card-hover">
+    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+        <span class="w-8 h-8 bg-gradient-to-br from-red-600 to-red-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+            <i class="fa-solid fa-bolt text-white text-sm"></i>
+        </span>
+        Acciones Rápidas
+    </h2>
+    
+    <div class="grid grid-cols-2 gap-3">
+        <a href="{{ route('animales.create') }}" class="p-4 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border-2 border-red-200 rounded-xl transition-all group">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                    <i class="fa-solid fa-plus text-white text-xl"></i>
                 </div>
-            </button>
-
-            <button class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-2 border-blue-200 rounded-xl transition-all group">
-                <div class="flex flex-col items-center text-center">
-                    <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                        <i class="fa-solid fa-syringe text-white text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold text-gray-800">Vacunación</span>
-                </div>
-            </button>
-
-            <button class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 border-2 border-purple-200 rounded-xl transition-all group">
-                <div class="flex flex-col items-center text-center">
-                    <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                        <i class="fa-solid fa-chart-line text-white text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold text-gray-800">Producción</span>
-                </div>
-            </button>
-
-            <button class="p-4 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border-2 border-green-200 rounded-xl transition-all group">
-                <div class="flex flex-col items-center text-center">
-                    <div class="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                        <i class="fa-solid fa-map-marked text-white text-xl"></i>
-                    </div>
-                    <span class="text-sm font-bold text-gray-800">Nueva Finca</span>
-                </div>
-            </button>
-        </div>
-        
-        <div class="mt-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border-2 border-red-200">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-lightbulb text-red-600 text-2xl"></i>
-                    <div>
-                        <p class="font-bold text-gray-900 text-sm">¿Necesitas ayuda?</p>
-                        <p class="text-xs text-gray-600">Consulta la guía</p>
-                    </div>
-                </div>
-                <button class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-bold rounded-lg shadow-lg hover:shadow-xl transition-all">
-                    Ver guía
-                </button>
+                <span class="text-sm font-bold text-gray-800">Nuevo Animal</span>
             </div>
+        </a>
+
+        <button class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-2 border-blue-200 rounded-xl transition-all group">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                    <i class="fa-solid fa-syringe text-white text-xl"></i>
+                </div>
+                <span class="text-sm font-bold text-gray-800">Vacunación</span>
+            </div>
+        </button>
+
+        <button class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 border-2 border-purple-200 rounded-xl transition-all group">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                    <i class="fa-solid fa-chart-line text-white text-xl"></i>
+                </div>
+                <span class="text-sm font-bold text-gray-800">Producción</span>
+            </div>
+        </button>
+
+        <a href="{{ route('fincas.create') }}" class="p-4 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border-2 border-green-200 rounded-xl transition-all group">
+            <div class="flex flex-col items-center text-center">
+                <div class="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                    <i class="fa-solid fa-map-marked text-white text-xl"></i>
+                </div>
+                <span class="text-sm font-bold text-gray-800">Nueva Finca</span>
+            </div>
+        </a>
+    </div>
+    
+    <div class="mt-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border-2 border-red-200">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-lightbulb text-red-600 text-2xl"></i>
+                <div>
+                    <p class="font-bold text-gray-900 text-sm">¿Necesitas ayuda?</p>
+                    <p class="text-xs text-gray-600">Consulta la guía</p>
+                </div>
+            </div>
+            
+            <button class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-bold rounded-lg shadow-lg hover:shadow-xl transition-all">
+                Ver guía
+            </button>
         </div>
     </div>
-
 </div>
 
-<!-- Scripts para las gráficas -->
+<!-- Scripts -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // Configuración de colores
     const colors = {
-        red: {
-            solid: '#dc2626',
-            gradient: ['#dc2626', '#991b1b'],
-            light: 'rgba(220, 38, 38, 0.1)'
-        },
-        blue: {
-            solid: '#3b82f6',
-            light: 'rgba(59, 130, 246, 0.1)'
-        },
-        purple: {
-            solid: '#9333ea',
-            light: 'rgba(147, 51, 234, 0.1)'
-        },
-        yellow: {
-            solid: '#eab308',
-            light: 'rgba(234, 179, 8, 0.1)'
-        }
+        red: { solid: '#dc2626' },
+        blue: { solid: '#3b82f6' },
+        purple: { solid: '#9333ea' },
+        yellow: { solid: '#eab308' }
     };
 
-    // Gráfico de Distribución (Donut)
+    // Gráfico Distribución
     const distribucionCtx = document.getElementById('distribucionChart');
     if (distribucionCtx) {
         new Chart(distribucionCtx, {
@@ -401,13 +393,8 @@ document.addEventListener('DOMContentLoaded', function() {
             data: {
                 labels: ['Vacas', 'Terneros', 'Toros', 'Novillas'],
                 datasets: [{
-                    data: [0, 0, 0, 0], // Valores en 0
-                    backgroundColor: [
-                        colors.red.solid,
-                        colors.blue.solid,
-                        colors.purple.solid,
-                        colors.yellow.solid
-                    ],
+                    data: [0, 0, 0, 0],
+                    backgroundColor: [colors.red.solid, colors.blue.solid, colors.purple.solid, colors.yellow.solid],
                     borderWidth: 4,
                     borderColor: '#fff'
                 }]
@@ -415,34 +402,13 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.label + ': ' + context.parsed + ' animales';
-                            }
-                        },
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        padding: 12,
-                        cornerRadius: 8,
-                        titleFont: {
-                            size: 14,
-                            weight: 'bold'
-                        },
-                        bodyFont: {
-                            size: 13
-                        }
-                    }
-                },
+                plugins: { legend: { display: false } },
                 cutout: '70%'
             }
         });
     }
 
-    // Gráfico de Producción (Barras)
+    // Gráfico Producción
     const produccionCtx = document.getElementById('produccionChart');
     if (produccionCtx) {
         new Chart(produccionCtx, {
@@ -451,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
                 datasets: [{
                     label: 'Litros de leche',
-                    data: [0, 0, 0, 0, 0, 0, 0], // Valores en 0
+                    data: [0, 0, 0, 0, 0, 0, 0],
                     backgroundColor: function(context) {
                         const ctx = context.chart.ctx;
                         const gradient = ctx.createLinearGradient(0, 0, 0, 400);
@@ -466,77 +432,65 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        padding: 12,
-                        cornerRadius: 8,
-                        titleFont: {
-                            size: 14,
-                            weight: 'bold'
-                        },
-                        bodyFont: {
-                            size: 13
-                        },
-                        callbacks: {
-                            label: function(context) {
-                                return context.parsed.y + ' litros';
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            font: {
-                                size: 12,
-                                weight: '600'
-                            },
-                            color: '#6b7280'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false,
-                            drawBorder: false
-                        },
-                        ticks: {
-                            font: {
-                                size: 12,
-                                weight: '600'
-                            },
-                            color: '#6b7280'
-                        }
-                    }
-                }
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
             }
         });
     }
 
-    // Inicializar mapa de Leaflet
-    const map = L.map('map').setView([8.7479, -75.8814], 13); // Coordenadas de Montería
-    
+    // Mapa
+    const map = L.map('map').setView([8.7479, -75.8814], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 18,
     }).addTo(map);
     
-    // Agregar marcador de ejemplo (puedes comentar esto si no quieres el marcador)
-    const marker = L.marker([8.7479, -75.8814]).addTo(map);
-    marker.bindPopup('<div class="text-center p-2"><b class="text-red-700">Montería, Córdoba</b><br><span class="text-sm text-gray-600">Ubicación predeterminada</span></div>');
-    
-    // Aquí puedes agregar más marcadores cuando tengas fincas
-    // Ejemplo:
-    // const finca1 = L.marker([lat, lng]).addTo(map);
-    // finca1.bindPopup('<b>Nombre de la Finca</b><br>Descripción');
+    // Cargar fincas
+    fetch('/api/fincas/mapa', {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(fincas => {
+        if (fincas.length > 0) {
+            document.getElementById('contador-fincas').textContent = fincas.length + ' ' + (fincas.length === 1 ? 'finca' : 'fincas');
+            document.getElementById('contador-fincas-card').textContent = fincas.length;
+            document.getElementById('mapa-info-titulo').textContent = 'Fincas registradas';
+            document.getElementById('mapa-info-desc').textContent = 'Haz clic en los marcadores para ver detalles';
+            
+            const bounds = [];
+            fincas.forEach(finca => {
+                const marker = L.marker([finca.latitud, finca.longitud], {
+                    icon: L.icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                    })
+                }).addTo(map);
+                
+                marker.bindPopup(`
+                    <div class="p-3">
+                        <h3 class="font-bold text-red-700 mb-2 text-lg">${finca.nombre}</h3>
+                        <p class="text-sm text-gray-600 mb-1"><strong>Código:</strong> ${finca.codigo}</p>
+                        <p class="text-sm text-gray-600 mb-1"><strong>Área:</strong> ${finca.area} ha</p>
+                        ${finca.direccion ? `<p class="text-xs text-gray-500 mt-2">${finca.direccion}</p>` : ''}
+                    </div>
+                `);
+                
+                bounds.push([finca.latitud, finca.longitud]);
+            });
+            
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+    })
+    .catch(error => console.error('Error cargando fincas:', error));
 });
 </script>
 
