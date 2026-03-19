@@ -21,6 +21,10 @@ Route::middleware([
     // Rutas de Fincas
     Route::resource('fincas', FincaController::class);
     
+    // Ruta para cambiar estado de finca
+    Route::post('fincas/{finca}/toggle-estado', [FincaController::class, 'toggleEstado'])
+    ->name('fincas.toggle-estado');
+    
     // API para mapa
     Route::get('/api/fincas/mapa', [FincaController::class, 'getFincasParaMapa'])
         ->name('api.fincas.mapa');

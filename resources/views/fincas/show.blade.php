@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends('layouts.Dashboard')
 
 @section('title', $finca->nombre)
 
@@ -27,6 +27,12 @@
             </div>
         </div>
         <div class="flex gap-3">
+            <button onclick="toggleEstadoFinca()" 
+                    id="btn-toggle-estado"
+                    class="px-6 py-3 {{ $finca->activa ? 'bg-gray-600 hover:bg-gray-700' : 'bg-green-600 hover:bg-green-700' }} text-white rounded-xl transition-all font-bold shadow-xl">
+                <i class="fa-solid fa-{{ $finca->activa ? 'pause' : 'play' }}-circle mr-2"></i>
+                <span id="texto-estado">{{ $finca->activa ? 'Desactivar' : 'Activar' }}</span>
+            </button>
             <a href="{{ route('fincas.edit', $finca) }}" class="px-6 py-3 bg-white text-red-700 hover:bg-red-50 rounded-xl transition-all font-bold shadow-xl">
                 <i class="fa-solid fa-edit mr-2"></i>Editar
             </a>
@@ -58,7 +64,13 @@
                         <i class="fa-solid fa-ruler-combined text-orange-600 text-2xl"></i>
                     </div>
                     <p class="text-xs text-gray-600 mb-1">Área Total</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ number_format($finca->area, 2) }}</p>
+                    <p class="text-2xl font-bold text-gray-800">
+                        @if($finca->area)
+                            {{ number_format($finca->area, 2) }}
+                        @else
+                            <span class="text-gray-400">N/A</span>
+                        @endif
+                    </p>
                     <p class="text-xs text-orange-600 font-medium">hectáreas</p>
                 </div>
 
@@ -255,7 +267,7 @@
         'lng' => floatval($finca->longitud),
         'nombre' => $finca->nombre,
         'codigo' => $finca->codigo,
-        'area' => number_format($finca->area, 2),
+        'area' => $finca->area ? number_format($finca->area, 2) : 'N/A',
         'direccion' => $finca->direccion ?? ''
     ];
 @endphp
@@ -301,4 +313,43 @@
 })();
 </script>
 @endif
+
+<script>
+function toggleEstadoFinca() {
+    if (!confirm('¿Estás seguro de cambiar el estado de esta finca?')) {
+        return;
+    }
+    
+    var btn = document.getElementById('btn-toggle-estado');
+    var textoEstado = document.getElementById('texto-estado');
+    var originalText = textoEstado.textContent;
+    
+    textoEstado.textContent = 'Procesando...';
+    btn.disabled = true;
+    
+    fetch('{{ route("fincas.toggle-estado", $finca) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error al cambiar el estado');
+            textoEstado.textContent = originalText;
+            btn.disabled = false;
+        }
+    })
+    .catch(function(error) {
+        console.error('Error:', error);
+        alert('Error al cambiar el estado');
+        textoEstado.textContent = originalText;
+        btn.disabled = false;
+    });
+}
+</script>
 @endsection

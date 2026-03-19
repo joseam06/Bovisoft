@@ -52,7 +52,9 @@
                 </div>
                 <div class="text-right">
                     <p class="text-sm font-semibold text-gray-600 mb-1">Total Animales</p>
-                    <h3 class="text-4xl font-extrabold bg-gradient-to-r from-red-700 to-red-900 bg-clip-text text-transparent">0</h3>
+                    <h3 class="text-4xl font-extrabold bg-gradient-to-r from-red-700 to-red-900 bg-clip-text text-transparent">
+                        {{ \App\Models\Animal::where('user_id', Auth::id())->count() }}
+                    </h3>
                 </div>
             </div>
             <div class="flex items-center justify-between pt-4 border-t-2 border-red-100">
@@ -60,8 +62,8 @@
                     <i class="fa-solid fa-circle text-green-500 text-xs mr-2"></i>
                     Sistema activo
                 </span>
-                <a href="#" class="text-xs text-red-700 hover:text-red-800 font-semibold flex items-center group">
-                    Ver más
+                <a href="{{ route('animales.index') }}" class="text-xs text-red-700 hover:text-red-800 font-semibold flex items-center group">
+                    Ver todos
                     <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
                 </a>
             </div>
@@ -82,15 +84,15 @@
                 </div>
             </div>
             <div class="flex items-center justify-between pt-4 border-t-2 border-orange-100">
-    <span class="text-xs text-gray-600 flex items-center">
-        <i class="fa-solid fa-check-circle text-green-500 text-xs mr-2"></i>
-        Todas operativas
-    </span>
-    <a href="{{ route('fincas.index') }}" class="text-xs text-orange-700 hover:text-orange-800 font-semibold flex items-center group">
-        Ver todas
-        <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
-    </a>
-</div>
+                <span class="text-xs text-gray-600 flex items-center">
+                    <i class="fa-solid fa-check-circle text-green-500 text-xs mr-2"></i>
+                    Todas operativas
+                </span>
+                <a href="{{ route('fincas.index') }}" class="text-xs text-orange-700 hover:text-orange-800 font-semibold flex items-center group">
+                    Ver todas
+                    <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
+                </a>
+            </div>
         </div>
         <div class="h-2 bg-gradient-to-r from-orange-600 to-red-700"></div>
     </div>
@@ -146,7 +148,6 @@
         </div>
         <div class="h-2 bg-gradient-to-r from-purple-600 to-red-700"></div>
     </div>
-
 </div>
 
 <!-- Separador -->
@@ -174,6 +175,19 @@
             </select>
         </div>
         
+        @php
+            $totalAnimales = \App\Models\Animal::where('user_id', Auth::id())->count();
+            $vacas = \App\Models\Animal::where('user_id', Auth::id())->where('tipo', 'vaca')->count();
+            $toros = \App\Models\Animal::where('user_id', Auth::id())->where('tipo', 'toro')->count();
+            $terneros = \App\Models\Animal::where('user_id', Auth::id())->where('tipo', 'ternero')->count();
+            $novillas = \App\Models\Animal::where('user_id', Auth::id())->where('tipo', 'novilla')->count();
+            
+            $porcentajeVacas = $totalAnimales > 0 ? round(($vacas / $totalAnimales) * 100, 1) : 0;
+            $porcentajeToros = $totalAnimales > 0 ? round(($toros / $totalAnimales) * 100, 1) : 0;
+            $porcentajeTerneros = $totalAnimales > 0 ? round(($terneros / $totalAnimales) * 100, 1) : 0;
+            $porcentajeNovillas = $totalAnimales > 0 ? round(($novillas / $totalAnimales) * 100, 1) : 0;
+        @endphp
+        
         <div class="relative h-80">
             <canvas id="distribucionChart"></canvas>
         </div>
@@ -183,28 +197,28 @@
                 <div class="w-4 h-4 rounded-full bg-red-500 mr-3"></div>
                 <div>
                     <p class="text-xs text-gray-600">Vacas</p>
-                    <p class="font-bold text-gray-900">0 (0%)</p>
+                    <p class="font-bold text-gray-900">{{ $vacas }} ({{ $porcentajeVacas }}%)</p>
                 </div>
             </div>
             <div class="flex items-center p-3 bg-blue-50 rounded-xl border-2 border-blue-100">
                 <div class="w-4 h-4 rounded-full bg-blue-500 mr-3"></div>
                 <div>
                     <p class="text-xs text-gray-600">Terneros</p>
-                    <p class="font-bold text-gray-900">0 (0%)</p>
+                    <p class="font-bold text-gray-900">{{ $terneros }} ({{ $porcentajeTerneros }}%)</p>
                 </div>
             </div>
             <div class="flex items-center p-3 bg-purple-50 rounded-xl border-2 border-purple-100">
                 <div class="w-4 h-4 rounded-full bg-purple-500 mr-3"></div>
                 <div>
                     <p class="text-xs text-gray-600">Toros</p>
-                    <p class="font-bold text-gray-900">0 (0%)</p>
+                    <p class="font-bold text-gray-900">{{ $toros }} ({{ $porcentajeToros }}%)</p>
                 </div>
             </div>
             <div class="flex items-center p-3 bg-yellow-50 rounded-xl border-2 border-yellow-100">
                 <div class="w-4 h-4 rounded-full bg-yellow-500 mr-3"></div>
                 <div>
                     <p class="text-xs text-gray-600">Novillas</p>
-                    <p class="font-bold text-gray-900">0 (0%)</p>
+                    <p class="font-bold text-gray-900">{{ $novillas }} ({{ $porcentajeNovillas }}%)</p>
                 </div>
             </div>
         </div>
@@ -312,65 +326,66 @@
     </div>
 
     <!-- Acciones Rápidas -->
-<div class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 card-hover">
-    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-        <span class="w-8 h-8 bg-gradient-to-br from-red-600 to-red-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-            <i class="fa-solid fa-bolt text-white text-sm"></i>
-        </span>
-        Acciones Rápidas
-    </h2>
-    
-    <div class="grid grid-cols-2 gap-3">
-        <a href="{{ route('animales.create') }}" class="p-4 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border-2 border-red-200 rounded-xl transition-all group">
-            <div class="flex flex-col items-center text-center">
-                <div class="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                    <i class="fa-solid fa-plus text-white text-xl"></i>
+    <div class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 card-hover">
+        <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+            <span class="w-8 h-8 bg-gradient-to-br from-red-600 to-red-800 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+                <i class="fa-solid fa-bolt text-white text-sm"></i>
+            </span>
+            Acciones Rápidas
+        </h2>
+        
+        <div class="grid grid-cols-2 gap-3">
+            <a href="{{ route('animales.create') }}" class="p-4 bg-gradient-to-br from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 border-2 border-red-200 rounded-xl transition-all group">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                        <i class="fa-solid fa-plus text-white text-xl"></i>
+                    </div>
+                    <span class="text-sm font-bold text-gray-800">Nuevo Animal</span>
                 </div>
-                <span class="text-sm font-bold text-gray-800">Nuevo Animal</span>
-            </div>
-        </a>
+            </a>
 
-        <button class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-2 border-blue-200 rounded-xl transition-all group">
-            <div class="flex flex-col items-center text-center">
-                <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                    <i class="fa-solid fa-syringe text-white text-xl"></i>
+            <button class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-2 border-blue-200 rounded-xl transition-all group">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                        <i class="fa-solid fa-syringe text-white text-xl"></i>
+                    </div>
+                    <span class="text-sm font-bold text-gray-800">Vacunación</span>
                 </div>
-                <span class="text-sm font-bold text-gray-800">Vacunación</span>
-            </div>
-        </button>
-
-        <button class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 border-2 border-purple-200 rounded-xl transition-all group">
-            <div class="flex flex-col items-center text-center">
-                <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                    <i class="fa-solid fa-chart-line text-white text-xl"></i>
-                </div>
-                <span class="text-sm font-bold text-gray-800">Producción</span>
-            </div>
-        </button>
-
-        <a href="{{ route('fincas.create') }}" class="p-4 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border-2 border-green-200 rounded-xl transition-all group">
-            <div class="flex flex-col items-center text-center">
-                <div class="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                    <i class="fa-solid fa-map-marked text-white text-xl"></i>
-                </div>
-                <span class="text-sm font-bold text-gray-800">Nueva Finca</span>
-            </div>
-        </a>
-    </div>
-    
-    <div class="mt-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border-2 border-red-200">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <i class="fa-solid fa-lightbulb text-red-600 text-2xl"></i>
-                <div>
-                    <p class="font-bold text-gray-900 text-sm">¿Necesitas ayuda?</p>
-                    <p class="text-xs text-gray-600">Consulta la guía</p>
-                </div>
-            </div>
-            
-            <button class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-bold rounded-lg shadow-lg hover:shadow-xl transition-all">
-                Ver guía
             </button>
+
+            <button class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 hover:from-purple-100 hover:to-purple-200 border-2 border-purple-200 rounded-xl transition-all group">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                        <i class="fa-solid fa-chart-line text-white text-xl"></i>
+                    </div>
+                    <span class="text-sm font-bold text-gray-800">Producción</span>
+                </div>
+            </button>
+
+            <a href="{{ route('fincas.create') }}" class="p-4 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border-2 border-green-200 rounded-xl transition-all group">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
+                        <i class="fa-solid fa-map-marked text-white text-xl"></i>
+                    </div>
+                    <span class="text-sm font-bold text-gray-800">Nueva Finca</span>
+                </div>
+            </a>
+        </div>
+        
+        <div class="mt-6 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border-2 border-red-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-lightbulb text-red-600 text-2xl"></i>
+                    <div>
+                        <p class="font-bold text-gray-900 text-sm">¿Necesitas ayuda?</p>
+                        <p class="text-xs text-gray-600">Consulta la guía</p>
+                    </div>
+                </div>
+                
+                <button class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-bold rounded-lg shadow-lg hover:shadow-xl transition-all">
+                    Ver guía
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -378,40 +393,64 @@
 <!-- Scripts -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const colors = {
-        red: { solid: '#dc2626' },
-        blue: { solid: '#3b82f6' },
-        purple: { solid: '#9333ea' },
-        yellow: { solid: '#eab308' }
+    // Datos PHP para gráficos
+    var datosAnimales = {
+        vacas: <?php echo $vacas; ?>,
+        terneros: <?php echo $terneros; ?>,
+        toros: <?php echo $toros; ?>,
+        novillas: <?php echo $novillas; ?>,
+        total: <?php echo $totalAnimales; ?>
     };
 
     // Gráfico Distribución
-    const distribucionCtx = document.getElementById('distribucionChart');
+    var distribucionCtx = document.getElementById('distribucionChart');
     if (distribucionCtx) {
-        new Chart(distribucionCtx, {
+        new Chart(distribucionCtx.getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: ['Vacas', 'Terneros', 'Toros', 'Novillas'],
                 datasets: [{
-                    data: [0, 0, 0, 0],
-                    backgroundColor: [colors.red.solid, colors.blue.solid, colors.purple.solid, colors.yellow.solid],
-                    borderWidth: 4,
-                    borderColor: '#fff'
+                    data: [datosAnimales.vacas, datosAnimales.terneros, datosAnimales.toros, datosAnimales.novillas],
+                    backgroundColor: [
+                        'rgba(220, 38, 38, 0.8)',
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(147, 51, 234, 0.8)',
+                        'rgba(234, 179, 8, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(220, 38, 38, 1)',
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(147, 51, 234, 1)',
+                        'rgba(234, 179, 8, 1)'
+                    ],
+                    borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                var label = context.label || '';
+                                var value = context.parsed || 0;
+                                var percentage = datosAnimales.total > 0 ? ((value / datosAnimales.total) * 100).toFixed(1) : 0;
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                },
                 cutout: '70%'
             }
         });
     }
 
     // Gráfico Producción
-    const produccionCtx = document.getElementById('produccionChart');
+    var produccionCtx = document.getElementById('produccionChart');
     if (produccionCtx) {
-        new Chart(produccionCtx, {
+        new Chart(produccionCtx.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
@@ -419,8 +458,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     label: 'Litros de leche',
                     data: [0, 0, 0, 0, 0, 0, 0],
                     backgroundColor: function(context) {
-                        const ctx = context.chart.ctx;
-                        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                        var ctx = context.chart.ctx;
+                        var gradient = ctx.createLinearGradient(0, 0, 0, 400);
                         gradient.addColorStop(0, '#dc2626');
                         gradient.addColorStop(1, '#991b1b');
                         return gradient;
@@ -439,7 +478,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Mapa
-    const map = L.map('map').setView([8.7479, -75.8814], 13);
+    var map = L.map('map').setView([8.7479, -75.8814], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 18,
@@ -452,17 +491,17 @@ document.addEventListener('DOMContentLoaded', function() {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         }
     })
-    .then(response => response.json())
-    .then(fincas => {
+    .then(function(response) { return response.json(); })
+    .then(function(fincas) {
         if (fincas.length > 0) {
             document.getElementById('contador-fincas').textContent = fincas.length + ' ' + (fincas.length === 1 ? 'finca' : 'fincas');
             document.getElementById('contador-fincas-card').textContent = fincas.length;
             document.getElementById('mapa-info-titulo').textContent = 'Fincas registradas';
             document.getElementById('mapa-info-desc').textContent = 'Haz clic en los marcadores para ver detalles';
             
-            const bounds = [];
-            fincas.forEach(finca => {
-                const marker = L.marker([finca.latitud, finca.longitud], {
+            var bounds = [];
+            fincas.forEach(function(finca) {
+                var marker = L.marker([finca.latitud, finca.longitud], {
                     icon: L.icon({
                         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
                         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -473,14 +512,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                 }).addTo(map);
                 
-                marker.bindPopup(`
-                    <div class="p-3">
-                        <h3 class="font-bold text-red-700 mb-2 text-lg">${finca.nombre}</h3>
-                        <p class="text-sm text-gray-600 mb-1"><strong>Código:</strong> ${finca.codigo}</p>
-                        <p class="text-sm text-gray-600 mb-1"><strong>Área:</strong> ${finca.area} ha</p>
-                        ${finca.direccion ? `<p class="text-xs text-gray-500 mt-2">${finca.direccion}</p>` : ''}
-                    </div>
-                `);
+                marker.bindPopup(
+                    '<div class="p-3">' +
+                    '<h3 class="font-bold text-red-700 mb-2 text-lg">' + finca.nombre + '</h3>' +
+                    '<p class="text-sm text-gray-600 mb-1"><strong>Código:</strong> ' + finca.codigo + '</p>' +
+                    '<p class="text-sm text-gray-600 mb-1"><strong>Área:</strong> ' + (finca.area || 'N/A') + ' ha</p>' +
+                    (finca.direccion ? '<p class="text-xs text-gray-500 mt-2">' + finca.direccion + '</p>' : '') +
+                    '</div>'
+                );
                 
                 bounds.push([finca.latitud, finca.longitud]);
             });
@@ -490,7 +529,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     })
-    .catch(error => console.error('Error cargando fincas:', error));
+    .catch(function(error) {
+        console.error('Error cargando fincas:', error);
+    });
 });
 </script>
 

@@ -122,11 +122,11 @@
 
     <!-- BENEFICIOS -->
     <section id="beneficios" class="py-24 bg-white/95 backdrop-blur-sm mx-4 md:mx-8 rounded-3xl shadow-2xl border-4 border-white/50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <span class="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-semibold mb-4">
-                    Ventajas competitivas
-                </span>
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-16">
+            <span class="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-base font-semibold mb-4">
+                Ventajas competitivas
+            </span>
                 <h3 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">¿Por qué usar Bovisoft?</h3>
                 <p class="text-xl text-gray-600 max-w-2xl mx-auto">
                     Optimiza tu operación ganadera con tecnología de punta
@@ -178,12 +178,12 @@
 
     <!-- CARACTERISTICAS -->
     <section id="caracteristicas" class="py-24 bg-white/95 backdrop-blur-sm mx-4 md:mx-8 rounded-3xl shadow-2xl border-4 border-white/50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <span class="inline-block px-4 py-2 bg-white text-red-800 rounded-full text-sm font-semibold mb-4 shadow-sm">
-                    Funcionalidades completas
-                </span>
-                <h3 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Características principales</h3>
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center mb-16">
+            <span class="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-base font-semibold mb-4">
+                Características principales
+            </span>
+                <h3 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Funciones de Bovisoft</h3>
                 <p class="text-xl text-gray-600 max-w-2xl mx-auto">
                     Todo lo que necesitas para gestionar tu operación ganadera
                 </p>
@@ -231,21 +231,16 @@
                         </div>
                     </div>
                     
-                    <div class="flex items-start group">
-                        <span class="feature-icon">👥</span>
-                        <div>
-                            <h5 class="text-xl font-bold text-gray-900 mb-2">Roles y permisos</h5>
-                            <p class="text-gray-600">Control de acceso para tu equipo de trabajo</p>
-                        </div>
-                    </div>
                 </div>
                 
-                <div class="relative">
-                    <div class="absolute inset-0 bg-gradient-to-r from-red-400/20 to-purple-400/20 rounded-3xl blur-2xl"></div>
-                    <img src="https://cdn.pixabay.com/photo/2019/07/19/09/35/cow-4345955_1280.jpg" 
-                         class="relative rounded-3xl shadow-2xl border-4 border-white" 
-                         alt="Ganado" />
-                </div>
+              <div class="relative">
+    <div class="absolute inset-0 bg-gradient-to-r from-red-400/20 to-purple-400/20 rounded-3xl blur-2xl"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-red-600/20 to-transparent rounded-3xl transform rotate-3"></div>
+    <img src="{{ asset('images/caracteristicas.png') }}" 
+         class="relative rounded-3xl shadow-2xl border-4 border-white w-full h-auto object-cover transform -rotate-2 hover:rotate-0 transition-transform duration-500" 
+         alt="Dashboard BoviSoft - Gestión Ganadera" 
+         loading="lazy" />
+</div>
             </div>
         </div>
     </section>
