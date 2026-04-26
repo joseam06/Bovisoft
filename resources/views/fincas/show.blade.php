@@ -233,13 +233,16 @@
                 <p class="text-xs text-gray-600 mt-1">Registrar nuevo</p>
             </a>
 
-            <button class="p-6 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border-2 border-green-200 rounded-xl transition-all group text-center">
-                <div class="w-16 h-16 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform shadow-lg">
-                    <i class="fa-solid fa-border-all text-white text-2xl"></i>
-                </div>
-                <p class="font-bold text-gray-800">Potreros</p>
-                <p class="text-xs text-gray-600 mt-1">Gestionar divisiones</p>
-            </button>
+          <a href="{{ route('potreros.index') }}?finca={{ $finca->id }}" 
+   class="p-6 bg-gradient-to-br from-green-50 to-green-100 hover:from-green-100 hover:to-green-200 border-2 border-green-200 rounded-xl transition-all group text-center">
+    
+    <div class="w-16 h-16 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform shadow-lg">
+        <i class="fa-solid fa-border-all text-white text-2xl"></i>
+    </div>
+
+    <p class="font-bold text-gray-800">Potreros</p>
+    <p class="text-xs text-gray-600 mt-1">Gestionar divisiones</p>
+</a>
 
             <button class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-2 border-blue-200 rounded-xl transition-all group text-center">
                 <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform shadow-lg">

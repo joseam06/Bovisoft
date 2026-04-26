@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
+use App\Models\Potrero;
 
 class Animal extends Model
 {
@@ -25,6 +26,7 @@ class Animal extends Model
         'observaciones',
         'estado',
         'finca_id',
+        'potrero_id',
         'user_id',
     ];
 
@@ -39,6 +41,13 @@ class Animal extends Model
     {
         return $this->belongsTo(Finca::class);
     }
+
+
+    // 2. relación después de la relación finca():
+public function potrero()
+{
+    return $this->belongsTo(Potrero::class);
+}
 
     public function user()
     {

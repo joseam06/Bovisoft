@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Potrero;
 
 class Finca extends Model
 {
@@ -41,11 +42,17 @@ class Finca extends Model
         return $this->hasMany(Animal::class);
     }
 
-    // Descomentar cuando implementes el modelo Potrero
-    // public function potreros()
-    // {
-    //     return $this->hasMany(Potrero::class);
-    // }
+   public function potreros()
+{
+    return $this->hasMany(Potrero::class);
+}
+ 
+// Accessor para total de potreros
+public function getTotalPotrerosAttribute()
+{
+    return $this->potreros()->count();
+}
+ 
 
     public function scopeActivas($query)
     {

@@ -23,7 +23,7 @@
                 <span class="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-sm font-semibold mb-3">
                     Panel de Control
                 </span>
-                <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">Dashboard Bovisoft</h1>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-2">BOVISOFT</h1>
                 <p class="text-gray-600 text-lg">Gestión inteligente de tu operación ganadera</p>
             </div>
             <div class="flex gap-3">

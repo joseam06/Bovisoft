@@ -167,51 +167,51 @@
         <nav class="mt-6 px-3 space-y-2">
             <a href="{{ route('dashboard') }}" class="sidebar-link flex items-center px-4 py-3 text-white rounded-xl hover:bg-red-700/30 transition-all duration-200 {{ request()->routeIs('dashboard') ? 'bg-red-700/30 active' : '' }}">
                 <i class="fa-solid fa-gauge-high text-xl w-6 flex-shrink-0"></i>
-                <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Dashboard</span>
+                <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Inicio</span>
             </a>
 
-            <a href="#" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
+            <a href="animales" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                 <i class="fa-solid fa-cow text-xl w-6 flex-shrink-0"></i>
                 <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Ganado</span>
             </a>
 
-            <a href="#" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
+            <a href="fincas" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                 <i class="fa-solid fa-map-location-dot text-xl w-6 flex-shrink-0"></i>
-                <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Fincas y Potreros</span>
+                <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Fincas</span>
             </a>
 
-            <a href="#" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
+            <a href="{{ route('salud.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                 <i class="fa-solid fa-syringe text-xl w-6 flex-shrink-0"></i>
                 <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Salud</span>
             </a>
 
-            <a href="#" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
+            <a href="{{ route('produccion.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                 <i class="fa-solid fa-chart-line text-xl w-6 flex-shrink-0"></i>
                 <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Producción</span>
             </a>
 
-            <a href="#" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
+            <a href="{{ route('finanzas.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                 <i class="fa-solid fa-money-bill-trend-up text-xl w-6 flex-shrink-0"></i>
                 <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Finanzas</span>
             </a>
 
-            <a href="#" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
+            <a href="{{ route('alertas.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                 <i class="fa-solid fa-bell text-xl w-6 flex-shrink-0"></i>
                 <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Alertas</span>
             </a>
 
-            <a href="#" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
+            <a href="{{ route('reportes.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                 <i class="fa-solid fa-file-alt text-xl w-6 flex-shrink-0"></i>
                 <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Reportes</span>
             </a>
         </nav>
 
         <!-- Settings at Bottom -->
-        <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-red-900/50 space-y-2">
+         <!-- <div class="absolute bottom-0 left-0 right-0 p-3 border-t border-red-900/50 space-y-2">
             <a href="#" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                 <i class="fa-solid fa-gear text-xl w-6 flex-shrink-0"></i>
                 <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Configuración</span>
-            </a>
+            </a>-->
             
             <form method="POST" action="{{ route('logout') }}" id="logout-form">
                 @csrf
