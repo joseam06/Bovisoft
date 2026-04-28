@@ -12,7 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('animales', function (Blueprint $table) {
-            //
+            // Agregar columna potrero_id (nullable porque el animal puede no estar en un potrero)
+            $table->foreignId('potrero_id')
+                ->nullable()
+                ->after('finca_id')
+                ->constrained('potreros')
+                ->onDelete('set null');
+            
+            // Agregar campo numero (opcional, para identificación del animal)
+            $table->string('numero')->nullable()->after('codigo');
         });
     }
 
@@ -22,7 +30,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('animales', function (Blueprint $table) {
-            //
+            $table->dropForeign(['potrero_id']);
+            $table->dropColumn('potrero_id');
+            $table->dropColumn('numero');
         });
     }
 };

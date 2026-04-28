@@ -26,12 +26,33 @@ Route::middleware([
     Route::post('fincas/{finca}/toggle-estado', [FincaController::class, 'toggleEstado'])
     ->name('fincas.toggle-estado');
     
-    // API para mapa
-    Route::get('/api/fincas/mapa', [FincaController::class, 'getFincasParaMapa'])
-        ->name('api.fincas.mapa');
-    
-    // Rutas de Animales
-    Route::resource('animales', AnimalController::class);
+   // API para mapa
+Route::get('/api/fincas/mapa', [FincaController::class, 'getFincasParaMapa'])
+->name('api.fincas.mapa');
+
+// NUEVA API: Potreros por finca (con disponibilidad)
+Route::get('/api/fincas/{finca}/potreros', function($fincaId) {
+    $potreros = \App\Models\Potrero::where('finca_id', $fincaId)
+        ->where('user_id', Auth::id())
+        ->where('estado', 'activo')
+        ->get(['id', 'nombre', 'capacidad_animales', 'animales_actuales'])
+        ->map(function($potrero) {
+            $disponibilidad = $potrero->capacidad_animales
+                ? max(0, $potrero->capacidad_animales - $potrero->animales_actuales)
+                : 'Sin límite';
+
+            return [
+                'id' => $potrero->id,
+                'nombre' => $potrero->nombre,
+                'disponibilidad' => $disponibilidad
+            ];
+        });
+
+    return response()->json($potreros);
+})->name('api.fincas.potreros');
+
+// Rutas de Animales
+Route::resource('animales', AnimalController::class);
    
     // Rutas de Potreros (agregar después de las rutas de animales)
 Route::middleware(['auth'])->group(function () {

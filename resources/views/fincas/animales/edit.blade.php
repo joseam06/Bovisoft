@@ -314,6 +314,47 @@
                 </div>
             </div>
 
+            <!-- Campo Potrero (después del campo Finca) -->
+<div>
+    <label class="block text-gray-700 text-sm font-bold mb-2">
+        <i class="fa-solid fa-map mr-2"></i>Potrero (Opcional)
+    </label>
+    <select name="potrero_id" id="potrero_id" class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-800">
+        <option value="">Selecciona un potrero</option>
+    </select>
+    <p id="potrero-message" class="text-gray-500 text-xs mt-1">Primero selecciona una finca</p>
+</div>
+
+<script>
+document.querySelector('select[name="finca_id"]').addEventListener('change', function() {
+    const fincaId = this.value;
+    const potreroSelect = document.getElementById('potrero_id');
+    const message = document.getElementById('potrero-message');
+    
+    potreroSelect.innerHTML = '<option value="">Cargando...</option>';
+    
+    if (fincaId) {
+        fetch(`/api/fincas/${fincaId}/potreros`)
+            .then(r => r.json())
+            .then(data => {
+                potreroSelect.innerHTML = '<option value="">Sin potrero</option>';
+                if (data.length > 0) {
+                    data.forEach(p => {
+                        potreroSelect.innerHTML += `<option value="${p.id}">${p.nombre} (${p.disponibilidad} disponibles)</option>`;
+                    });
+                    message.textContent = `${data.length} potrero(s) disponible(s)`;
+                } else {
+                    message.textContent = 'Esta finca no tiene potreros registrados';
+                }
+            });
+    } else {
+        potreroSelect.innerHTML = '<option value="">Selecciona un potrero</option>';
+        message.textContent = 'Primero selecciona una finca';
+    }
+});
+</script>
+
+
             <!-- Observaciones -->
             <div class="mb-8">
                 <div class="flex items-center mb-6 pb-4 border-b-2 border-red-200">

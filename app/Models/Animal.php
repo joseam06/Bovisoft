@@ -16,6 +16,7 @@ class Animal extends Model
 
     protected $fillable = [
         'codigo',
+        'numero', 
         'nombre',
         'tipo',
         'sexo',
