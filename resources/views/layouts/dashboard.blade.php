@@ -170,20 +170,22 @@
                 <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Inicio</span>
             </a>
 
-            <a href="animales" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
+            <a href="{{ route('animales.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                 <i class="fa-solid fa-cow text-xl w-6 flex-shrink-0"></i>
                 <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Ganado</span>
             </a>
 
-            <a href="fincas" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
+            <a href="{{ route('fincas.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                 <i class="fa-solid fa-map-location-dot text-xl w-6 flex-shrink-0"></i>
                 <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Fincas</span>
             </a>
 
             <a href="{{ route('salud.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
-                <i class="fa-solid fa-syringe text-xl w-6 flex-shrink-0"></i>
+                <i class="fa-solid fa-heart-pulse text-xl w-6 flex-shrink-0"></i>
                 <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Salud</span>
-            </a>
+
+            </a>  
+            
 
             <a href="{{ route('produccion.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                 <i class="fa-solid fa-chart-line text-xl w-6 flex-shrink-0"></i>

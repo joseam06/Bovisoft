@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\FincaController;
 use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\PotreroController;
+use App\Http\Controllers\SaludController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -70,20 +71,13 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     
     // Salud
-    Route::get('/salud', function () {
-        return view('en-desarrollo', [
-            'modulo' => 'Salud',
-            'progreso' => '20',
-            'caracteristicas' => [
-                'Calendario de vacunaciones',
-                'Registro de tratamientos y medicamentos',
-                'Control de enfermedades',
-                'Historial clínico por animal',
-                'Alertas de próximas vacunas',
-                'Inventario de medicamentos',
-            ]
-        ]);
-    })->name('salud.index');
+   
+Route::resource('salud', SaludController::class);
+Route::get('animales/{animal}/salud', [SaludController::class, 'porAnimal'])
+    ->name('salud.por-animal');
+ 
+
+
     
     // Producción
     Route::get('/produccion', function () {

@@ -24,7 +24,7 @@ class AnimalController extends Controller
     {
         $codigo = Animal::generarCodigo();
         $fincas = Finca::where('user_id', Auth::id())
-            ->where('estado', 'activa')
+            ->where('activa', true)
             ->orderBy('nombre')
             ->get();
         
@@ -81,39 +81,38 @@ class AnimalController extends Controller
             ->with('success', 'Animal registrado exitosamente');
     }
 
-    public function show(Animal $animal)
+    public function show(int $id)
     {
-        $animal->load(['finca', 'potrero', 'user']);
+        $animal = Animal::with(['finca', 'potrero', 'user'])
+            ->where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
-        if ($animal->user_id !== Auth::id()) {
-            abort(403, 'No tienes permiso para ver este animal');
-        }
-
-        return view('animales.show', compact('animal'));
+        return view('fincas.animales.show', compact('animal'));
     }
 
-    public function edit(Animal $animal)
+    public function edit(int $id)
     {
-        if ($animal->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $animal = Animal::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
         $fincas = Finca::where('user_id', Auth::id())
-            ->where('estado', 'activa')
+            ->where('activa', true)
             ->orderBy('nombre')
             ->get();
-        
+
         $tipos = Animal::getTipos();
         $razas = Animal::getRazas();
 
         return view('fincas.animales.edit', compact('animal', 'fincas', 'tipos', 'razas'));
     }
 
-    public function update(Request $request, Animal $animal)
+    public function update(Request $request, int $id)
     {
-        if ($animal->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $animal = Animal::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
         $validated = $request->validate([
             'numero' => 'nullable|string|max:100',
@@ -163,15 +162,15 @@ class AnimalController extends Controller
 
         $animal->update($validated);
 
-        return redirect()->route('animales.show', $animal)
+        return redirect()->route('animales.show', $animal->id)
             ->with('success', 'Animal actualizado exitosamente');
     }
 
-    public function destroy(Animal $animal)
+    public function destroy(int $id)
     {
-        if ($animal->user_id !== Auth::id()) {
-            abort(403);
-        }
+        $animal = Animal::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
 
         if ($animal->potrero_id) {
             Potrero::find($animal->potrero_id)->decrement('animales_actuales');
