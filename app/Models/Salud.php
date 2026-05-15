@@ -15,7 +15,8 @@ class Salud extends Model
 
     protected $fillable = [
         'codigo', 'animal_id', 'finca_id', 'user_id',
-        'tipo', 'nombre_producto', 'enfermedad_prevenida', 'diagnostico',
+        'tipo', 'categoria',                        // ← nuevo campo
+        'nombre_producto', 'enfermedad_prevenida', 'diagnostico',
         'fecha_aplicacion', 'dosis', 'unidad_dosis', 'via_aplicacion',
         'lote_medicamento', 'laboratorio', 'veterinario', 'costo',
         'proxima_aplicacion', 'dias_carencia', 'fin_carencia',
@@ -87,11 +88,27 @@ class Salud extends Model
     public static function getTipos(): array
     {
         return [
+            // Preventivo
             'vacunacion'      => 'Vacunación',
+            'vitaminizacion'  => 'Vitaminización',
             'desparasitacion' => 'Desparasitación',
+            'bioseguridad'    => 'Bioseguridad',
+            // Clínico
+            'enfermedad'      => 'Enfermedad',
             'tratamiento'     => 'Tratamiento',
+            'diagnostico'     => 'Diagnóstico',
             'cirugia'         => 'Cirugía',
             'revision'        => 'Revisión',
+            // Reproductivo
+            'sincronizacion'  => 'Sincronización',
+            'hormonas'        => 'Hormonas',
+            'protocolo'       => 'Protocolo',
+            'preparacion_iatf'=> 'Preparación IATF',
+            // Seguimiento
+            'alerta'          => 'Alerta',
+            'control'         => 'Control',
+            'carencia'        => 'Carencia',
+            // Genérico (sin categoría)
             'otro'            => 'Otro',
         ];
     }
@@ -122,5 +139,41 @@ class Salud extends Model
     public static function getUnidadesDosis(): array
     {
         return ['ml', 'cc', 'mg', 'g', 'dosis', 'unidad'];
+    }
+
+    // ─── Mapeo tipo → categoría ────────────────────────────────────────────────
+
+    public static function getCategoriaPorTipo(string $tipo): ?string
+    {
+        return match ($tipo) {
+            'vacunacion',
+            'vitaminizacion',
+            'desparasitacion',
+            'bioseguridad'      => 'preventivo',
+            'enfermedad',
+            'tratamiento',
+            'diagnostico',
+            'cirugia',
+            'revision'          => 'clinico',
+            'sincronizacion',
+            'hormonas',
+            'protocolo',
+            'preparacion_iatf'  => 'reproductivo',
+            'alerta',
+            'control',
+            'carencia'          => 'seguimiento',
+            default => null,
+        };
+    }
+
+    // ─── Asignar categoría automáticamente al crear ────────────────────────────
+
+    protected static function booted(): void
+    {
+        static::creating(function (Salud $salud) {
+            if (empty($salud->categoria) && $salud->tipo) {
+                $salud->categoria = self::getCategoriaPorTipo($salud->tipo);
+            }
+        });
     }
 }

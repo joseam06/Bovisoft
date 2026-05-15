@@ -72,11 +72,31 @@ Route::middleware(['auth'])->group(function () {
     
     // Salud
    
-Route::resource('salud', SaludController::class);
-Route::get('animales/{animal}/salud', [SaludController::class, 'porAnimal'])
-    ->name('salud.por-animal');
+// Rutas adicionales por categoría (deben ir ANTES del resource)
+Route::get('/salud/preventivo', [SaludController::class, 'preventivo'])
+     ->name('salud.preventivo')
+     ->middleware('auth');
+
+Route::get('/salud/clinico', [SaludController::class, 'clinico'])
+     ->name('salud.clinico')
+     ->middleware('auth');
+
+Route::get('/salud/reproductivo', [SaludController::class, 'reproductivo'])
+     ->name('salud.reproductivo')
+     ->middleware('auth');
+
+Route::get('/salud/seguimiento', [SaludController::class, 'seguimiento'])
+     ->name('salud.seguimiento')
+     ->middleware('auth');
+
+     Route::get('/animales/{animal}/salud', [SaludController::class, 'porAnimal'])
+    ->name('salud.por-animal')
+    ->middleware('auth');
  
 
+
+// Rutas resource originales (ahora después)
+Route::resource('salud', SaludController::class)->middleware('auth');
 
     
     // Producción

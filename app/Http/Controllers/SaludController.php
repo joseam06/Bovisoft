@@ -11,36 +11,12 @@ use Carbon\Carbon;
 
 class SaludController extends Controller
 {
-    // ─── index ─────────────────────────────────────────────────────────────────
+    // ─── index (Panel principal de categorías) ─────────────────────────────────
 
-    public function index(Request $request)
+    public function index()
     {
-        $query = Salud::with(['animal', 'finca'])
-            ->where('user_id', Auth::id());
-
-        if ($request->filled('buscar')) {
-            $b = $request->buscar;
-            $query->where(function ($q) use ($b) {
-                $q->where('codigo', 'like', "%{$b}%")
-                  ->orWhere('nombre_producto', 'like', "%{$b}%")
-                  ->orWhere('veterinario', 'like', "%{$b}%")
-                  ->orWhereHas('animal', fn($a) =>
-                      $a->where('nombre', 'like', "%{$b}%")
-                        ->orWhere('codigo', 'like', "%{$b}%")
-                  );
-            });
-        }
-
-        if ($request->filled('finca_id'))  $query->where('finca_id',  $request->finca_id);
-        if ($request->filled('tipo'))      $query->where('tipo',       $request->tipo);
-        if ($request->filled('estado'))    $query->where('estado',     $request->estado);
-        if ($request->filled('animal_id')) $query->where('animal_id',  $request->animal_id);
-
-        $registros = $query->orderBy('fecha_aplicacion', 'desc')
-                           ->paginate(10)
-                           ->withQueryString();
-
         $base = Salud::where('user_id', Auth::id());
+
         $estadisticas = [
             'total'          => (clone $base)->count(),
             'vacunaciones'   => (clone $base)->where('tipo', 'vacunacion')->count(),
@@ -55,11 +31,130 @@ class SaludController extends Controller
                 ->count(),
         ];
 
+        $categorias = [
+            [
+                'codigo'      => 'preventivo',
+                'nombre'      => 'Preventivo',
+                'icono'       => 'fa-shield-virus',
+                'descripcion' => 'Vacunación, vitaminización, desparasitación y bioseguridad.',
+                'items'       => ['Vacunación', 'Vitaminización', 'Desparasitación', 'Bioseguridad'],
+                'color_borde' => 'border-blue-400',
+                'gradiente'   => 'from-blue-500 to-blue-700',
+                'count'       => (clone $base)->where('categoria', 'preventivo')->count(),
+                'url'         => route('salud.preventivo'),
+            ],
+            [
+                'codigo'      => 'clinico',
+                'nombre'      => 'Clínico',
+                'icono'       => 'fa-stethoscope',
+                'descripcion' => 'Enfermedades, tratamientos, diagnósticos y cirugías.',
+                'items'       => ['Enfermedades', 'Tratamientos', 'Diagnósticos', 'Cirugías'],
+                'color_borde' => 'border-purple-400',
+                'gradiente'   => 'from-purple-500 to-purple-700',
+                'count'       => (clone $base)->where('categoria', 'clinico')->count(),
+                'url'         => route('salud.clinico'),
+            ],
+            [
+                'codigo'      => 'reproductivo',
+                'nombre'      => 'Reproductivo Sanitario',
+                'icono'       => 'fa-venus-mars',
+                'descripcion' => 'Sincronización, hormonas, protocolos y preparación IATF.',
+                'items'       => ['Sincronización', 'Hormonas', 'Protocolos', 'Preparación IATF'],
+                'color_borde' => 'border-pink-400',
+                'gradiente'   => 'from-pink-500 to-pink-700',
+                'count'       => (clone $base)->where('categoria', 'reproductivo')->count(),
+                'url'         => route('salud.reproductivo'),
+            ],
+            [
+                'codigo'      => 'seguimiento',
+                'nombre'      => 'Seguimiento',
+                'icono'       => 'fa-calendar-check',
+                'descripcion' => 'Alertas, próximas aplicaciones, carencias y controles.',
+                'items'       => ['Alertas', 'Próximas aplicaciones', 'Carencias', 'Controles'],
+                'color_borde' => 'border-yellow-400',
+                'gradiente'   => 'from-yellow-500 to-yellow-700',
+                'count'       => (clone $base)->where('categoria', 'seguimiento')->count(),
+                'url'         => route('salud.seguimiento'),
+            ],
+        ];
+
+        return view('salud.index', compact('estadisticas', 'categorias'));
+    }
+
+    // ─── Método reutilizable para vistas de categoría ──────────────────────────
+
+    private function listadoPorCategoria(string $categoria, string $titulo, string $descripcion)
+    {
+        $query = Salud::with(['animal', 'finca'])
+            ->where('user_id', Auth::id())
+            ->where('categoria', $categoria);
+
+        // Filtros (exactamente los mismos que tenía el index original)
+        if (request()->filled('buscar')) {
+            $b = request('buscar');
+            $query->where(function ($q) use ($b) {
+                $q->where('codigo', 'like', "%{$b}%")
+                  ->orWhere('nombre_producto', 'like', "%{$b}%")
+                  ->orWhere('veterinario', 'like', "%{$b}%")
+                  ->orWhereHas('animal', fn($a) =>
+                      $a->where('nombre', 'like', "%{$b}%")
+                        ->orWhere('codigo', 'like', "%{$b}%")
+                  );
+            });
+        }
+
+        if (request()->filled('finca_id'))  $query->where('finca_id',  request('finca_id'));
+        if (request()->filled('tipo'))      $query->where('tipo',       request('tipo'));
+        if (request()->filled('estado'))    $query->where('estado',     request('estado'));
+        if (request()->filled('animal_id')) $query->where('animal_id',  request('animal_id'));
+
+        $registros = $query->orderBy('fecha_aplicacion', 'desc')
+                           ->paginate(10)
+                           ->appends(request()->query());
+
         $fincas  = Finca::where('user_id', Auth::id())->orderBy('nombre')->get();
         $tipos   = Salud::getTipos();
         $estados = Salud::getEstados();
 
-        return view('salud.index', compact('registros', 'estadisticas', 'fincas', 'tipos', 'estados'));
+        return view('salud.categoria', compact(
+            'registros', 'fincas', 'tipos', 'estados', 'categoria', 'titulo', 'descripcion'
+        ));
+    }
+
+    public function preventivo()
+    {
+        return $this->listadoPorCategoria(
+            'preventivo',
+            'Preventivo',
+            'Vacunaciones, vitaminización, desparasitación y bioseguridad.'
+        );
+    }
+
+    public function clinico()
+    {
+        return $this->listadoPorCategoria(
+            'clinico',
+            'Clínico',
+            'Enfermedades, tratamientos, diagnósticos y cirugías.'
+        );
+    }
+
+    public function reproductivo()
+    {
+        return $this->listadoPorCategoria(
+            'reproductivo',
+            'Reproductivo Sanitario',
+            'Sincronización, hormonas, protocolos y preparación IATF.'
+        );
+    }
+
+    public function seguimiento()
+    {
+        return $this->listadoPorCategoria(
+            'seguimiento',
+            'Seguimiento',
+            'Alertas, próximas aplicaciones, carencias y controles.'
+        );
     }
 
     // ─── create ────────────────────────────────────────────────────────────────
@@ -95,7 +190,7 @@ class SaludController extends Controller
         $validated = $request->validate([
             'animal_id'            => 'required|exists:animales,id',
             'finca_id'             => 'required|exists:fincas,id',
-            'tipo'                 => 'required|in:vacunacion,desparasitacion,tratamiento,cirugia,revision,otro',
+            'tipo'                 => 'required|in:vacunacion,vitaminizacion,desparasitacion,bioseguridad,enfermedad,tratamiento,diagnostico,cirugia,revision,sincronizacion,hormonas,protocolo,preparacion_iatf,alerta,control,carencia,otro',
             'nombre_producto'      => 'required|string|max:255',
             'enfermedad_prevenida' => 'nullable|string|max:255',
             'diagnostico'          => 'nullable|string|max:2000',
@@ -128,6 +223,7 @@ class SaludController extends Controller
         $validated['user_id'] = Auth::id();
         $validated['codigo']  = Salud::generarCodigo();
 
+        // La categoría se asigna automáticamente en el modelo (booted)
         Salud::create($validated);
 
         return redirect()
@@ -182,7 +278,7 @@ class SaludController extends Controller
         $validated = $request->validate([
             'animal_id'            => 'required|exists:animales,id',
             'finca_id'             => 'required|exists:fincas,id',
-            'tipo'                 => 'required|in:vacunacion,desparasitacion,tratamiento,cirugia,revision,otro',
+            'tipo'                 => 'required|in:vacunacion,vitaminizacion,desparasitacion,bioseguridad,enfermedad,tratamiento,diagnostico,cirugia,revision,sincronizacion,hormonas,protocolo,preparacion_iatf,alerta,control,carencia,otro',
             'nombre_producto'      => 'required|string|max:255',
             'enfermedad_prevenida' => 'nullable|string|max:255',
             'diagnostico'          => 'nullable|string|max:2000',
@@ -207,6 +303,12 @@ class SaludController extends Controller
         } else {
             $validated['fin_carencia'] = null;
         }
+
+        // La categoría se actualizará automáticamente porque el modelo la recalcula en el evento updating (si quieres ese comportamiento).
+        // Si no quieres que se actualice al editar, puedes forzarla manualmente o usar el mismo booted.
+        // Actualmente no hay evento updating, por lo que la categoría no cambiará al editar el tipo. Si quieres que sí lo haga,
+        // agrega static::updating(...) en el modelo. Aquí lo forzamos manualmente:
+        $validated['categoria'] = Salud::getCategoriaPorTipo($validated['tipo']);
 
         $registro->update($validated);
 
