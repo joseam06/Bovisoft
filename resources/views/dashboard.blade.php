@@ -97,31 +97,39 @@
         <div class="h-2 bg-gradient-to-r from-orange-600 to-red-700"></div>
     </div>
 
+
     <!-- Alertas Card -->
     <div class="stat-card rounded-2xl shadow-xl overflow-hidden card-hover border-4 border-white/50 animate-slide-up" style="animation-delay: 0.2s">
         <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-                <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <i class="fa-solid fa-bell text-white text-2xl"></i>
-                </div>
-                <div class="text-right">
-                    <p class="text-sm font-semibold text-gray-600 mb-1">Alertas Activas</p>
-                    <h3 class="text-4xl font-extrabold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">0</h3>
-                </div>
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <i class="fa-solid fa-bell text-white text-2xl"></i>
             </div>
-            <div class="flex items-center justify-between pt-4 border-t-2 border-yellow-100">
-                <span class="text-xs text-gray-600 flex items-center">
-                    <i class="fa-solid fa-check text-green-500 text-xs mr-2"></i>
-                    Sin pendientes
-                </span>
-                <a href="#" class="text-xs text-yellow-700 hover:text-yellow-800 font-semibold flex items-center group">
-                    Ver todas
-                    <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
-                </a>
+            <div class="text-right">
+                <p class="text-sm font-semibold text-gray-600 mb-1">Alertas Activas</p>
+                <h3 class="text-4xl font-extrabold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                    {{ $totalAlertas }}
+                </h3>
             </div>
         </div>
-        <div class="h-2 bg-gradient-to-r from-yellow-500 to-orange-600"></div>
+        <div class="flex items-center justify-between pt-4 border-t-2 border-yellow-100">
+            <span class="text-xs text-gray-600 flex items-center">
+                @if($totalAlertas > 0)
+                    <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-xs mr-2"></i>
+                    Requieren atención
+                @else
+                    <i class="fa-solid fa-check text-green-500 text-xs mr-2"></i>
+                    Sin pendientes
+                @endif
+            </span>
+            <a href="{{ route('alertas.index') }}" class="text-xs text-yellow-700 hover:text-yellow-800 font-semibold flex items-center group">
+                Ver todas
+                <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
+            </a>
+        </div>
     </div>
+    <div class="h-2 bg-gradient-to-r from-yellow-500 to-orange-600"></div>
+</div>
 
     <!-- Producción Card -->
     <div class="stat-card rounded-2xl shadow-xl overflow-hidden card-hover border-4 border-white/50 animate-slide-up" style="animation-delay: 0.3s">
@@ -290,22 +298,63 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
     
     <!-- Alertas Recientes -->
-    <div class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 card-hover">
-        <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-            <span class="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center mr-3 shadow-lg">
-                <i class="fa-solid fa-bell text-white text-sm"></i>
+    {{-- Alertas Recientes --}}
+<div class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 card-hover">
+    <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+        <span class="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center mr-3 shadow-lg">
+            <i class="fa-solid fa-bell text-white text-sm"></i>
+        </span>
+        Alertas Recientes
+        @if($totalAlertas > 0)
+            <span class="ml-auto text-xs bg-yellow-100 text-yellow-700 border border-yellow-300 font-bold px-2 py-1 rounded-full">
+                {{ $totalAlertas }}
             </span>
-            Alertas Recientes
-        </h2>
-        
-        <div class="text-center py-12">
-            <div class="w-20 h-20 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                <i class="fa-solid fa-check-circle text-green-600 text-3xl"></i>
+        @endif
+    </h2>
+
+    @if($alertasDashboard->isEmpty())
+        <div class="text-center py-10">
+            <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <i class="fa-solid fa-check-circle text-green-600 text-2xl"></i>
             </div>
-            <p class="text-gray-600 font-medium mb-2">Todo en orden</p>
-            <p class="text-sm text-gray-500">No hay alertas pendientes por el momento</p>
+            <p class="text-gray-600 font-medium text-sm">Todo en orden</p>
+            <p class="text-xs text-gray-400 mt-1">Sin alertas pendientes</p>
         </div>
-    </div>
+    @else
+        <div class="space-y-3">
+            @foreach($alertasDashboard as $alerta)
+            @php
+                $coloresCard = [
+                    'red'    => 'bg-red-50 border-red-200 text-red-600',
+                    'orange' => 'bg-orange-50 border-orange-200 text-orange-600',
+                    'yellow' => 'bg-yellow-50 border-yellow-200 text-yellow-600',
+                    'blue'   => 'bg-blue-50 border-blue-200 text-blue-600',
+                    'purple' => 'bg-purple-50 border-purple-200 text-purple-600',
+                    'teal'   => 'bg-teal-50 border-teal-200 text-teal-600',
+                ];
+                $cc = $coloresCard[$alerta['color']] ?? $coloresCard['blue'];
+            @endphp
+            <div class="flex items-center gap-3 p-3 {{ $cc }} border-2 rounded-xl">
+                <i class="fa-solid {{ $alerta['icono'] }} text-lg flex-shrink-0"></i>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold truncate">{{ $alerta['titulo'] }}</p>
+                    <p class="text-xs opacity-80 truncate">{{ $alerta['animal'] }}</p>
+                </div>
+                <a href="{{ route('salud.show', $alerta['salud_id']) }}"
+                   class="text-xs font-bold underline flex-shrink-0">Ver</a>
+            </div>
+            @endforeach
+        </div>
+
+        @if($totalAlertas > 5)
+        <a href="{{ route('alertas.index') }}"
+           class="mt-4 flex items-center justify-center w-full py-2.5 bg-gradient-to-r from-yellow-500 to-orange-600 text-white text-xs font-bold rounded-xl hover:from-yellow-600 hover:to-orange-700 transition-all shadow-md">
+            Ver todas las alertas ({{ $totalAlertas }})
+            <i class="fa-solid fa-arrow-right ml-2"></i>
+        </a>
+        @endif
+    @endif
+</div>
 
     <!-- Actividad Reciente -->
     <div class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 card-hover">

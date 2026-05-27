@@ -16,9 +16,7 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     
     // Rutas de Fincas
     Route::resource('fincas', FincaController::class);
@@ -51,6 +49,15 @@ Route::get('/api/fincas/{finca}/potreros', function($fincaId) {
 
     return response()->json($potreros);
 })->name('api.fincas.potreros');
+
+
+// Perfil de usuario
+Route::get('/perfil', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+Route::patch('/perfil', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+Route::patch('/perfil/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
+Route::post('/perfil/foto', [App\Http\Controllers\ProfileController::class, 'updatePhoto'])->name('profile.photo');
+Route::delete('/perfil/foto', [App\Http\Controllers\ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
+
 
 // Rutas de Animales
 Route::resource('animales', AnimalController::class);
@@ -132,20 +139,8 @@ Route::resource('salud', SaludController::class)->middleware('auth');
     })->name('finanzas.index');
     
     // Alertas
-    Route::get('/alertas', function () {
-        return view('en-desarrollo', [
-            'modulo' => 'Alertas',
-            'progreso' => '25',
-            'caracteristicas' => [
-                'Notificaciones automáticas',
-                'Alertas de vacunación pendiente',
-                'Avisos de partos próximos',
-                'Recordatorios de tratamientos',
-                'Alertas personalizables',
-                'Notificaciones por correo y SMS',
-            ]
-        ]);
-    })->name('alertas.index');
+    Route::get('/alertas', [App\Http\Controllers\AlertaController::class, 'index'])->name('alertas.index');
+    Route::get('/api/alertas/recientes', [App\Http\Controllers\AlertaController::class, 'apiRecientes'])->name('api.alertas.recientes');
     
     // Reportes
     Route::get('/reportes', function () {
