@@ -2,7 +2,7 @@
     @csrf
 
     <div>
-        <x-label for="name" value="Name" class="text-white/90" />
+        <x-label for="name" value="Nombre" class="text-white/90" />
         <x-input
             id="name"
             name="name"
@@ -17,7 +17,7 @@
     </div>
 
     <div>
-        <x-label for="email" value="Email" class="text-white/90" />
+        <x-label for="email" value="Correo electrónico" class="text-white/90" />
         <x-input
             id="email"
             name="email"
@@ -31,7 +31,7 @@
     </div>
 
     <div>
-        <x-label for="password" value="Password" class="text-white/90" />
+        <x-label for="password" value="Contraseña" class="text-white/90" />
         <x-input
             id="password"
             name="password"
@@ -44,7 +44,7 @@
     </div>
 
     <div>
-        <x-label for="password_confirmation" value="Confirm Password" class="text-white/90" />
+        <x-label for="password_confirmation" value="Confirmar contraseña" class="text-white/90" />
         <x-input
             id="password_confirmation"
             name="password_confirmation"
@@ -62,7 +62,7 @@
         </button>
 
         <button class="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-600 text-white font-semibold shadow">
-            REGISTER
+            REGISTRARSE
         </button>
     </div>
 </form>

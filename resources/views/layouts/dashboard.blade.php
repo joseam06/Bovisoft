@@ -268,12 +268,12 @@
         </main>
         
         <!-- FOOTER -->
-        <footer class="glass-effect mt-8 py-6 text-center border-t-2 border-red-200">
-            <div class="flex items-center justify-center gap-3 mb-2">
-                <img src="{{ asset('images/logo.png') }}" alt="Bovisoft Logo" class="w-8 h-8 object-contain">
-                <span class="font-bold text-lg text-gray-800">Bovisoft</span>
+        <footer class="glass-effect mt-8 py-6 text-center border-t-2 border-red-300">
+            <div class="flex items-center justify-center gap-1 mb-2">
+                <img src="{{ asset('images/logoblackred.png') }}" alt="Bovisoft Logo" class="w-8 h-8 object-contain">
+                <span class="font-bold text-lg text-gray-800">BoviSoft</span>
             </div>
-            <p class="text-gray-600 text-sm">© 2025 Bovisoft - Gestión Ganadera Inteligente</p>
+            <p class="text-gray-600 text-sm">© 2025 BoviSoft - Gestión Ganadera Inteligente</p>
             <p class="text-xs text-gray-500 mt-1">Desarrollado para ganaderos colombianos</p>
         </footer>
     </div>

@@ -3,15 +3,30 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bovisoft - Gestión Inteligente Ganadera</title>
+    <title>BoviSoft - Gestión Inteligente Ganadera</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
         body {
             font-family: 'Inter', sans-serif;
             background: linear-gradient(135deg, #7c2d12 0%, #991b1b 25%, #dc2626 50%, #b91c1c 75%, #450a0a 100%);
             background-attachment: fixed;
+        }
+        
+        /* Navbar flotante */
+        .navbar-scrolled {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 0.75rem 0;
         }
         
         .section-divider {
@@ -20,52 +35,92 @@
         }
         
         .card-hover {
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         .card-hover:hover {
             transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
         }
         
         .feature-icon {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 3rem;
-            height: 3rem;
-            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-            border-radius: 12px;
+            width: 3.5rem;
+            height: 3.5rem;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border-radius: 14px;
             color: white;
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-right: 1rem;
-            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+            font-size: 1.75rem;
+            box-shadow: 0 8px 16px rgba(220, 38, 38, 0.3);
+        }
+        
+        .stat-number {
+            background: linear-gradient(135deg, #ffffff 0%, #fee2e2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Animación de scroll suave */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Gradiente animado */
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .animated-gradient {
+            background: linear-gradient(270deg, #dc2626, #991b1b, #7c2d12, #450a0a);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
         }
     </style>
 </head>
 <body class="text-gray-800">
 
-    <!-- HEADER / NAV -->
-    <header class="fixed w-full top-0 left-0 bg-white/95 backdrop-blur-md shadow-lg z-50 border-b border-red-100">
-        <div class="max-w-7xl mx-auto flex items-center justify-between p-4">
-            <div class="flex items-center gap-3">
-                <img src="/images/logo.png" alt="Logo Bovisoft" class="w-12 h-12 object-contain" />
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent">Bovisoft</h1>
+    <!-- HEADER / NAV (con efecto flotante) -->
+    <header id="mainNav" class="fixed w-full top-0 left-0 bg-white/95 backdrop-blur-md shadow-md z-50 border-b border-red-100 transition-all duration-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+        
+        <div class="flex items-center gap-3">
+            <img src="/images/logored.png" alt="Logo Bovisoft" class="w-12 h-12 object-contain" />
+                <div>
+                    <h1 class="text-2xl font-extrabold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent">Bovisoft</h1>
+                    <p class="text-xs text-gray-500 font-medium">Gestión Ganadera</p>
+                </div>
             </div>
-            <nav class="hidden md:flex gap-8 text-gray-700 font-medium">
-                <a href="#inicio" class="hover:text-red-600 transition-colors">Inicio</a>
-                <a href="#beneficios" class="hover:text-red-600 transition-colors">Beneficios</a>
-                <a href="#caracteristicas" class="hover:text-red-600 transition-colors">Características</a>
-                <a href="#contacto" class="hover:text-red-600 transition-colors">Contacto</a>
+            <nav class="hidden md:flex gap-8 text-gray-700 font-semibold">
+                <a href="#inicio" class="hover:text-red-600 transition-colors relative group">
+                    Inicio
+                    <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all"></span>
+                </a>
+                <a href="#beneficios" class="hover:text-red-600 transition-colors relative group">
+                    Beneficios
+                    <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all"></span>
+                </a>
+                <a href="#caracteristicas" class="hover:text-red-600 transition-colors relative group">
+                    Características
+                    <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all"></span>
+                </a>
+                <a href="#contacto" class="hover:text-red-600 transition-colors relative group">
+                    Contacto
+                    <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all"></span>
+                </a>
             </nav>
             <button type="button" data-open="login"
-                class="px-6 py-2.5 bg-gradient-to-r from-red-800 to-red-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-red-900 hover:to-red-800 transition-all">
-                Iniciar sesión
+                class="px-6 py-2.5 bg-gradient-to-r from-red-700 to-red-800 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:from-red-800 hover:to-red-900 transition-all transform hover:scale-105">
+                <i class="fas fa-sign-in-alt mr-2"></i>Iniciar sesión
             </button>
         </div>
     </header>
 
+   
     <!-- HERO -->
     <section id="inicio" class="pt-32 pb-24 bg-gradient-to-r from-red-700 to-black text-white relative overflow-hidden">
         <!-- Decorative elements -->
@@ -77,8 +132,8 @@
                 <div class="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-semibold border border-white/20">
                     🐄 Solución integral para ganaderos
                 </div>
-                <h2 class="text-5xl md:text-6xl font-extrabold leading-tight">
-                    La plataforma <span class="text-red-200">inteligente</span> para la gestión ganadera
+                <h2 class="text-6xl md:text-7xl font-black leading-tight">
+                    La plataforma <span class="stat-number">inteligente</span> para la gestión ganadera
                 </h2>
                 <p class="text-xl text-red-50 leading-relaxed">
                     Bovisoft te permite administrar tu finca, animales, producción, ventas y reportes desde un solo lugar de manera eficiente y profesional.
@@ -88,9 +143,10 @@
                         class="px-8 py-4 bg-white text-red-900 font-bold rounded-xl shadow-2xl hover:shadow-red-500/50 hover:scale-105 transition-all">
                         Comenzar ahora →
                     </button>
-                    <a href="#beneficios" class="px-8 py-4 bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 transition-all">
-                        Ver más
+                    <a href="#beneficios"class="px-8 py-4 bg-red-900 border-2 border-red-400/40 text-white font-bold rounded-xl shadow-2xl hover:shadow-red-500/50 hover:scale-105 transition-all">
+                        <i class="fas fa-info-circle mr-2"></i>Ver más
                     </a>
+                   
                 </div>
                 
                 <!-- Stats -->
@@ -116,19 +172,23 @@
             </div>
         </div>
     </section>
+    
 
     <!-- Separador -->
     <div class="section-divider my-8"></div>
+    <!-- BENEFICIOS -->   
+    <!-- pt (espacio debajo del separador o inicio de la seccion) --> <!-- pt (espacio antes del separador o final de la seccion) -->                   
+    <section id="beneficios" class="pt-32 pb-24 bg-gradient-to-r from-red-700 to-black text-white relative overflow-hidden">
 
-    <!-- BENEFICIOS -->
-    <section id="beneficios" class="py-24 bg-white/95 backdrop-blur-sm mx-4 md:mx-8 rounded-3xl shadow-2xl border-4 border-white/50">
-    <div class="max-w-7xl mx-auto px-6">
-        <div class="text-center mb-16">
-            <span class="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-base font-semibold mb-4">
-                Ventajas competitivas
-            </span>
-                <h3 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">¿Por qué usar Bovisoft?</h3>
-                <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+    <div class="py-16 bg-white/10 backdrop-blur-sm mx-4 md:mx-8 rounded-3xl border-2 border-white/20 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-6">
+
+            <div class="text-center mb-16">
+                <span class="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-base font-semibold mb-4">
+                    Ventajas competitivas
+                </span>
+                <h3 class="text-4xl md:text-5xl font-bold text-white mb-4">¿Por qué usar Bovisoft?</h3>
+                <p class="text-xl text-white max-w-2xl mx-auto">
                     Optimiza tu operación ganadera con tecnología de punta
                 </p>
             </div>
@@ -258,7 +318,7 @@
             <p class="text-xl text-gray-600 mb-10">
                 ¿Tienes dudas? ¿Quieres una demo? Estamos listos para ayudarte a transformar tu gestión ganadera.
             </p>
-            <a href="mailto:contacto@bovisoft.com" 
+            <a href="mailto:monterrosa@bovisoft.com" 
                class="inline-block px-10 py-4 bg-gradient-to-r from-green-600 to-green-500 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:from-green-700 hover:to-green-600 transition-all transform hover:scale-105">
                 📧 Enviar correo
             </a>
@@ -290,163 +350,191 @@
     <!-- FOOTER -->
     <footer class="py-12 bg-black/60 backdrop-blur-md text-white text-center border-t-4 border-white/20">
         <div class="max-w-7xl mx-auto px-6">
-            <div class="flex items-center justify-center gap-2 mb-4">
-                <img src="/images/logo.png" alt="Logo Bovisoft" class="w-8 h-8 object-contain" />
-                <span class="font-bold text-lg">Bovisoft</span>
+            <div class="flex items-center justify-center gap-1 mb-4">
+                <img src="/images/logowhite.png" alt="Logo Bovisoft" class="w-8 h-8 object-contain" />
+                <span class="font-bold text-lg">BoviSoft</span>
             </div>
-            <p class="text-gray-400">© 2025 Bovisoft - Gestión Ganadera Inteligente</p>
+            <p class="text-gray-400">© 2025 BoviSoft - Gestión Ganadera Inteligente</p>
             <p class="text-sm text-gray-500 mt-2">Desarrollado para ganaderos colombianos</p>
         </div>
     </footer>
 
-<!-- OVERLAY AUTH (Login/Register) -->
-<div id="authOverlay" class="fixed inset-0 z-[999] hidden" aria-hidden="true">
+    <!-- OVERLAY AUTH MEJORADO -->
+    <div id="authOverlay" class="fixed inset-0 z-[999] hidden" aria-hidden="true">
+        <!-- Fondo -->
+        <div id="authBackdrop" class="absolute inset-0 bg-black/80 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
 
-  <!-- Fondo -->
-  <div id="authBackdrop"
-       class="absolute inset-0 bg-black/70 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+        <!-- Contenido centrado -->
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div id="authPanel"
+                 class="w-full max-w-md rounded-3xl border-2 border-white/20
+                        bg-gradient-to-br from-red-800/40 via-black/60 to-gray-900/40
+                        backdrop-blur-2xl shadow-2xl
+                        transform scale-95 translate-y-4 opacity-0
+                        transition-all duration-300">
 
-  <!-- Contenido centrado -->
-  <div class="relative min-h-screen flex items-center justify-center p-4">
-    <div id="authPanel"
-         class="w-full max-w-md rounded-2xl border border-white/15
-                bg-gradient-to-r from-red-700/30 to-black/30
-                backdrop-blur-2xl shadow-2xl
-                transform scale-95 translate-y-3 opacity-0
-                transition-all duration-300">
-
-      <div class="p-6">
-        <!-- Header -->
-        <div class="flex items-start justify-between gap-4 mb-5">
-          <div class="flex items-center gap-3">
-            <img src="/images/logo.png" class="h-10 w-10 object-contain" alt="Bovisoft">
-            <div>
-              <h3 class="text-white text-xl font-extrabold leading-tight">Bovisoft</h3>
-              <p id="authSubtitle" class="text-white/70 text-sm">Accede a tu cuenta</p>
+                <div class="p-8">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between gap-4 mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-3">
+                 <img src="/images/logored.png" alt="Logo Bovisoft" class="w-12 h-12 object-contain" />
+                 <div class="flex flex-col">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent">Bovisoft</h1>
+                <p class="text-xs text-gray-400 font-medium">Gestión Ganadera</p>
+                </div>
+             <div>      </div>
+             <div>      </div>
+                <h5 id="authSubtitle" class="text-white/80 text-sm font-medium">Accede a tu cuenta</h5>
+          
             </div>
-          </div>
+            
+                        </div>
+                        <button id="authClose" class="text-white/70 hover:text-white text-3xl leading-none transition-colors">&times;</button>
+                    </div>
 
-          <button id="authClose" class="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+                    <!-- Tabs MEJORADOS -->
+                    <div class="flex gap-3 mb-8 bg-white/5 p-1.5 rounded-xl">
+                        <button id="tabLogin"
+                                class="flex-1 px-4 py-3 rounded-lg text-sm font-bold transition-all
+                                       bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Login
+                        </button>
+                        <button id="tabRegister"
+                                class="flex-1 px-4 py-3 rounded-lg text-sm font-bold
+                                       bg-transparent text-white/70 hover:text-white transition-all">
+                                <i class="fas fa-user-plus mr-2"></i>Registro
+                        </button>
+                    </div>
+
+                    <!-- Mensajes de error (NO se cierra el overlay) -->
+                    <div class="mb-6">
+                        @if ($errors->any())
+                        <div class="bg-red-500/20 border-2 border-red-500/50 rounded-xl p-4 backdrop-blur-sm">
+                            <div class="flex items-center gap-3 text-white">
+                                <i class="fas fa-exclamation-triangle text-2xl"></i>
+                                <div class="flex-1">
+                                    <p class="font-bold mb-1">Credenciales incorrectas</p>
+                                    @foreach ($errors->all() as $error)
+                                    <p class="text-sm text-red-100">{{ $error }}</p>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+
+                    <!-- Contenido de formularios -->
+                    <div id="panelLogin" class="block">
+                        @include('auth.partials.login-form')
+                    </div>
+
+                    <div id="panelRegister" class="hidden">
+                        @include('auth.partials.register-form')
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <!-- Tabs -->
-        <div class="flex gap-2 mb-5">
-          <button id="tabLogin"
-                  class="flex-1 px-3 py-2 rounded-lg text-sm font-semibold bg-white/10 text-white hover:bg-white/15">
-            Login
-          </button>
-          <button id="tabRegister"
-                  class="flex-1 px-3 py-2 rounded-lg text-sm font-semibold bg-white/5 text-white/80 hover:bg-white/15">
-            Registro
-          </button>
-        </div>
-
-        <!-- Contenido -->
-        <div class="mb-4">
-    @include('auth.partials.errors')
-</div>
-
-<div id="panelLogin" class="block">
-    @include('auth.partials.login-form')
-</div>
-
-<div id="panelRegister" class="hidden">
-    @include('auth.partials.register-form')
-</div>
-
-      </div>
-
     </div>
-  </div>
-</div>
 
-<script>
-(function () {
-  const overlay = document.getElementById('authOverlay');
-  const backdrop = document.getElementById('authBackdrop');
-  const panel = document.getElementById('authPanel');
-  const closeBtn = document.getElementById('authClose');
-
-  const tabLogin = document.getElementById('tabLogin');
-  const tabRegister = document.getElementById('tabRegister');
-  const panelLogin = document.getElementById('panelLogin');
-  const panelRegister = document.getElementById('panelRegister');
-  const subtitle = document.getElementById('authSubtitle');
-
-  function setTab(which) {
-    const loginActive = which === 'login';
-    panelLogin.classList.toggle('hidden', !loginActive);
-    panelRegister.classList.toggle('hidden', loginActive);
-
-    tabLogin.classList.toggle('bg-white/10', loginActive);
-    tabLogin.classList.toggle('bg-white/5', !loginActive);
-    tabLogin.classList.toggle('text-white', loginActive);
-    tabLogin.classList.toggle('text-white/80', !loginActive);
-
-    tabRegister.classList.toggle('bg-white/10', !loginActive);
-    tabRegister.classList.toggle('bg-white/5', loginActive);
-    tabRegister.classList.toggle('text-white', !loginActive);
-    tabRegister.classList.toggle('text-white/80', loginActive);
-
-    subtitle.textContent = loginActive ? 'Accede a tu cuenta' : 'Crea tu cuenta';
-  }
-
-  function openOverlay(which) {
-    overlay.classList.remove('hidden');
-    overlay.setAttribute('aria-hidden', 'false');
-    setTab(which);
-
-    requestAnimationFrame(() => {
-      backdrop.classList.remove('opacity-0');
-      backdrop.classList.add('opacity-100');
-
-      panel.classList.remove('opacity-0', 'scale-95', 'translate-y-3');
-      panel.classList.add('opacity-100', 'scale-100', 'translate-y-0');
+    <script>
+    // Navbar flotante 
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('mainNav');
+        if (window.scrollY > 80) {
+            nav.classList.add('navbar-scrolled');
+        } else {
+            nav.classList.remove('navbar-scrolled');
+        }
     });
 
-    document.addEventListener('keydown', onEsc);
-  }
+    // Overlay mejorado con tabs activos
+    (function () {
+        const overlay = document.getElementById('authOverlay');
+        const backdrop = document.getElementById('authBackdrop');
+        const panel = document.getElementById('authPanel');
+        const closeBtn = document.getElementById('authClose');
 
-  function closeOverlay() {
-    backdrop.classList.remove('opacity-100');
-    backdrop.classList.add('opacity-0');
+        const tabLogin = document.getElementById('tabLogin');
+        const tabRegister = document.getElementById('tabRegister');
+        const panelLogin = document.getElementById('panelLogin');
+        const panelRegister = document.getElementById('panelRegister');
+        const subtitle = document.getElementById('authSubtitle');
 
-    panel.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
-    panel.classList.add('opacity-0', 'scale-95', 'translate-y-3');
+        function setTab(which) {
+            const loginActive = which === 'login';
+            panelLogin.classList.toggle('hidden', !loginActive);
+            panelRegister.classList.toggle('hidden', loginActive);
 
-    document.removeEventListener('keydown', onEsc);
+            if (loginActive) {
+                tabLogin.className = 'flex-1 px-4 py-3 rounded-lg text-sm font-bold transition-all bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg';
+                tabRegister.className = 'flex-1 px-4 py-3 rounded-lg text-sm font-bold bg-transparent text-white/70 hover:text-white transition-all';
+            } else {
+                tabRegister.className = 'flex-1 px-4 py-3 rounded-lg text-sm font-bold transition-all bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg';
+                tabLogin.className = 'flex-1 px-4 py-3 rounded-lg text-sm font-bold bg-transparent text-white/70 hover:text-white transition-all';
+            }
 
-    setTimeout(() => {
-      overlay.classList.add('hidden');
-      overlay.setAttribute('aria-hidden', 'true');
-    }, 280);
-  }
+            subtitle.textContent = loginActive ? 'Accede a tu cuenta' : 'Crea tu cuenta gratis';
+        }
 
-  function onEsc(e) {
-    if (e.key === 'Escape') closeOverlay();
-  }
+        function openOverlay(which) {
+            overlay.classList.remove('hidden');
+            overlay.setAttribute('aria-hidden', 'false');
+            setTab(which);
 
-  // Abrir con data-open
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-open]');
-    if (!btn) return;
+            requestAnimationFrame(() => {
+                backdrop.classList.remove('opacity-0');
+                backdrop.classList.add('opacity-100');
+                panel.classList.remove('opacity-0', 'scale-95', 'translate-y-4');
+                panel.classList.add('opacity-100', 'scale-100', 'translate-y-0');
+            });
 
-    const which = btn.getAttribute('data-open');
-    if (which === 'login' || which === 'register') {
-      e.preventDefault();
-      openOverlay(which);
-    }
-  });
+            document.addEventListener('keydown', onEsc);
+        }
 
-  // Tabs
-  tabLogin.addEventListener('click', () => setTab('login'));
-  tabRegister.addEventListener('click', () => setTab('register'));
+        function closeOverlay() {
+            backdrop.classList.remove('opacity-100');
+            backdrop.classList.add('opacity-0');
+            panel.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
+            panel.classList.add('opacity-0', 'scale-95', 'translate-y-4');
+            document.removeEventListener('keydown', onEsc);
 
-  // Cerrar
-  closeBtn.addEventListener('click', closeOverlay);
-  backdrop.addEventListener('click', closeOverlay);
-})();
-</script>
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                overlay.setAttribute('aria-hidden', 'true');
+            }, 300);
+        }
+
+        function onEsc(e) {
+            if (e.key === 'Escape') closeOverlay();
+        }
+
+        // Abrir con data-open
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-open]');
+            if (!btn) return;
+
+            const which = btn.getAttribute('data-open');
+            if (which === 'login' || which === 'register') {
+                e.preventDefault();
+                openOverlay(which);
+            }
+        });
+
+        // Tabs
+        tabLogin.addEventListener('click', () => setTab('login'));
+        tabRegister.addEventListener('click', () => setTab('register'));
+
+        // Cerrar
+        closeBtn.addEventListener('click', closeOverlay);
+        backdrop.addEventListener('click', closeOverlay);
+
+        // Abrir overlay automáticamente si hay errores
+        @if ($errors->any())
+            openOverlay('login');
+        @endif
+    })();
+    </script>
 
 </body>
 </html>

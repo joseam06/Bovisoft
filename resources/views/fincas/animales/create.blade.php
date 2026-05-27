@@ -45,11 +45,8 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fa-solid fa-barcode text-gray-400"></i>
                             </div>
-                            <input type="text"
-                                   name="codigo"
-                                   id="codigo"
-                                   value="{{ old('codigo', $codigo) }}"
-                                   readonly
+                            <input type="text" name="codigo" id="codigo"
+                                   value="{{ old('codigo', $codigo) }}" readonly
                                    class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl bg-gray-100 cursor-not-allowed font-mono text-lg text-gray-600">
                         </div>
                         <p class="text-gray-500 text-xs mt-1">Generado automáticamente</p>
@@ -69,9 +66,7 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fa-solid fa-hashtag text-gray-400"></i>
                             </div>
-                            <input type="text"
-                                   name="numero"
-                                   id="numero"
+                            <input type="text" name="numero" id="numero"
                                    value="{{ old('numero') }}"
                                    placeholder="Número asignado por el veterinario"
                                    class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('numero') border-red-500 @enderror">
@@ -92,9 +87,7 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fa-solid fa-tag text-gray-400"></i>
                             </div>
-                            <input type="text"
-                                   name="nombre"
-                                   id="nombre"
+                            <input type="text" name="nombre" id="nombre"
                                    value="{{ old('nombre') }}"
                                    placeholder="Ej: La Morena, Manchada..."
                                    class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('nombre') border-red-500 @enderror">
@@ -115,15 +108,11 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fa-solid fa-cow text-gray-400"></i>
                             </div>
-                            <select name="tipo"
-                                    id="tipo"
-                                    required
+                            <select name="tipo" id="tipo" required
                                     class="w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('tipo') border-red-500 @enderror">
                                 <option value="">Seleccione un tipo</option>
                                 @foreach($tipos as $key => $valor)
-                                    <option value="{{ $key }}" {{ old('tipo') == $key ? 'selected' : '' }}>
-                                        {{ $valor }}
-                                    </option>
+                                    <option value="{{ $key }}" {{ old('tipo') == $key ? 'selected' : '' }}>{{ $valor }}</option>
                                 @endforeach
                             </select>
                             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -146,9 +135,7 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fa-solid fa-venus-mars text-gray-400"></i>
                             </div>
-                            <select name="sexo"
-                                    id="sexo"
-                                    required
+                            <select name="sexo" id="sexo" required
                                     class="w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('sexo') border-red-500 @enderror">
                                 <option value="">Seleccione el sexo</option>
                                 <option value="hembra" {{ old('sexo') == 'hembra' ? 'selected' : '' }}>♀ Hembra</option>
@@ -174,9 +161,7 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fa-solid fa-circle-check text-gray-400"></i>
                             </div>
-                            <select name="estado"
-                                    id="estado"
-                                    required
+                            <select name="estado" id="estado" required
                                     class="w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('estado') border-red-500 @enderror">
                                 <option value="activo"  {{ old('estado', 'activo') == 'activo'  ? 'selected' : '' }}>✅ Activo</option>
                                 <option value="vendido" {{ old('estado') == 'vendido' ? 'selected' : '' }}>💰 Vendido</option>
@@ -202,14 +187,11 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fa-solid fa-dna text-gray-400"></i>
                             </div>
-                            <select name="raza"
-                                    id="raza"
+                            <select name="raza" id="raza"
                                     class="w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('raza') border-red-500 @enderror">
                                 <option value="">Seleccione una raza</option>
                                 @foreach($razas as $key => $valor)
-                                    <option value="{{ $key }}" {{ old('raza') == $key ? 'selected' : '' }}>
-                                        {{ $valor }}
-                                    </option>
+                                    <option value="{{ $key }}" {{ old('raza') == $key ? 'selected' : '' }}>{{ $valor }}</option>
                                 @endforeach
                             </select>
                             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
@@ -232,9 +214,7 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fa-solid fa-palette text-gray-400"></i>
                             </div>
-                            <input type="text"
-                                   name="color"
-                                   id="color"
+                            <input type="text" name="color" id="color"
                                    value="{{ old('color') }}"
                                    placeholder="Ej: Negro con blanco, Marrón..."
                                    class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('color') border-red-500 @enderror">
@@ -256,7 +236,6 @@
                     </span>
                     <h2 class="text-2xl font-bold text-gray-800">Datos Complementarios</h2>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- Fecha de Nacimiento -->
                     <div>
@@ -267,9 +246,7 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fa-solid fa-calendar text-gray-400"></i>
                             </div>
-                            <input type="date"
-                                   name="fecha_nacimiento"
-                                   id="fecha_nacimiento"
+                            <input type="date" name="fecha_nacimiento" id="fecha_nacimiento"
                                    value="{{ old('fecha_nacimiento') }}"
                                    max="{{ date('Y-m-d') }}"
                                    class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('fecha_nacimiento') border-red-500 @enderror">
@@ -290,14 +267,9 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="fa-solid fa-weight-scale text-gray-400"></i>
                             </div>
-                            <input type="number"
-                                   name="peso_actual"
-                                   id="peso_actual"
+                            <input type="number" name="peso_actual" id="peso_actual"
                                    value="{{ old('peso_actual') }}"
-                                   step="0.01"
-                                   min="0"
-                                   max="9999.99"
-                                   placeholder="0.00"
+                                   step="0.01" min="0" max="9999.99" placeholder="0.00"
                                    class="w-full pl-12 pr-16 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('peso_actual') border-red-500 @enderror">
                             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                                 <span class="text-gray-500 font-medium">kg</span>
@@ -332,9 +304,7 @@
                                 <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                     <i class="fa-solid fa-home text-gray-400"></i>
                                 </div>
-                                <select name="finca_id"
-                                        id="finca_id"
-                                        required
+                                <select name="finca_id" id="finca_id" required
                                         class="w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('finca_id') border-red-500 @enderror">
                                     <option value="">Seleccione una finca</option>
                                     @foreach($fincas as $finca)
@@ -377,18 +347,19 @@
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <i class="fa-solid fa-map text-gray-400"></i>
+                                <i class="fa-solid fa-map text-gray-400" id="potrero-icon"></i>
                             </div>
-                            <select name="potrero_id"
-                                    id="potrero_id"
-                                    class="w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all">
-                                <option value="">Selecciona un potrero</option>
+                            <select name="potrero_id" id="potrero_id" disabled
+                                    class="w-full pl-12 pr-10 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-500 appearance-none transition-all cursor-not-allowed">
+                                <option value="">— Primero selecciona una finca —</option>
                             </select>
                             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                                 <i class="fa-solid fa-chevron-down text-gray-400"></i>
                             </div>
                         </div>
-                        <p id="potrero-message" class="text-gray-500 text-xs mt-1">Primero selecciona una finca</p>
+                        <p id="potrero-message" class="text-gray-400 text-xs mt-1 flex items-center gap-1">
+                            <i class="fa-solid fa-circle-info"></i> Selecciona una finca para ver los potreros
+                        </p>
                         @error('potrero_id')
                             <p class="text-red-600 text-sm mt-2 flex items-center">
                                 <i class="fa-solid fa-circle-exclamation mr-1"></i>{{ $message }}
@@ -410,9 +381,7 @@
                     <label for="observaciones" class="block text-sm font-bold text-gray-700 mb-2">
                         Notas Adicionales <span class="text-gray-500 font-normal">(Opcional)</span>
                     </label>
-                    <textarea name="observaciones"
-                              id="observaciones"
-                              rows="4"
+                    <textarea name="observaciones" id="observaciones" rows="4"
                               placeholder="Información adicional relevante sobre el animal..."
                               class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all resize-none @error('observaciones') border-red-500 @enderror">{{ old('observaciones') }}</textarea>
                     @error('observaciones')
@@ -439,38 +408,95 @@
     </div>
 </div>
 
-@push('scripts')
+{{-- ═══ SCRIPT INLINE — fuera del @section para que Blade siempre lo procese ═══ --}}
 <script>
-    document.getElementById('finca_id').addEventListener('change', function () {
-        const fincaId = this.value;
-        const potreroSelect = document.getElementById('potrero_id');
-        const message = document.getElementById('potrero-message');
+(function () {
+    // ── referencias DOM ──────────────────────────────────────────────────────
+    var fincaSelect   = document.getElementById('finca_id');
+    var potreroSelect = document.getElementById('potrero_id');
+    var msgEl         = document.getElementById('potrero-message');
 
-        potreroSelect.innerHTML = '<option value="">Cargando...</option>';
+    if (!fincaSelect || !potreroSelect) return; // guard: finca no renderizada (sin fincas)
 
-        if (fincaId) {
-            fetch(`/api/fincas/${fincaId}/potreros`)
-                .then(r => r.json())
-                .then(data => {
-                    potreroSelect.innerHTML = '<option value="">Sin potrero</option>';
-                    if (data.length > 0) {
-                        data.forEach(p => {
-                            potreroSelect.innerHTML += `<option value="${p.id}">${p.nombre} (${p.disponibilidad} disponibles)</option>`;
-                        });
-                        message.textContent = `${data.length} potrero(s) disponible(s)`;
-                    } else {
-                        message.textContent = 'Esta finca no tiene potreros registrados';
-                    }
-                })
-                .catch(() => {
-                    potreroSelect.innerHTML = '<option value="">Error al cargar</option>';
-                    message.textContent = 'Error de conexión';
-                });
+    // ── helpers de UI ────────────────────────────────────────────────────────
+    function setLoading() {
+        potreroSelect.disabled = true;
+        potreroSelect.className = 'w-full pl-12 pr-10 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-400 appearance-none transition-all cursor-wait';
+        potreroSelect.innerHTML = '<option value="">Cargando potreros...</option>';
+        msgEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Consultando potreros...';
+        msgEl.className = 'text-blue-500 text-xs mt-1 flex items-center gap-1';
+    }
+
+    function setReady(potreros, preselId) {
+        potreroSelect.innerHTML = '<option value="">Sin potrero asignado</option>';
+        if (potreros.length > 0) {
+            potreros.forEach(function (p) {
+                var opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.nombre + ' (' + p.disponibilidad + ' disponibles)';
+                if (preselId && p.id == preselId) opt.selected = true;
+                potreroSelect.appendChild(opt);
+            });
+            potreroSelect.disabled = false;
+            potreroSelect.className = 'w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all';
+            msgEl.innerHTML = '<i class="fa-solid fa-check-circle mr-1"></i> ' + potreros.length + ' potrero(s) disponible(s)';
+            msgEl.className = 'text-green-600 text-xs mt-1 font-medium flex items-center gap-1';
         } else {
-            potreroSelect.innerHTML = '<option value="">Selecciona un potrero</option>';
-            message.textContent = 'Primero selecciona una finca';
+            potreroSelect.disabled = true;
+            potreroSelect.className = 'w-full pl-12 pr-10 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-400 appearance-none transition-all cursor-not-allowed';
+            msgEl.innerHTML = '<i class="fa-solid fa-circle-info mr-1"></i> Esta finca no tiene potreros registrados';
+            msgEl.className = 'text-gray-500 text-xs mt-1 flex items-center gap-1';
         }
+    }
+
+    function setError() {
+        potreroSelect.disabled = true;
+        potreroSelect.className = 'w-full pl-12 pr-10 py-3 border-2 border-red-300 rounded-xl bg-red-50 text-gray-400 appearance-none transition-all cursor-not-allowed';
+        potreroSelect.innerHTML = '<option value="">Error al cargar</option>';
+        msgEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> Error de conexión. Recarga la página.';
+        msgEl.className = 'text-red-500 text-xs mt-1 font-medium flex items-center gap-1';
+    }
+
+    function setEmpty() {
+        potreroSelect.disabled = true;
+        potreroSelect.className = 'w-full pl-12 pr-10 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-500 appearance-none transition-all cursor-not-allowed';
+        potreroSelect.innerHTML = '<option value="">— Primero selecciona una finca —</option>';
+        msgEl.innerHTML = '<i class="fa-solid fa-circle-info mr-1"></i> Selecciona una finca para ver los potreros';
+        msgEl.className = 'text-gray-400 text-xs mt-1 flex items-center gap-1';
+    }
+
+    // ── función principal ────────────────────────────────────────────────────
+    function cargarPotreros(fincaId, preselId) {
+        if (!fincaId) { setEmpty(); return; }
+
+        setLoading();
+
+        fetch('/api/fincas/' + fincaId + '/potreros', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(function (data) {
+            setReady(data, preselId || null);
+        })
+        .catch(function (err) {
+            console.error('Potreros fetch error:', err);
+            setError();
+        });
+    }
+
+    // ── evento cambio de finca ───────────────────────────────────────────────
+    fincaSelect.addEventListener('change', function () {
+        cargarPotreros(this.value);
     });
+
+    // ── carga inicial (si ya hay finca seleccionada, ej. old() en validación) ─
+    var fincaInicial = fincaSelect.value;
+    if (fincaInicial) {
+        cargarPotreros(fincaInicial, null);
+    }
+})();
 </script>
-@endpush
 @endsection
