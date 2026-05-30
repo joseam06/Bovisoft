@@ -16,7 +16,7 @@
                 @endif
             </div>
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Mi Perfil</h1>
+                <h1 class="text-2xl font-bold text-gray-800">Hola, bienvenido a tu perfil</h1>
                 <p class="text-gray-500 text-sm">Gestiona tu información personal y seguridad de cuenta</p>
             </div>
         </div>

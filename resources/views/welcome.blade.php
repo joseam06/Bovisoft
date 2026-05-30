@@ -178,7 +178,7 @@
     <div class="section-divider my-8"></div>
     <!-- BENEFICIOS -->   
     <!-- pt (espacio debajo del separador o inicio de la seccion) --> <!-- pt (espacio antes del separador o final de la seccion) -->                   
-    <section id="beneficios" class="pt-32 pb-24 bg-gradient-to-r from-red-700 to-black text-white relative overflow-hidden">
+    <section id="beneficios" class="pt-20 pb-20 bg-gradient-to-r from-red-700 to-black text-white relative overflow-hidden">
 
     <div class="py-16 bg-white/10 backdrop-blur-sm mx-4 md:mx-8 rounded-3xl border-2 border-white/20 shadow-2xl">
         <div class="max-w-7xl mx-auto px-6">
@@ -188,7 +188,7 @@
                     Ventajas competitivas
                 </span>
                 <h3 class="text-4xl md:text-5xl font-bold text-white mb-4">¿Por qué usar Bovisoft?</h3>
-                <p class="text-xl text-white max-w-2xl mx-auto">
+                <p class="text-xl text-gray-300 max-w-2xl mx-auto">
                     Optimiza tu operación ganadera con tecnología de punta
                 </p>
             </div>
@@ -237,14 +237,16 @@
     <div class="section-divider my-8"></div>
 
     <!-- CARACTERISTICAS -->
-    <section id="caracteristicas" class="py-24 bg-white/95 backdrop-blur-sm mx-4 md:mx-8 rounded-3xl shadow-2xl border-4 border-white/50">
-    <div class="max-w-7xl mx-auto px-6">
+        <section id="caracteristicas" class="pt-20 pb-20 bg-gradient-to-r from-red-700 to-black text-white relative overflow-hidden">
+
+    <div class="py-16 bg-white/10 backdrop-blur-sm mx-4 md:mx-8 rounded-3xl border-2 border-white/20 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-6">
         <div class="text-center mb-16">
             <span class="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-base font-semibold mb-4">
                 Características principales
             </span>
-                <h3 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Funciones de Bovisoft</h3>
-                <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                <h3 class="text-4xl md:text-5xl font-bold text-white mb-4">Funciones de Bovisoft</h3>
+                <p class="text-xl text-gray-300 max-w-2xl mx-auto">
                     Todo lo que necesitas para gestionar tu operación ganadera
                 </p>
             </div>
@@ -254,48 +256,48 @@
                     <div class="flex items-start group">
                         <span class="feature-icon">📋</span>
                         <div>
-                            <h5 class="text-xl font-bold text-gray-900 mb-2">Registro de ganado</h5>
-                            <p class="text-gray-600">Control detallado de cada animal con historial completo</p>
+                            <h5 class="text-xl font-bold text-white mb-2">Registro de ganado</h5>
+                            <p class="text-gray-300">Control detallado de cada animal con historial completo</p>
                         </div>
                     </div>
                     
                     <div class="flex items-start group">
                         <span class="feature-icon">💉</span>
                         <div>
-                            <h5 class="text-xl font-bold text-gray-900 mb-2">Gestión de salud y vacunación</h5>
-                            <p class="text-gray-600">Seguimiento de tratamientos y calendario de vacunas</p>
+                            <h5 class="text-xl font-bold text-white mb-2">Gestión de salud y vacunación</h5>
+                            <p class="text-gray-300">Seguimiento de tratamientos y calendario de vacunas</p>
                         </div>
                     </div>
                     
                     <div class="flex items-start group">
                         <span class="feature-icon">🥛</span>
                         <div>
-                            <h5 class="text-xl font-bold text-gray-900 mb-2">Control de producción lechera</h5>
-                            <p class="text-gray-600">Monitoreo diario de producción por animal</p>
+                            <h5 class="text-xl font-bold text-white mb-2">Control de producción lechera</h5>
+                            <p class="text-gray-300">Monitoreo diario de producción por animal</p>
                         </div>
                     </div>
                     
                     <div class="flex items-start group">
                         <span class="feature-icon">💰</span>
                         <div>
-                            <h5 class="text-xl font-bold text-gray-900 mb-2">Registro de ventas y compras</h5>
-                            <p class="text-gray-600">Control financiero completo de tu operación</p>
+                            <h5 class="text-xl font-bold text-white mb-2">Registro de ventas y compras</h5>
+                            <p class="text-gray-300">Control financiero completo de tu operación</p>
                         </div>
                     </div>
                     
                     <div class="flex items-start group">
                         <span class="feature-icon">📊</span>
                         <div>
-                            <h5 class="text-xl font-bold text-gray-900 mb-2">Dashboard intuitivo</h5>
-                            <p class="text-gray-600">Visualiza toda tu información de un vistazo</p>
+                            <h5 class="text-xl font-bold text-white mb-2">Dashboard intuitivo</h5>
+                            <p class="text-gray-300">Visualiza toda tu información de un vistazo</p>
                         </div>
                     </div>
                     
                 </div>
                 
               <div class="relative">
-    <div class="absolute inset-0 bg-gradient-to-r from-red-400/20 to-purple-400/20 rounded-3xl blur-2xl"></div>
-    <div class="absolute inset-0 bg-gradient-to-r from-red-600/20 to-transparent rounded-3xl transform rotate-3"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-red-400 to-purple-300/55 rounded-2xl blur-2xl"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-red-800 to-transparent rounded-3xl transform rotate-3"></div>
     <img src="{{ asset('images/caracteristicas.png') }}" 
          class="relative rounded-3xl shadow-2xl border-4 border-white w-full h-auto object-cover transform -rotate-2 hover:rotate-0 transition-transform duration-500" 
          alt="Dashboard BoviSoft - Gestión Ganadera" 
@@ -309,13 +311,15 @@
     <div class="section-divider my-8"></div>
 
     <!-- CONTACTO -->
-    <section id="contacto" class="py-24 bg-white/95 backdrop-blur-sm mx-4 md:mx-8 rounded-3xl shadow-2xl border-4 border-white/50">
+        <section id="contacto" class="pt-20 pb-16 bg-gradient-to-r from-red-700 to-black text-white relative overflow-hidden">
+        <div class="py-16 bg-white/10 backdrop-blur-sm mx-4 md:mx-8 rounded-3xl border-2 border-white/20 shadow-2xl">
+      
         <div class="max-w-4xl mx-auto px-6 text-center">
             <div class="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold mb-6">
                 ¿Listo para comenzar?
             </div>
-            <h3 class="text-4xl md:text-5xl font-bold mb-6 text-gray-900">Contáctanos</h3>
-            <p class="text-xl text-gray-600 mb-10">
+            <h3 class="text-4xl md:text-5xl font-bold mb-6 text-white">Contáctanos</h3>
+            <p class="text-xl text-gray-300 mb-10">
                 ¿Tienes dudas? ¿Quieres una demo? Estamos listos para ayudarte a transformar tu gestión ganadera.
             </p>
             <a href="mailto:monterrosa@bovisoft.com" 
