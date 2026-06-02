@@ -6,6 +6,7 @@ use App\Http\Controllers\FincaController;
 use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\PotreroController;
 use App\Http\Controllers\SaludController;
+use App\Http\Controllers\FinanzasController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -107,36 +108,25 @@ Route::resource('salud', SaludController::class)->middleware('auth');
 
     
     // Producción
-    Route::get('/produccion', function () {
-        return view('en-desarrollo', [
-            'modulo' => 'Producción',
-            'progreso' => '15',
-            'caracteristicas' => [
-                'Registro diario de producción lechera',
-                'Control de calidad de leche',
-                'Estadísticas y gráficas de producción',
-                'Proyecciones de producción',
-                'Comparativas por animal y por finca',
-                'Exportación de datos',
-            ]
-        ]);
-    })->name('produccion.index');
+    Route::resource('produccion', App\Http\Controllers\ProduccionController::class);
+    Route::get('/api/produccion/chart', [App\Http\Controllers\ProduccionController::class, 'apiChart'])->name('api.produccion.chart');
+    Route::get('/animales/{animal}/produccion', [App\Http\Controllers\ProduccionController::class, 'porAnimal'])->name('produccion.por-animal');
     
-    // Finanzas
-    Route::get('/finanzas', function () {
-        return view('en-desarrollo', [
-            'modulo' => 'Finanzas',
-            'progreso' => '10',
-            'caracteristicas' => [
-                'Control de ingresos y egresos',
-                'Registro de ventas de animales y productos',
-                'Control de compras y gastos',
-                'Balance financiero',
-                'Reportes de rentabilidad',
-                'Proyecciones financieras',
-            ]
-        ]);
-    })->name('finanzas.index');
+    
+    // Finanzas — panel principal
+    Route::get('/finanzas', [FinanzasController::class, 'index'])->name('finanzas.index');
+
+    // Ingresos
+    Route::get('/finanzas/ingresos/nuevo',   [FinanzasController::class, 'createIngreso'])->name('finanzas.ingresos.create');
+    Route::post('/finanzas/ingresos',        [FinanzasController::class, 'storeIngreso'])->name('finanzas.ingresos.store');
+    Route::get('/finanzas/ingresos/{id}',    [FinanzasController::class, 'showIngreso'])->name('finanzas.ingresos.show');
+    Route::delete('/finanzas/ingresos/{id}', [FinanzasController::class, 'destroyIngreso'])->name('finanzas.ingresos.destroy');
+
+    // Egresos
+    Route::get('/finanzas/egresos/nuevo',   [FinanzasController::class, 'createEgreso'])->name('finanzas.egresos.create');
+    Route::post('/finanzas/egresos',        [FinanzasController::class, 'storeEgreso'])->name('finanzas.egresos.store');
+    Route::get('/finanzas/egresos/{id}',    [FinanzasController::class, 'showEgreso'])->name('finanzas.egresos.show');
+    Route::delete('/finanzas/egresos/{id}', [FinanzasController::class, 'destroyEgreso'])->name('finanzas.egresos.destroy');
     
     // Alertas
     Route::get('/alertas', [App\Http\Controllers\AlertaController::class, 'index'])->name('alertas.index');

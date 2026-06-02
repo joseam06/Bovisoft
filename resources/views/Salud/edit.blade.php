@@ -303,32 +303,34 @@
                            placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all resize-none">{{ old('observaciones', $registro->observaciones) }}</textarea>
             </div>
 
-            {{-- ══ Botones ══ --}}
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t-2 border-red-200">
-                <form action="{{ route('salud.destroy', $registro) }}" method="POST"
-                      onsubmit="return confirm('¿Eliminar este registro de salud?')">
-                    @csrf @method('DELETE')
-                    <button type="submit"
-                        class="px-6 py-4 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-xl transition-all border-2 border-red-300 flex items-center gap-2">
-                        <i class="fa-solid fa-trash"></i> Eliminar Registro
-                    </button>
-                </form>
-                <div class="flex gap-4">
-                    <a href="{{ route('salud.show', $registro) }}"
-                       class="px-8 py-4 border-2 border-gray-300 rounded-xl text-gray-700 font-bold hover:bg-gray-50 transition-all shadow-lg">
-                        <i class="fa-solid fa-times mr-2"></i>Cancelar
-                    </a>
-                    <button type="submit"
-                        class="px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800
-                               text-white font-bold rounded-xl transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5">
-                        <i class="fa-solid fa-save mr-2"></i>Guardar Cambios
-                    </button>
-                </div>
+              {{-- Botones --}}
+            <div class="flex justify-end gap-4 pt-4 border-t-2 border-red-200">
+                <a href="{{ route('salud.show', $registro) }}"
+                   class="px-8 py-4 border-2 border-gray-300 rounded-xl text-gray-700 font-bold hover:bg-gray-50 transition-all shadow-lg">
+                    <i class="fa-solid fa-times mr-2"></i>Cancelar
+                </a>
+                <button type="submit"
+                    class="px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800
+                           text-white font-bold rounded-xl transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5">
+                    <i class="fa-solid fa-save mr-2"></i>Guardar Cambios
+                </button>
             </div>
 
         </div>{{-- fin card --}}
-    </form>
-</div>
+    </form>{{-- ← cierre del form principal --}}
+
+    {{-- Formulario de eliminación separado, FUERA del form principal --}}
+    <div class="mt-4">
+        <form action="{{ route('salud.destroy', $registro) }}" method="POST"
+              onsubmit="return confirm('¿Eliminar este registro de salud?')">
+            @csrf
+            @method('DELETE')
+            <button type="submit"
+                class="px-6 py-4 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-xl transition-all border-2 border-red-300 flex items-center gap-2">
+                <i class="fa-solid fa-trash"></i> Eliminar Registro
+            </button>
+        </form>
+    </div>
 
 @push('scripts')
 <script>

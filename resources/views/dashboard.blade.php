@@ -140,15 +140,17 @@
                 </div>
                 <div class="text-right">
                     <p class="text-sm font-semibold text-gray-600 mb-1">Producción (L)</p>
-                    <h3 class="text-4xl font-extrabold bg-gradient-to-r from-purple-600 to-red-700 bg-clip-text text-transparent">0</h3>
+                    <h3 class="text-4xl font-extrabold bg-gradient-to-r from-purple-600 to-red-700 bg-clip-text text-transparent">
+                        {{ number_format($produccionMes, 1) }}
+                    </h3>
                 </div>
             </div>
             <div class="flex items-center justify-between pt-4 border-t-2 border-purple-100">
                 <span class="text-xs text-gray-600 flex items-center">
-                    <i class="fa-solid fa-minus text-gray-400 text-xs mr-2"></i>
+                    <i class="fa-solid fa-calendar text-purple-500 text-xs mr-2"></i>
                     Este mes
                 </span>
-                <a href="#" class="text-xs text-purple-700 hover:text-purple-800 font-semibold flex items-center group">
+                <a href="{{ route('produccion.index') }}" class="text-xs text-purple-700 hover:text-purple-800 font-semibold flex items-center group">
                     Ver detalles
                     <i class="fa-solid fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform"></i>
                 </a>
@@ -442,6 +444,7 @@
 <!-- Scripts -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    
     // Datos PHP para gráficos
     var datosAnimales = {
         vacas: <?php echo $vacas; ?>,
@@ -497,15 +500,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Gráfico Producción
-    var produccionCtx = document.getElementById('produccionChart');
+    var chartDiasLabel   = {!! json_encode($chartDiasLabel) !!};
+    var chartProduccion  = {!! json_encode($chartProduccion) !!};
+      var produccionCtx = document.getElementById('produccionChart');
     if (produccionCtx) {
         new Chart(produccionCtx.getContext('2d'), {
             type: 'bar',
             data: {
-                labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                labels: chartDiasLabel,      
                 datasets: [{
                     label: 'Litros de leche',
-                    data: [0, 0, 0, 0, 0, 0, 0],
+                    data: chartProduccion,
                     backgroundColor: function(context) {
                         var ctx = context.chart.ctx;
                         var gradient = ctx.createLinearGradient(0, 0, 0, 400);
