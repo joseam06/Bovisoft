@@ -278,17 +278,20 @@
             </h2>
             <p class="text-sm text-gray-600 mt-1 ml-13">Últimos 7 días</p>
         </div>
-        <div class="flex gap-2">
-            <button class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-bold rounded-lg shadow-lg hover:shadow-xl transition-all">
-                7 días
-            </button>
-            <button class="px-4 py-2 bg-white border-2 border-red-200 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-50 transition-all">
-                30 días
-            </button>
-            <button class="px-4 py-2 bg-white border-2 border-red-200 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-50 transition-all">
-                Este año
-            </button>
-        </div>
+      <div class="flex gap-2">
+    <button onclick="cargarProduccion('7dias')" id="btn-7dias"
+        class="btn-periodo px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-bold rounded-lg shadow-lg hover:shadow-xl transition-all">
+        7 días
+    </button>
+    <button onclick="cargarProduccion('30dias')" id="btn-30dias"
+        class="btn-periodo px-4 py-2 bg-white border-2 border-red-200 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-50 transition-all">
+        30 días
+    </button>
+    <button onclick="cargarProduccion('anio')" id="btn-anio"
+        class="btn-periodo px-4 py-2 bg-white border-2 border-red-200 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-50 transition-all">
+        Este año
+    </button>
+</div>
     </div>
     
     <div class="h-80">
@@ -500,36 +503,74 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Gráfico Producción
-    var chartDiasLabel   = {!! json_encode($chartDiasLabel) !!};
-    var chartProduccion  = {!! json_encode($chartProduccion) !!};
-      var produccionCtx = document.getElementById('produccionChart');
-    if (produccionCtx) {
-        new Chart(produccionCtx.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: chartDiasLabel,      
-                datasets: [{
-                    label: 'Litros de leche',
-                    data: chartProduccion,
-                    backgroundColor: function(context) {
-                        var ctx = context.chart.ctx;
-                        var gradient = ctx.createLinearGradient(0, 0, 0, 400);
-                        gradient.addColorStop(0, '#dc2626');
-                        gradient.addColorStop(1, '#991b1b');
-                        return gradient;
-                    },
-                    borderRadius: 8,
-                    borderSkipped: false,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true } }
-            }
-        });
+   // Gráfico Producción — dinámico
+var produccionChartInstance = null;
+
+function cargarProduccion(rango) {
+    // Actualizar estilos de botones
+    document.querySelectorAll('.btn-periodo').forEach(function(btn) {
+        btn.className = 'btn-periodo px-4 py-2 bg-white border-2 border-red-200 text-red-700 text-sm font-semibold rounded-lg hover:bg-red-50 transition-all';
+    });
+    var btnActivo = document.getElementById(
+        rango === '7dias' ? 'btn-7dias' : (rango === '30dias' ? 'btn-30dias' : 'btn-anio')
+    );
+    if (btnActivo) {
+        btnActivo.className = 'btn-periodo px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white text-sm font-bold rounded-lg shadow-lg hover:shadow-xl transition-all';
     }
+
+    fetch('/api/produccion/chart?rango=' + rango, {
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var labels  = data.map(function(d) { return d.fecha; });
+        var litros  = data.map(function(d) { return d.litros; });
+
+        if (produccionChartInstance) {
+            produccionChartInstance.data.labels = labels;
+            produccionChartInstance.data.datasets[0].data = litros;
+            produccionChartInstance.update();
+        } else {
+            var produccionCtx = document.getElementById('produccionChart');
+            if (!produccionCtx) return;
+            produccionChartInstance = new Chart(produccionCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Litros de leche',
+                        data: litros,
+                        backgroundColor: function(context) {
+                            var ctx = context.chart.ctx;
+                            var gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                            gradient.addColorStop(0, '#dc2626');
+                            gradient.addColorStop(1, '#991b1b');
+                            return gradient;
+                        },
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+    })
+    .catch(function(err) {
+        console.error('Error cargando producción:', err);
+    });
+}
+
+// Cargar 7 días al iniciar
+cargarProduccion('7dias');
+    
 
     // Mapa
     var map = L.map('map').setView([8.7479, -75.8814], 13);

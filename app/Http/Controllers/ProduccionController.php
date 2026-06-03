@@ -258,15 +258,16 @@ class ProduccionController extends Controller
 
     // ─── API: datos del gráfico (7 o 30 días) ─────────────────────────────────
 
-    public function apiChart(Request $request)
-    {
-        $userId = Auth::id();
-        $dias   = (int) $request->get('dias', 7);
-        $dias   = in_array($dias, [7, 30]) ? $dias : 7;
-        $hoy    = Carbon::today();
+   public function apiChart(Request $request)
+{
+    $userId = Auth::id();
+    $rango  = $request->get('rango', '7dias');
+    $hoy    = Carbon::today();
 
-        $data = [];
-        for ($i = $dias - 1; $i >= 0; $i--) {
+    $data = [];
+
+    if ($rango === '7dias') {
+        for ($i = 6; $i >= 0; $i--) {
             $dia    = $hoy->copy()->subDays($i);
             $data[] = [
                 'fecha'  => $dia->format('d/m'),
@@ -275,9 +276,36 @@ class ProduccionController extends Controller
                     ->sum('litros'),
             ];
         }
-
-        return response()->json($data);
+    } elseif ($rango === '30dias') {
+        for ($i = 29; $i >= 0; $i--) {
+            $dia    = $hoy->copy()->subDays($i);
+            $data[] = [
+                'fecha'  => $dia->format('d/m'),
+                'litros' => (float) Produccion::where('user_id', $userId)
+                    ->whereDate('fecha', $dia)
+                    ->sum('litros'),
+            ];
+        }
+    } elseif ($rango === 'anio') {
+        $mesesNombres = [
+            1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr',
+            5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago',
+            9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic',
+        ];
+        for ($m = 1; $m <= 12; $m++) {
+            $inicio = Carbon::create($hoy->year, $m, 1)->startOfMonth();
+            $fin    = $inicio->copy()->endOfMonth();
+            $data[] = [
+                'fecha'  => $mesesNombres[$m],
+                'litros' => (float) Produccion::where('user_id', $userId)
+                    ->whereBetween('fecha', [$inicio, $fin])
+                    ->sum('litros'),
+            ];
+        }
     }
+
+    return response()->json($data);
+}
 
     // ─── porAnimal ─────────────────────────────────────────────────────────────
 

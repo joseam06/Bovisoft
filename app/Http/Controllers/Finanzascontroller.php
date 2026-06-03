@@ -315,29 +315,36 @@ class FinanzasController extends Controller
     }
 
     private function calcularFlujoCaja(int $userId, ?int $fincaId): array
-    {
-        $meses = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $fecha    = Carbon::now()->subMonths($i);
-            $inicio   = $fecha->copy()->startOfMonth();
-            $fin      = $fecha->copy()->endOfMonth();
+{
+    $mesesNombres = [
+        1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr',
+        5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago',
+        9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic',
+    ];
 
-            $qIng = Ingreso::where('user_id', $userId)->whereBetween('fecha', [$inicio, $fin]);
-            $qEgr = Egreso::where('user_id', $userId)->whereBetween('fecha', [$inicio, $fin]);
+    $meses = [];
+    for ($i = 5; $i >= 0; $i--) {
+        $fecha  = Carbon::now()->subMonths($i);
+        $inicio = $fecha->copy()->startOfMonth();
+        $fin    = $fecha->copy()->endOfMonth();
 
-            if ($fincaId) {
-                $qIng->where('finca_id', $fincaId);
-                $qEgr->where('finca_id', $fincaId);
-            }
+        $qIng = Ingreso::where('user_id', $userId)->whereBetween('fecha', [$inicio, $fin]);
+        $qEgr = Egreso::where('user_id',  $userId)->whereBetween('fecha', [$inicio, $fin]);
 
-            $meses[] = [
-                'mes'       => $fecha->translatedFormat('M Y'),
-                'ingresos'  => (float) $qIng->sum('monto'),
-                'egresos'   => (float) $qEgr->sum('monto'),
-            ];
+        if ($fincaId) {
+            $qIng->where('finca_id', $fincaId);
+            $qEgr->where('finca_id', $fincaId);
         }
-        return $meses;
+
+        $meses[] = [
+            'mes'      => $mesesNombres[$fecha->month] . ' ' . $fecha->year,
+            'ingresos' => (float) $qIng->sum('monto'),
+            'egresos'  => (float) $qEgr->sum('monto'),
+        ];
     }
+
+    return $meses;
+}
 
     private function calcularBalancePorFinca(int $userId, Carbon $inicio, Carbon $fin): array
     {

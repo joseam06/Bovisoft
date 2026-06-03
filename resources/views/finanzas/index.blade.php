@@ -24,7 +24,7 @@
                     <i class="fa-solid fa-circle-plus"></i> Nuevo Ingreso
                 </a>
                 <a href="{{ route('finanzas.egresos.create') }}"
-                   class="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-white bg-white/20 hover:bg-white/30 border-2 border-white/40 shadow-xl transition-all hover:-translate-y-0.5">
+                   class="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 border-2 border-white/40 shadow-xl transition-all hover:-translate-y-0.5">
                     <i class="fa-solid fa-circle-minus"></i> Nuevo Egreso
                 </a>
             </div>
@@ -289,75 +289,83 @@
 
 </div>
 
-@push('scripts')
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+(function () {
     var flujoCaja = @json($flujoCaja);
 
     var labels   = flujoCaja.map(function(m){ return m.mes; });
     var ingresos = flujoCaja.map(function(m){ return m.ingresos; });
     var egresos  = flujoCaja.map(function(m){ return m.egresos; });
 
-    var ctx = document.getElementById('flujoCajaChart');
-    if (!ctx) return;
+    function iniciarChart() {
+        var ctx = document.getElementById('flujoCajaChart');
+        if (!ctx) return;
 
-    new Chart(ctx.getContext('2d'), {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Ingresos',
-                    data: ingresos,
-                    backgroundColor: 'rgba(5, 150, 105, 0.7)',
-                    borderColor: 'rgba(5, 150, 105, 1)',
-                    borderWidth: 2,
-                    borderRadius: 6,
-                },
-                {
-                    label: 'Egresos',
-                    data: egresos,
-                    backgroundColor: 'rgba(220, 38, 38, 0.7)',
-                    borderColor: 'rgba(220, 38, 38, 1)',
-                    borderWidth: 2,
-                    borderRadius: 6,
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'top' },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            return ctx.dataset.label + ': $' +
-                                new Intl.NumberFormat('es-CO').format(ctx.parsed.y);
+        new Chart(ctx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Ingresos',
+                        data: ingresos,
+                        backgroundColor: 'rgba(5, 150, 105, 0.7)',
+                        borderColor: 'rgba(5, 150, 105, 1)',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                    },
+                    {
+                        label: 'Egresos',
+                        data: egresos,
+                        backgroundColor: 'rgba(220, 38, 38, 0.7)',
+                        borderColor: 'rgba(220, 38, 38, 1)',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return ctx.dataset.label + ': $' +
+                                    new Intl.NumberFormat('es-CO').format(ctx.parsed.y);
+                            }
                         }
                     }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(v) {
-                            return '$' + new Intl.NumberFormat('es-CO').format(v);
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(v) {
+                                return '$' + new Intl.NumberFormat('es-CO').format(v);
+                            }
                         }
                     }
                 }
             }
-        }
-    });
-});
-</script>
+        });
+    }
 
-<script>
+    // Compatibilidad: si el DOM ya está listo ejecutar ahora, si no esperar
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', iniciarChart);
+    } else {
+        iniciarChart();
+    }
+
+    // Auto-cerrar alerta
     setTimeout(function() {
         var a = document.getElementById('alert-ok');
         if (a) { a.style.opacity = '0'; a.style.transition = 'opacity 0.5s'; setTimeout(function(){ a.remove(); }, 500); }
     }, 5000);
+})();
 </script>
-@endpush
+
 @endsection
