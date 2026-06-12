@@ -41,10 +41,11 @@
         </label>
 
         @if (Route::has('password.request'))
-            <a class="text-sm text-white/80 hover:text-white underline" href="{{ route('password.request') }}">
-                ¿Olvidaste tu contraseña?
-            </a>
-        @endif
+    <button type="button" data-open="forgot"
+            class="text-sm text-white/80 hover:text-white underline">
+        ¿Olvidaste tu contraseña?
+    </button>
+@endif
     </div>
 
     <div class="flex items-center justify-end gap-3 pt-2">

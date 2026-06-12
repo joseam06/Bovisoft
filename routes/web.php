@@ -7,6 +7,7 @@ use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\PotreroController;
 use App\Http\Controllers\SaludController;
 use App\Http\Controllers\FinanzasController;
+use App\Http\Controllers\ReportesController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -133,21 +134,10 @@ Route::resource('salud', SaludController::class)->middleware('auth');
     Route::get('/api/alertas/recientes', [App\Http\Controllers\AlertaController::class, 'apiRecientes'])->name('api.alertas.recientes');
     
     // Reportes
-    Route::get('/reportes', function () {
-        return view('en-desarrollo', [
-            'modulo' => 'Reportes',
-            'progreso' => '35',
-            'caracteristicas' => [
-                'Reportes predefinidos',
-                'Reportes personalizables',
-                'Exportación a PDF y Excel',
-                'Gráficas y estadísticas',
-                'Reportes por período',
-                'Dashboard de KPIs',
-            ]
-        ]);
-    })->name('reportes.index');
-    
+    Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes.index');
+    Route::get('/reportes/preview/{tipo}', [ReportesController::class, 'preview'])->name('reportes.preview');
+    Route::get('/reportes/descargar/{tipo}', [ReportesController::class, 'descargar'])->name('reportes.descargar');
+ 
     // Configuración
     Route::get('/configuracion', function () {
         return view('en-desarrollo', [

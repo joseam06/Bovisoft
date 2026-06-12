@@ -436,6 +436,10 @@
                     <div id="panelRegister" class="hidden">
                         @include('auth.partials.register-form')
                     </div>
+                    
+                    <div id="panelForgot" class="hidden">
+                        @include('auth.partials.forgot-password-form')
+                    </div>
                 </div>
             </div>
         </div>
@@ -463,23 +467,38 @@
         const tabRegister = document.getElementById('tabRegister');
         const panelLogin = document.getElementById('panelLogin');
         const panelRegister = document.getElementById('panelRegister');
+        const panelForgot   = document.getElementById('panelForgot');
         const subtitle = document.getElementById('authSubtitle');
-
+        const tabsContainer = document.querySelector('#authPanel .flex.gap-3.mb-8');
+        
         function setTab(which) {
-            const loginActive = which === 'login';
-            panelLogin.classList.toggle('hidden', !loginActive);
-            panelRegister.classList.toggle('hidden', loginActive);
+    // Ocultar todos los paneles
+    panelLogin.classList.add('hidden');
+    panelRegister.classList.add('hidden');
+    panelForgot.classList.add('hidden');
 
-            if (loginActive) {
-                tabLogin.className = 'flex-1 px-4 py-3 rounded-lg text-sm font-bold transition-all bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg';
-                tabRegister.className = 'flex-1 px-4 py-3 rounded-lg text-sm font-bold bg-transparent text-white/70 hover:text-white transition-all';
-            } else {
-                tabRegister.className = 'flex-1 px-4 py-3 rounded-lg text-sm font-bold transition-all bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg';
-                tabLogin.className = 'flex-1 px-4 py-3 rounded-lg text-sm font-bold bg-transparent text-white/70 hover:text-white transition-all';
-            }
+    // Mostrar el panel activo
+    if (which === 'login')        panelLogin.classList.remove('hidden');
+    else if (which === 'register') panelRegister.classList.remove('hidden');
+    else if (which === 'forgot')   panelForgot.classList.remove('hidden');
 
-            subtitle.textContent = loginActive ? 'Accede a tu cuenta' : 'Crea tu cuenta gratis';
-        }
+    if (which === 'forgot') {
+        tabsContainer.classList.add('hidden');
+    } else {
+        tabsContainer.classList.remove('hidden');
+    }
+    // Estilos de tabs (forgot no activa ningún tab, ambos quedan inactivos)
+    const activeTab   = 'flex-1 px-4 py-3 rounded-lg text-sm font-bold transition-all bg-gradient-to-r from-red-600 to-red-700 text-white shadow-lg';
+    const inactiveTab = 'flex-1 px-4 py-3 rounded-lg text-sm font-bold bg-transparent text-white/70 hover:text-white transition-all';
+
+    tabLogin.className    = which === 'login'    ? activeTab : inactiveTab;
+    tabRegister.className = which === 'register' ? activeTab : inactiveTab;
+
+    // Subtítulo dinámico
+    if (which === 'login')         subtitle.textContent = 'Accede a tu cuenta';
+    else if (which === 'register') subtitle.textContent = 'Crea tu cuenta gratis';
+    else if (which === 'forgot')   subtitle.textContent = 'Recuperar contraseña';
+}
 
         function openOverlay(which) {
             overlay.classList.remove('hidden');
@@ -515,15 +534,15 @@
 
         // Abrir con data-open
         document.addEventListener('click', (e) => {
-            const btn = e.target.closest('[data-open]');
-            if (!btn) return;
+    const btn = e.target.closest('[data-open]');
+    if (!btn) return;
 
-            const which = btn.getAttribute('data-open');
-            if (which === 'login' || which === 'register') {
-                e.preventDefault();
-                openOverlay(which);
-            }
-        });
+    const which = btn.getAttribute('data-open');
+    if (which === 'login' || which === 'register' || which === 'forgot') {
+        e.preventDefault();
+        openOverlay(which);
+    }
+});
 
         // Tabs
         tabLogin.addEventListener('click', () => setTab('login'));
@@ -533,10 +552,17 @@
         closeBtn.addEventListener('click', closeOverlay);
         backdrop.addEventListener('click', closeOverlay);
 
-        // Abrir overlay automáticamente si hay errores
+       // Abrir overlay automáticamente si hay errores
         @if ($errors->any())
             openOverlay('login');
         @endif
+
+        // Reabrir forgot si se procesó el envío del enlace
+        @if (session('status'))
+            openOverlay('forgot');
+        @endif
+
+        window.openOverlay = openOverlay;
     })();
     </script>
 

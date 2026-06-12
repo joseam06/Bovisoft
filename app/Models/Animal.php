@@ -59,12 +59,18 @@ class Animal extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function salud()
+{
+    return $this->hasMany(\App\Models\Salud::class);
+}
  
     public function ingresoVenta()
     {
         return $this->belongsTo(Ingreso::class, 'ingreso_venta_id');
     }
  
+    
     public function ingresos()
     {
         return $this->hasMany(Ingreso::class);
