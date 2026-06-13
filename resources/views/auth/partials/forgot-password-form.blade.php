@@ -28,12 +28,13 @@
 
     <div class="flex items-center justify-between pt-2">
         <button type="button" data-open="login"
-                class="text-sm text-red-600 hover:text-white underline">
+                class="text-sm text-white/70 hover:text-white underline">
             ← Volver al login
         </button>
         <button type="submit"
-                class="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-600 text-white font-semibold shadow">
-            ENVIAR ENLACE
+                class="px-5 py-2.5 bg-gradient-to-r from-red-700 to-red-800 text-white font-bold
+                rounded-xl shadow-lg hover:from-red-800 hover:to-red-900 hover:scale-105 transition-all">
+                    <i class="fas fa-paper-plane mr-2"></i>Enviar enlace
         </button>
     </div>
 </form>
