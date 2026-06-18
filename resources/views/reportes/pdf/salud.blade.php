@@ -6,45 +6,142 @@
 <div class="kpi-row">
     <table cellpadding="0" cellspacing="0">
         <tr>
-            <td width="25%">
+            <td width="16%">
                 <div class="kpi-card">
                     <div class="kpi-label">Total Registros</div>
                     <div class="kpi-value">{{ $totalRegistros }}</div>
                 </div>
             </td>
-            <td width="25%">
+            <td width="16%">
                 <div class="kpi-card blue">
                     <div class="kpi-label">Vacunaciones</div>
                     <div class="kpi-value">{{ $vacunaciones }}</div>
                 </div>
             </td>
-            <td width="25%">
+            <td width="16%">
+                <div class="kpi-card teal">
+                    <div class="kpi-label">Desparasitaciones</div>
+                    <div class="kpi-value">{{ $desparasitaciones }}</div>
+                </div>
+            </td>
+            <td width="16%">
+                <div class="kpi-card purple">
+                    <div class="kpi-label">Tratamientos</div>
+                    <div class="kpi-value">{{ $tratamientosActivos }}</div>
+                </div>
+            </td>
+            <td width="16%">
                 <div class="kpi-card orange">
                     <div class="kpi-label">En Carencia</div>
                     <div class="kpi-value">{{ $enCarenciaCount }}</div>
                 </div>
             </td>
-            <td width="25%">
+            <td width="16%">
                 <div class="kpi-card purple">
                     <div class="kpi-label">Costo Total</div>
-                    <div class="kpi-value" style="font-size:13px;">${{ number_format($costoTotal, 0, ',', '.') }}</div>
+                    <div class="kpi-value" style="font-size:11px;">${{ number_format($costoTotal, 0, ',', '.') }}</div>
                 </div>
             </td>
         </tr>
     </table>
 </div>
 
-{{-- ── Tabla de registros de salud ── --}}
+{{-- ── Alertas sanitarias ── --}}
+@if($alertasVencidas->count() > 0)
+<div class="alert-box alert-red">
+    <strong>ALERTAS VENCIDAS ({{ $alertasVencidas->count() }}):</strong> Los siguientes animales tienen dosis pendientes vencidas.
+</div>
+<table class="data-table" cellpadding="0" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Animal</th>
+            <th>Producto</th>
+            <th>Proxima Dosis</th>
+            <th>Dias Vencido</th>
+            <th>Finca</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($alertasVencidas as $a)
+        <tr class="danger-row">
+            <td>{{ $a->animal->nombre ?? $a->animal->codigo ?? '—' }}</td>
+            <td>{{ $a->nombre_producto }}</td>
+            <td>{{ $a->proxima_aplicacion?->format('d/m/Y') ?? '—' }}</td>
+            <td><span class="badge badge-red">{{ abs($a->proxima_aplicacion->diffInDays(now())) }} dias</span></td>
+            <td>{{ $a->finca->nombre ?? '—' }}</td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+@endif
+
+@if($alertasProximas->count() > 0)
+<div class="alert-box alert-yellow">
+    <strong>PROXIMAS DOSIS (7 dias) — {{ $alertasProximas->count() }} animales:</strong>
+</div>
+<table class="data-table" cellpadding="0" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Animal</th>
+            <th>Producto</th>
+            <th>Fecha Proxima Dosis</th>
+            <th>Dias Restantes</th>
+            <th>Finca</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($alertasProximas as $a)
+        <tr class="highlight-row">
+            <td>{{ $a->animal->nombre ?? $a->animal->codigo ?? '—' }}</td>
+            <td>{{ $a->nombre_producto }}</td>
+            <td>{{ $a->proxima_aplicacion?->format('d/m/Y') ?? '—' }}</td>
+            <td><span class="badge badge-yellow">{{ $a->proxima_aplicacion->diffInDays(now()) }} dias</span></td>
+            <td>{{ $a->finca->nombre ?? '—' }}</td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+@endif
+
+{{-- ── Tratamientos activos ── --}}
+@if($tratamientosActivos > 0)
+<div class="section-title">Tratamientos Activos (en_tratamiento)</div>
+<table class="data-table" cellpadding="0" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Codigo</th>
+            <th>Animal</th>
+            <th>Producto</th>
+            <th>Diagnostico</th>
+            <th>Fecha Inicio</th>
+            <th>Veterinario</th>
+            <th>Costo</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($registrosTratamientos as $t)
+        <tr>
+            <td style="font-family: monospace; font-size:9px;">{{ $t->codigo }}</td>
+            <td>{{ $t->animal->nombre ?? $t->animal->codigo ?? '—' }}</td>
+            <td>{{ $t->nombre_producto }}</td>
+            <td>{{ $t->diagnostico ?? '—' }}</td>
+            <td>{{ $t->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</td>
+            <td>{{ $t->veterinario ?? '—' }}</td>
+            <td>{{ $t->costo ? '$' . number_format($t->costo, 0, ',', '.') : '—' }}</td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+@endif
+
+{{-- ── Tabla completa de registros ── --}}
 <div class="section-title">Registros Sanitarios del Periodo</div>
 
 @if($registros->count() > 0)
-
-{{-- Los catálogos se resuelven una sola vez, fuera del foreach --}}
 @php
-    $tiposLabel  = \App\Models\Salud::getTipos();
+    $tiposLabel   = \App\Models\Salud::getTipos();
     $estadosLabel = \App\Models\Salud::getEstados();
 @endphp
-
 <table class="data-table" cellpadding="0" cellspacing="0">
     <thead>
         <tr>
@@ -62,16 +159,14 @@
         @foreach($registros as $r)
         @php
             $enCarenciaFila = $r->en_carencia;
-
             $tipoBadge = match($r->tipo) {
                 'vacunacion'      => 'badge-blue',
-                'desparasitacion' => 'badge-green',
+                'desparasitacion' => 'badge-teal',
                 'tratamiento'     => 'badge-purple',
                 'cirugia'         => 'badge-red',
                 'revision'        => 'badge-yellow',
                 default           => 'badge-gray',
             };
-
             $estadoBadge = match($r->estado) {
                 'completado'     => 'badge-green',
                 'en_tratamiento' => 'badge-orange',
@@ -98,9 +193,7 @@
             </td>
             <td>{{ $r->costo ? '$' . number_format($r->costo, 0, ',', '.') : '—' }}</td>
             <td>
-                <span class="badge {{ $estadoBadge }}">
-                    {{ $estadosLabel[$r->estado] ?? $r->estado }}
-                </span>
+                <span class="badge {{ $estadoBadge }}">{{ $estadosLabel[$r->estado] ?? $r->estado }}</span>
                 @if($enCarenciaFila)
                     <br><span class="badge badge-yellow">Carencia {{ $r->dias_carencia_restantes }}d</span>
                 @endif
@@ -120,7 +213,7 @@
 <div class="obs-box">No hay registros sanitarios para los filtros seleccionados.</div>
 @endif
 
-{{-- ── Animales en carencia actualmente ── --}}
+{{-- ── Animales en carencia ── --}}
 @if($enCarencia->count() > 0)
 <div class="section-title">Animales Actualmente en Periodo de Carencia</div>
 <table class="data-table" cellpadding="0" cellspacing="0">
@@ -135,7 +228,7 @@
     </thead>
     <tbody>
         @foreach($enCarencia as $c)
-        <tr class="carencia-row">
+        <tr class="highlight-row">
             <td>{{ $c->animal->nombre ?? $c->animal->codigo ?? '—' }}</td>
             <td>{{ $c->finca->nombre ?? '—' }}</td>
             <td>{{ $c->nombre_producto }}</td>
@@ -145,19 +238,20 @@
         @endforeach
     </tbody>
 </table>
-
 <div class="obs-box" style="border-left: 4px solid #d97706;">
     <strong>Atencion:</strong> Los animales en periodo de carencia no deben comercializarse (leche ni carne) hasta cumplir la fecha indicada.
 </div>
 @endif
 
-{{-- ── Resumen de costos ── --}}
+{{-- ── Resumen ── --}}
 <div class="section-title">Resumen de Costos Sanitarios</div>
 <div class="obs-box">
     Se registraron <strong>{{ $totalRegistros }}</strong> eventos sanitarios en el periodo,
     con un costo total de <strong>${{ number_format($costoTotal, 0, ',', '.') }} COP</strong>.
-    De estos, <strong>{{ $vacunaciones }}</strong> corresponden a vacunaciones y
-    <strong>{{ $enCarenciaCount }}</strong> animales se encuentran actualmente en carencia.
+    Vacunaciones: <strong>{{ $vacunaciones }}</strong> &mdash;
+    Desparasitaciones: <strong>{{ $desparasitaciones }}</strong> &mdash;
+    Tratamientos activos: <strong>{{ $tratamientosActivos }}</strong> &mdash;
+    Animales en carencia: <strong>{{ $enCarenciaCount }}</strong>.
 </div>
 
 @endsection

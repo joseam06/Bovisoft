@@ -133,11 +133,35 @@ Route::resource('salud', SaludController::class)->middleware('auth');
     Route::get('/alertas', [App\Http\Controllers\AlertaController::class, 'index'])->name('alertas.index');
     Route::get('/api/alertas/recientes', [App\Http\Controllers\AlertaController::class, 'apiRecientes'])->name('api.alertas.recientes');
     
-    // Reportes
-    Route::get('/reportes', [ReportesController::class, 'index'])->name('reportes.index');
-    Route::get('/reportes/preview/{tipo}', [ReportesController::class, 'preview'])->name('reportes.preview');
-    Route::get('/reportes/descargar/{tipo}', [ReportesController::class, 'descargar'])->name('reportes.descargar');
- 
+   // ── Reportes ────────────────────────────────────────────────────────────────
+Route::prefix('reportes')->name('reportes.')->group(function () {
+    Route::get('/',                        [ReportesController::class, 'index'])->name('index');
+
+    // Inventario
+    Route::get('/preview/inventario',      [ReportesController::class, 'previewInventario'])->name('preview.inventario');
+    Route::get('/descargar/inventario',    [ReportesController::class, 'descargarInventario'])->name('descargar.inventario');
+
+    // Salud general
+    Route::get('/preview/salud',           [ReportesController::class, 'previewSalud'])->name('preview.salud');
+    Route::get('/descargar/salud',         [ReportesController::class, 'descargarSalud'])->name('descargar.salud');
+
+    // Vacunacion
+    Route::get('/preview/vacunacion',      [ReportesController::class, 'previewVacunacion'])->name('preview.vacunacion');
+    Route::get('/descargar/vacunacion',    [ReportesController::class, 'descargarVacunacion'])->name('descargar.vacunacion');
+
+    // Tratamientos
+    Route::get('/preview/tratamientos',    [ReportesController::class, 'previewTratamientos'])->name('preview.tratamientos');
+    Route::get('/descargar/tratamientos',  [ReportesController::class, 'descargarTratamientos'])->name('descargar.tratamientos');
+
+    // Historial por animal
+    Route::get('/preview/historial',       [ReportesController::class, 'previewHistorialAnimal'])->name('preview.historial');
+    Route::get('/descargar/historial',     [ReportesController::class, 'descargarHistorialAnimal'])->name('descargar.historial');
+
+    // Financiero
+    Route::get('/preview/financiero',      [ReportesController::class, 'previewFinanciero'])->name('preview.financiero');
+    Route::get('/descargar/financiero',    [ReportesController::class, 'descargarFinanciero'])->name('descargar.financiero');
+});
+    
     // Configuración
     Route::get('/configuracion', function () {
         return view('en-desarrollo', [

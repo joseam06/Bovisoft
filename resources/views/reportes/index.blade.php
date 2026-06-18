@@ -21,7 +21,6 @@
         </div>
     </div>
 
-    {{-- ── Flash ── --}}
     @if(session('success'))
     <div id="alert-ok" class="flex items-center gap-3 p-4 rounded-xl glass-effect border-4 border-white/50 text-green-700 shadow-xl">
         <i class="fa-solid fa-circle-check text-xl shrink-0"></i>
@@ -29,7 +28,7 @@
     </div>
     @endif
 
-    {{-- ── Estadísticas rápidas ── --}}
+    {{-- ── Estadisticas rapidas ── --}}
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="glass-effect border-4 border-white/50 rounded-xl p-4 shadow-xl flex items-center justify-between">
             <div>
@@ -74,23 +73,21 @@
         <h2 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
             <i class="fa-solid fa-filter text-blue-600"></i> Filtros del reporte
         </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="filtros-container">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
 
-            {{-- Período --}}
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">Período</label>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Periodo</label>
                 <select id="sel-periodo"
                     class="w-full px-4 py-2.5 bg-white border-2 border-gray-300 rounded-xl text-gray-800 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="dia">Hoy</option>
                     <option value="semana">Esta semana</option>
                     <option value="mes" selected>Este mes</option>
-                    <option value="anio">Este año</option>
+                    <option value="anio">Este ano</option>
                     <option value="todos">Todos los registros</option>
                     <option value="custom">Rango personalizado</option>
                 </select>
             </div>
 
-            {{-- Finca --}}
             <div>
                 <label class="block text-sm font-bold text-gray-700 mb-2">Finca</label>
                 <select id="sel-finca"
@@ -102,14 +99,24 @@
                 </select>
             </div>
 
-            {{-- Fecha inicio (custom) --}}
+            {{-- Animal (para historial clinico) --}}
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">Animal (historial)</label>
+                <select id="sel-animal"
+                    class="w-full px-4 py-2.5 bg-white border-2 border-gray-300 rounded-xl text-gray-800 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Seleccionar animal</option>
+                    @foreach($animales as $a)
+                        <option value="{{ $a->id }}">{{ $a->codigo }}{{ $a->nombre ? ' - ' . $a->nombre : '' }}</option>
+                    @endforeach
+                </select>
+            </div>
+
             <div id="div-fecha-inicio" class="hidden">
                 <label class="block text-sm font-bold text-gray-700 mb-2">Fecha inicio</label>
                 <input type="date" id="inp-fecha-inicio"
                     class="w-full px-4 py-2.5 bg-white border-2 border-gray-300 rounded-xl text-gray-800 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
 
-            {{-- Fecha fin (custom) --}}
             <div id="div-fecha-fin" class="hidden">
                 <label class="block text-sm font-bold text-gray-700 mb-2">Fecha fin</label>
                 <input type="date" id="inp-fecha-fin"
@@ -119,6 +126,8 @@
     </div>
 
     {{-- ── Tarjetas de reportes ── --}}
+
+    {{-- Fila 1: reportes principales --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
         {{-- INVENTARIO --}}
@@ -162,14 +171,14 @@
                     </span>
                     <div>
                         <h3 class="text-xl font-bold text-white">Salud Animal</h3>
-                        <p class="text-purple-100 text-sm">Historial sanitario y vacunaciones</p>
+                        <p class="text-purple-100 text-sm">Historial sanitario completo</p>
                     </div>
                 </div>
             </div>
             <div class="p-5">
                 <ul class="text-sm text-gray-700 space-y-1.5 mb-5">
-                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> KPIs: total, vacunaciones, en carencia, costo</li>
-                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Tabla con producto, fecha aplicacion y costo</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> KPIs separados: vacunas, desparasitaciones, tratamientos</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Alertas vencidas y proximas 7 dias</li>
                     <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Animales en carencia destacados</li>
                 </ul>
                 <div class="flex gap-2">
@@ -201,8 +210,8 @@
             <div class="p-5">
                 <ul class="text-sm text-gray-700 space-y-1.5 mb-5">
                     <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> KPIs: total ingresos, egresos y balance</li>
-                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Tablas detalladas de ingresos y egresos</li>
-                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Barras proporcionales por monto</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Tablas detalladas con barras proporcionales</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Costos de salud cruzados</li>
                 </ul>
                 <div class="flex gap-2">
                     <button onclick="generarReporte('financiero', true)"
@@ -219,6 +228,107 @@
 
     </div>
 
+    {{-- Fila 2: reportes nuevos --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {{-- VACUNACION --}}
+        <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-blue-800 p-5">
+                <div class="flex items-center gap-3">
+                    <span class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center shadow">
+                        <i class="fa-solid fa-syringe text-white text-2xl"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Vacunacion</h3>
+                        <p class="text-blue-100 text-sm">Calendario de proximas dosis</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5">
+                <ul class="text-sm text-gray-700 space-y-1.5 mb-5">
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Vacunaciones y desparasitaciones separadas</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Calendario de proximas dosis (60 dias)</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Lote, laboratorio y costo por aplicacion</li>
+                </ul>
+                <div class="flex gap-2">
+                    <button onclick="generarReporte('vacunacion', true)"
+                        class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl text-sm transition-all shadow-lg">
+                        <i class="fa-solid fa-eye"></i> Vista previa
+                    </button>
+                    <button onclick="generarReporte('vacunacion', false)"
+                        class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-blue-300 text-blue-700 hover:bg-blue-50 font-bold rounded-xl text-sm transition-all">
+                        <i class="fa-solid fa-download"></i> Descargar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {{-- TRATAMIENTOS --}}
+        <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-orange-600 to-orange-800 p-5">
+                <div class="flex items-center gap-3">
+                    <span class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center shadow">
+                        <i class="fa-solid fa-pills text-white text-2xl"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Tratamientos</h3>
+                        <p class="text-orange-100 text-sm">Tratamientos activos y clinicos</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5">
+                <ul class="text-sm text-gray-700 space-y-1.5 mb-5">
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Tratamientos en curso destacados</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Diagnostico y veterinario responsable</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Historial de cirugias y revisiones</li>
+                </ul>
+                <div class="flex gap-2">
+                    <button onclick="generarReporte('tratamientos', true)"
+                        class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-bold rounded-xl text-sm transition-all shadow-lg">
+                        <i class="fa-solid fa-eye"></i> Vista previa
+                    </button>
+                    <button onclick="generarReporte('tratamientos', false)"
+                        class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-orange-300 text-orange-700 hover:bg-orange-50 font-bold rounded-xl text-sm transition-all">
+                        <i class="fa-solid fa-download"></i> Descargar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {{-- HISTORIAL POR ANIMAL --}}
+        <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl overflow-hidden">
+            <div class="bg-gradient-to-r from-teal-600 to-teal-800 p-5">
+                <div class="flex items-center gap-3">
+                    <span class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center shadow">
+                        <i class="fa-solid fa-file-medical text-white text-2xl"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-xl font-bold text-white">Historial Clinico</h3>
+                        <p class="text-teal-100 text-sm">Por animal individual</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5">
+                <ul class="text-sm text-gray-700 space-y-1.5 mb-5">
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Ficha completa del animal</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Todo el historial sanitario individual</li>
+                    <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Selecciona el animal en los filtros</li>
+                </ul>
+                <div class="flex gap-2">
+                    <button onclick="generarReporte('historial', true)"
+                        class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-bold rounded-xl text-sm transition-all shadow-lg">
+                        <i class="fa-solid fa-eye"></i> Vista previa
+                    </button>
+                    <button onclick="generarReporte('historial', false)"
+                        class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-teal-300 text-teal-700 hover:bg-teal-50 font-bold rounded-xl text-sm transition-all">
+                        <i class="fa-solid fa-download"></i> Descargar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
     {{-- ── Info de uso ── --}}
     <div class="glass-effect border-4 border-white/50 rounded-xl p-4 shadow-xl flex items-center gap-4">
         <span class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
@@ -226,14 +336,13 @@
         </span>
         <div class="text-sm text-gray-700">
             <p class="font-bold">Como usar los reportes</p>
-            <p class="text-gray-600 mt-0.5">Selecciona el <strong>periodo</strong> y la <strong>finca</strong> que deseas analizar, luego haz clic en <strong>Vista previa</strong> para ver el PDF en el navegador o en <strong>Descargar</strong> para guardarlo.</p>
+            <p class="text-gray-600 mt-0.5">Selecciona el <strong>periodo</strong> y la <strong>finca</strong>, luego haz clic en <strong>Vista previa</strong> o <strong>Descargar</strong>. Para el historial clinico debes seleccionar el <strong>animal</strong> en los filtros primero.</p>
         </div>
     </div>
 
 </div>
 
 <script>
-    // Mostrar / ocultar campos de rango personalizado
     document.getElementById('sel-periodo').addEventListener('change', function () {
         var isCustom = this.value === 'custom';
         document.getElementById('div-fecha-inicio').classList.toggle('hidden', !isCustom);
@@ -241,10 +350,11 @@
     });
 
     function buildUrl(tipo, preview) {
-        var periodo    = document.getElementById('sel-periodo').value;
-        var fincaId    = document.getElementById('sel-finca').value;
-        var fechaIni   = document.getElementById('inp-fecha-inicio').value;
-        var fechaFin   = document.getElementById('inp-fecha-fin').value;
+        var periodo  = document.getElementById('sel-periodo').value;
+        var fincaId  = document.getElementById('sel-finca').value;
+        var animalId = document.getElementById('sel-animal').value;
+        var fechaIni = document.getElementById('inp-fecha-inicio').value;
+        var fechaFin = document.getElementById('inp-fecha-fin').value;
 
         var base = preview
             ? '{{ url("/reportes/preview") }}/' + tipo
@@ -253,6 +363,8 @@
         var params = '?periodo=' + encodeURIComponent(periodo);
 
         if (fincaId)  params += '&finca_id='     + encodeURIComponent(fincaId);
+        if (animalId) params += '&animal_id='    + encodeURIComponent(animalId);
+
         if (periodo === 'custom') {
             if (fechaIni) params += '&fecha_inicio=' + encodeURIComponent(fechaIni);
             if (fechaFin) params += '&fecha_fin='    + encodeURIComponent(fechaFin);
@@ -262,6 +374,13 @@
     }
 
     function generarReporte(tipo, preview) {
+        if (tipo === 'historial') {
+            var animalId = document.getElementById('sel-animal').value;
+            if (!animalId) {
+                alert('Selecciona un animal para generar el historial clinico.');
+                return;
+            }
+        }
         var url = buildUrl(tipo, preview);
         if (preview) {
             window.open(url, '_blank');
@@ -270,7 +389,6 @@
         }
     }
 
-    // Auto cerrar flash
     setTimeout(function () {
         var a = document.getElementById('alert-ok');
         if (a) { a.style.opacity = '0'; a.style.transition = 'opacity 0.5s'; setTimeout(function () { a.remove(); }, 500); }
