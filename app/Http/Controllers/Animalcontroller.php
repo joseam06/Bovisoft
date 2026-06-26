@@ -88,7 +88,12 @@ class AnimalController extends Controller
             ->where('user_id', Auth::id())
             ->firstOrFail();
 
-        return view('fincas.animales.show', compact('animal'));
+        $ultimosSanitarios = $animal->salud()
+            ->orderBy('fecha_aplicacion', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('fincas.animales.show', compact('animal', 'ultimosSanitarios'));
     }
 
     public function edit(int $id)
