@@ -71,13 +71,11 @@
                         @keydown.escape.window="abierto = false"
                         class="flex items-center gap-2 px-3 py-2 rounded-xl text-gray-600 hover:bg-gray-100 focus:outline-none transition duration-150 ease-in-out"
                     >
-                        @if (Auth::user()->foto_perfil)
-                            <img
-                                src="{{ asset('storage/' . Auth::user()->foto_perfil) }}"
-                                alt="{{ Auth::user()->name }}"
-                                class="size-8 rounded-full object-cover ring-2 ring-red-600"
-                            />
-                        @else
+                       @if (Auth::user()->foto_url)
+                        <img src="{{ Auth::user()->foto_url }}"
+                        alt="{{ Auth::user()->name }}"
+                        class="size-8 rounded-full object-cover ring-2 ring-red-600"/>
+                @else
                             <div class="size-8 rounded-full bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center ring-2 ring-red-200">
                                 <span class="text-white text-xs font-bold">
                                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
@@ -114,12 +112,10 @@
                         <!-- Encabezado -->
                         <div class="px-4 py-3 bg-gradient-to-r from-red-600 to-red-800">
                             <div class="flex items-center gap-3">
-                                @if (Auth::user()->foto_perfil)
-                                    <img
-                                        src="{{ asset('storage/' . Auth::user()->foto_perfil) }}"
-                                        alt="{{ Auth::user()->name }}"
-                                        class="size-10 rounded-full object-cover ring-2 ring-white/50"
-                                    />
+                               @if (Auth::user()->foto_url)
+                                <img src="{{ Auth::user()->foto_url }}"
+                                  alt="{{ Auth::user()->name }}"
+                                  class="size-10 rounded-full object-cover ring-2 ring-white/50"/>
                                 @else
                                     <div class="size-10 rounded-full bg-white/20 flex items-center justify-center">
                                         <span class="text-white text-sm font-bold">
@@ -202,9 +198,11 @@
 
         <div class="pt-4 pb-1 border-t border-gray-200">
             <div class="flex items-center px-4">
-                @if (Auth::user()->foto_perfil)
-                    <div class="shrink-0 me-3">
-                        <img class="size-10 rounded-full object-cover ring-2 ring-red-400" src="{{ asset('storage/' . Auth::user()->foto_perfil) }}" alt="{{ Auth::user()->name }}" />
+                @if (Auth::user()->foto_url)
+                <div class="shrink-0 me-3">
+                <img class="size-10 rounded-full object-cover ring-2 ring-red-400"
+                    src="{{ Auth::user()->foto_url }}"
+                    alt="{{ Auth::user()->name }}" />
                     </div>
                 @else
                     <div class="shrink-0 me-3">

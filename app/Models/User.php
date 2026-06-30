@@ -31,6 +31,8 @@ class User extends Authenticatable
         'password',
         'telefono',
         'foto_perfil',
+        'google_id',           
+        'profile_photo_path',
     ];
 
     /**
@@ -52,6 +54,7 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
+        'foto_url',
     ];
 
     /**
@@ -66,4 +69,23 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+/**
+ * Retorna la URL de la foto de perfil, sea local o de Google.
+ */
+public function getFotoUrlAttribute(): ?string
+{
+    if (!$this->profile_photo_path) {
+        return null;
+    }
+
+    // Si es URL externa (avatar de Google), devolverla tal cual
+    if (str_starts_with($this->profile_photo_path, 'http')) {
+        return $this->profile_photo_path;
+    }
+
+    // Si es archivo local, construir URL de storage
+    return asset('storage/' . $this->profile_photo_path);
+}
+
 }

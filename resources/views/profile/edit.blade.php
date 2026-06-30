@@ -10,7 +10,7 @@
         <div class="flex items-center space-x-4">
             <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center shadow-lg overflow-hidden">
                 @if($user->profile_photo_path)
-                    <img src="{{ Storage::url($user->profile_photo_path) }}" alt="Foto de perfil" class="w-full h-full object-cover">
+                    <img src="{{ $user->foto_url }}" alt="Foto de perfil" class="w-full h-full object-cover">
                 @else
                     <i class="fa-solid fa-user text-white text-2xl"></i>
                 @endif
@@ -55,7 +55,7 @@
             <div class="relative flex-shrink-0">
                 <div id="photo-preview-container" class="w-32 h-32 rounded-2xl bg-gradient-to-br from-red-100 to-red-200 border-4 border-red-300 overflow-hidden flex items-center justify-center shadow-lg">
                     @if($user->profile_photo_path)
-                        <img id="photo-preview" src="{{ Storage::url($user->profile_photo_path) }}" alt="Foto de perfil" class="w-full h-full object-cover">
+                        <img id="photo-preview" src="{{ $user->foto_url }}" alt="Foto de perfil" class="w-full h-full object-cover">
                     @else
                         <div id="photo-placeholder" class="flex flex-col items-center justify-center text-red-400">
                             <i class="fa-solid fa-user text-4xl mb-1"></i>

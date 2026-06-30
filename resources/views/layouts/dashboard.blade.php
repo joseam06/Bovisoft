@@ -290,10 +290,10 @@
             <p class="text-xs text-gray-500">Administrador</p>
         </div>
         <div class="w-12 h-12 bg-gradient-to-br from-red-600 to-red-900 rounded-xl flex items-center justify-center shadow-md overflow-hidden flex-shrink-0">
-            @if(auth()->user()->profile_photo_path)
-                <img src="{{ Storage::url(auth()->user()->profile_photo_path) }}" alt="Foto" class="w-full h-full object-cover">
+            @if(auth()->user()->foto_url)
+            <img src="{{ auth()->user()->foto_url }}" alt="Foto" class="w-full h-full object-cover">
             @else
-                <i class="fa-solid fa-user text-white text-lg"></i>
+            <i class="fa-solid fa-user text-white text-lg"></i>
             @endif
         </div>
         <i class="fa-solid fa-chevron-down text-gray-500 text-xs hidden sm:block transition-transform duration-200" id="chevron-icon"></i>

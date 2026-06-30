@@ -72,30 +72,30 @@ class ProfileController extends Controller
         $user      = Auth::user();
         $photoData = $request->input('photo');
 
-        // Validar que sea base64 de imagen válida
         if (!preg_match('/^data:image\/(jpeg|jpg|png|gif|webp);base64,/', $photoData)) {
             return back()->withErrors(['photo' => 'Formato de imagen no válido.']);
         }
 
-        // Extraer y decodificar base64
-        $base64 = preg_replace('/^data:image\/\w+;base64,/', '', $photoData);
+        $base64  = preg_replace('/^data:image\/\w+;base64,/', '', $photoData);
         $decoded = base64_decode($base64);
 
         if (!$decoded) {
             return back()->withErrors(['photo' => 'No se pudo procesar la imagen.']);
         }
 
-        // Validar tamaño (máx 5 MB)
         if (strlen($decoded) > 5 * 1024 * 1024) {
             return back()->withErrors(['photo' => 'La imagen no puede superar los 5 MB.']);
         }
 
-        // Eliminar foto anterior si existe
-        if ($user->profile_photo_path && Storage::disk('public')->exists($user->profile_photo_path)) {
+        // Eliminar foto anterior solo si es archivo local (no URL de Google)
+        if (
+            $user->profile_photo_path &&
+            !str_starts_with($user->profile_photo_path, 'http') &&
+            Storage::disk('public')->exists($user->profile_photo_path)
+        ) {
             Storage::disk('public')->delete($user->profile_photo_path);
         }
 
-        // Guardar nueva foto
         $filename = 'profile_photos/' . $user->id . '_' . time() . '.jpg';
         Storage::disk('public')->put($filename, $decoded);
 
@@ -109,7 +109,12 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->profile_photo_path && Storage::disk('public')->exists($user->profile_photo_path)) {
+        // Eliminar solo si es archivo local (no URL de Google)
+        if (
+            $user->profile_photo_path &&
+            !str_starts_with($user->profile_photo_path, 'http') &&
+            Storage::disk('public')->exists($user->profile_photo_path)
+        ) {
             Storage::disk('public')->delete($user->profile_photo_path);
         }
 
