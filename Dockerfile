@@ -37,4 +37,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Permisos
 RUN chown -R www-data:www-data storage bootstrap/cache
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 80
+CMD ["/entrypoint.sh"]
