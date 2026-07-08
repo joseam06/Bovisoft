@@ -1,4 +1,4 @@
-@extends('layouts.Dashboard')
+@extends('layouts.dashboard')
 
 @section('title', $finca->nombre)
 
