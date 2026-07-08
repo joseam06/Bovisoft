@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class FinanzasController extends Controller
 {
-    // ─── Panel principal ───────────────────────────────────────────────────────
+    // ─── Panel principal ───
 
     public function index(Request $request)
     {
@@ -93,7 +93,7 @@ class FinanzasController extends Controller
         ));
     }
 
-    // ─── INGRESOS ──────────────────────────────────────────────────────────────
+    // ─── INGRESOS ───
 
     public function createIngreso(Request $request)
     {
@@ -220,7 +220,7 @@ class FinanzasController extends Controller
             ->with('success', 'Ingreso eliminado exitosamente.');
     }
 
-    // ─── EGRESOS ───────────────────────────────────────────────────────────────
+    // ─── EGRESOS ───
 
     public function createEgreso(Request $request)
     {
@@ -298,7 +298,7 @@ class FinanzasController extends Controller
             ->with('success', 'Egreso eliminado exitosamente.');
     }
 
-    // ─── Helpers privados ──────────────────────────────────────────────────────
+    // ─── Helpers privados ───
 
     private function calcularPeriodo(string $periodo, Request $request): array
     {

@@ -78,7 +78,6 @@ class PotreroController extends Controller
 
         return view('potreros.create', compact('fincas', 'codigo', 'tipos_pasto', 'estados'));
     }
-
     /**
      * Store a newly created resource in storage.
      */

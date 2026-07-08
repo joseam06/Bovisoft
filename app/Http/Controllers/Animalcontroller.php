@@ -33,7 +33,6 @@ class AnimalController extends Controller
 
         return view('fincas.animales.create', compact('codigo', 'fincas', 'tipos', 'razas'));
     }
-
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -80,7 +79,6 @@ class AnimalController extends Controller
         return redirect()->route('animales.index')
             ->with('success', 'Animal registrado exitosamente');
     }
-
     public function show(int $id)
     {
         $animal = Animal::with(['finca', 'potrero', 'user'])
@@ -95,7 +93,6 @@ class AnimalController extends Controller
 
         return view('fincas.animales.show', compact('animal', 'ultimosSanitarios'));
     }
-
     public function edit(int $id)
     {
         $animal = Animal::where('id', $id)
