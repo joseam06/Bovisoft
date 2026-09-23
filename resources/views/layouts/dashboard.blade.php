@@ -233,14 +233,17 @@
         <!-- TOP HEADER -->
         <header class="glass-effect sticky top-0 z-30 shadow-xl">
             <div class="flex items-center justify-between px-6 py-4">
-                <!-- Search Bar -->
-                <div class="flex-1 max-w-lg">
-                    <div class="relative">
-                        <input type="text" placeholder="Buscar animal, finca, reporte..." 
-                               class="w-full pl-12 pr-4 py-3 bg-white border-2 border-red-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent shadow-sm transition-all">
-                        <i class="fa-solid fa-search absolute left-4 top-4 text-red-400 text-lg"></i>
-                    </div>
-                </div>
+                <!-- Search Bar - Desactivada temporalmente -->
+<div class="flex-1 max-w-lg">
+    <div class="relative">
+        <input type="text"
+               placeholder="Búsqueda próximamente..."
+               disabled
+               class="w-full pl-12 pr-4 py-3 bg-gray-100 border-2 border-gray-200 rounded-xl text-gray-400 cursor-not-allowed">
+
+        <i class="fa-solid fa-search absolute left-4 top-4 text-gray-400 text-lg"></i>
+    </div>
+</div>
 
                 <!-- Right Side Icons -->
                 <div class="flex items-center space-x-4 ml-6">
