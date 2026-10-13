@@ -7,7 +7,11 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpq-dev \
     libgd-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_mysql pdo_pgsql zip gd
 
 # Habilitar mod_rewrite de Apache
