@@ -18,7 +18,7 @@
     </head>
 
     <body class="min-h-screen bg-gradient-to-r from-red-700 via-red-800 to-black">
-        <!-- Opcional: brillo suave arriba para que se vea más pro -->
+        
         <div class="min-h-screen flex items-center justify-center px-4
                     font-sans text-gray-100 antialiased
                     bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.18),transparent_55%)]">
