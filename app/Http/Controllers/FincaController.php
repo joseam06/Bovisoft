@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Finca;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class FincaController extends Controller
 {
     public function index()
     {
-        $fincas = Finca::where('user_id', Auth::id())
+        $fincas = Finca::delUsuario(Auth::id())
            // ->with('animales')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -56,17 +57,21 @@ class FincaController extends Controller
 
     public function show(Finca $finca)
     {
+        Gate::authorize('view', $finca);
        // $finca->load('animales', 'potreros');
         return view('fincas.show', compact('finca'));
     }
 
     public function edit(Finca $finca)
     {
+        Gate::authorize('update', $finca);
         return view('fincas.edit', compact('finca'));
     }
 
     public function update(Request $request, Finca $finca)
     {
+        Gate::authorize('update', $finca);
+
         $validated = $request->validate([
             'nombre' => 'required|string|max:255',
             'area' => 'nullable|numeric|min:0',
@@ -87,6 +92,8 @@ class FincaController extends Controller
 
     public function destroy(Finca $finca)
     {
+        Gate::authorize('delete', $finca);
+
         $finca->delete();
         return redirect()->route('fincas.index')
             ->with('success', 'Finca eliminada exitosamente');
@@ -94,7 +101,7 @@ class FincaController extends Controller
 
     public function getFincasParaMapa()
     {
-        $fincas = Finca::where('user_id', Auth::id())
+        $fincas = Finca::delUsuario(Auth::id())
             ->activas()
             ->conUbicacion()
           //  ->with('animales')
@@ -117,6 +124,8 @@ class FincaController extends Controller
 
     public function toggleEstado(Finca $finca)
     {
+        Gate::authorize('toggleEstado', $finca);
+
         $finca->activa = !$finca->activa;
         $finca->save();
 

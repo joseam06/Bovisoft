@@ -6,6 +6,7 @@ use App\Models\Potrero;
 use App\Models\Finca;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class PotreroController extends Controller
 {
@@ -14,7 +15,14 @@ class PotreroController extends Controller
      */
     public function index(Request $request)
     {
+        if ($request->filled('finca_id')) {
+            $request->validate(['finca_id' => 'integer|min:1']);
+            $finca = Finca::findOrFail($request->input('finca_id'));
+            Gate::authorize('view', $finca);
+        }
+
         $query = Potrero::where('user_id', Auth::id())
+            ->whereHas('finca', fn ($query) => $query->delUsuario(Auth::id()))
             ->with('finca');
 
         // Búsqueda
@@ -39,13 +47,15 @@ class PotreroController extends Controller
         $potreros = $query->latest()->paginate(10);
 
         // Estadísticas
-        $total = Potrero::where('user_id', Auth::id())->count();
-        $activos = Potrero::where('user_id', Auth::id())->activos()->count();
-        $en_descanso = Potrero::where('user_id', Auth::id())->enDescanso()->count();
-        $area_total = Potrero::where('user_id', Auth::id())->sum('area');
+        $base = Potrero::where('user_id', Auth::id())
+            ->whereHas('finca', fn ($query) => $query->delUsuario(Auth::id()));
+        $total = (clone $base)->count();
+        $activos = (clone $base)->activos()->count();
+        $en_descanso = (clone $base)->enDescanso()->count();
+        $area_total = (clone $base)->sum('area');
 
         // Fincas para el filtro
-        $fincas = Finca::where('user_id', Auth::id())->orderBy('nombre')->get();
+        $fincas = Finca::delUsuario(Auth::id())->orderBy('nombre')->get();
 
         return view('potreros.index', compact(
             'potreros',
@@ -238,18 +248,30 @@ class PotreroController extends Controller
     /**
      * Ver potreros de una finca específica
      */
-    public function porFinca(Finca $finca)
+    public function porFinca(Request $request, Finca $finca)
     {
-        // Verificar permisos
-        if ($finca->user_id !== Auth::id()) {
-            abort(403, 'No tienes permiso para ver los potreros de esta finca');
-        }
+        Gate::authorize('view', $finca);
+        $request->merge(['finca_id' => $finca->id]);
 
-        $potreros = Potrero::where('finca_id', $finca->id)
+        return $this->index($request);
+    }
+
+    public function disponiblesPorFinca(Finca $finca)
+    {
+        Gate::authorize('view', $finca);
+
+        $potreros = $finca->potreros()
             ->where('user_id', Auth::id())
-            ->latest()
-            ->get();
+            ->activos()
+            ->get(['id', 'nombre', 'capacidad_animales', 'animales_actuales'])
+            ->map(fn ($potrero) => [
+                'id' => $potrero->id,
+                'nombre' => $potrero->nombre,
+                'disponibilidad' => $potrero->capacidad_animales
+                    ? max(0, $potrero->capacidad_animales - $potrero->animales_actuales)
+                    : 'Sin límite',
+            ]);
 
-        return view('potreros.por-finca', compact('finca', 'potreros'));
+        return response()->json($potreros);
     }
 }

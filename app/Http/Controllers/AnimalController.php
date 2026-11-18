@@ -7,12 +7,14 @@ use App\Models\Finca;
 use App\Models\Potrero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class AnimalController extends Controller
 {
     public function index()
     {
         $animales = Animal::where('user_id', Auth::id())
+            ->whereHas('finca', fn ($query) => $query->delUsuario(Auth::id()))
             ->with(['finca', 'potrero'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -184,9 +186,11 @@ class AnimalController extends Controller
             ->with('success', 'Animal eliminado exitosamente');
     }
 
-    public function porFinca($fincaId)
+    public function porFinca(Finca $finca)
     {
-        $animales = Animal::where('finca_id', $fincaId)
+        Gate::authorize('view', $finca);
+
+        $animales = Animal::where('finca_id', $finca->id)
             ->where('user_id', Auth::id())
             ->activos()
             ->get();
