@@ -48,16 +48,9 @@
                         <label class="block text-sm font-bold text-gray-700 mb-2">Animal <span class="text-red-600">*</span></label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="fa-solid fa-cow text-gray-400"></i></div>
-                            <select name="animal_id" id="animal_id"
-                                class="w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('animal_id') border-red-500 @enderror">
-                                @foreach($animales as $a)
-                                    <option value="{{ $a->id }}" data-finca="{{ $a->finca_id }}"
-                                        {{ old('animal_id', $registro->animal_id) == $a->id ? 'selected' : '' }}>
-                                        {{ $a->nombre ?? $a->codigo }} — {{ $a->finca->nombre ?? '' }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none"><i class="fa-solid fa-chevron-down text-gray-400"></i></div>
+                            <input type="text" value="{{ $registro->animal->nombre ?? $registro->animal->codigo }}" readonly
+                                class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl bg-gray-100 text-gray-800">
+                            <input type="hidden" name="animal_id" value="{{ $registro->animal_id }}">
                         </div>
                         @error('animal_id') <p class="text-red-600 text-sm mt-1"><i class="fa-solid fa-circle-exclamation mr-1"></i>{{ $message }}</p> @enderror
                     </div>
@@ -66,13 +59,9 @@
                         <label class="block text-sm font-bold text-gray-700 mb-2">Finca <span class="text-red-600">*</span></label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="fa-solid fa-map-marker-alt text-gray-400"></i></div>
-                            <select name="finca_id" id="finca_id"
-                                class="w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('finca_id') border-red-500 @enderror">
-                                @foreach($fincas as $f)
-                                    <option value="{{ $f->id }}" {{ old('finca_id', $registro->finca_id) == $f->id ? 'selected' : '' }}>{{ $f->nombre }}</option>
-                                @endforeach
-                            </select>
-                            <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none"><i class="fa-solid fa-chevron-down text-gray-400"></i></div>
+                            <input type="text" value="{{ $registro->finca->nombre }}" readonly
+                                class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl bg-gray-100 text-gray-800">
+                            <input type="hidden" name="finca_id" value="{{ $registro->finca_id }}">
                         </div>
                         @error('finca_id') <p class="text-red-600 text-sm mt-1"><i class="fa-solid fa-circle-exclamation mr-1"></i>{{ $message }}</p> @enderror
                     </div>
@@ -92,10 +81,13 @@
                         <label class="block text-sm font-bold text-gray-700 mb-2">Fecha <span class="text-red-600">*</span></label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i class="fa-solid fa-calendar text-gray-400"></i></div>
-                            <input type="date" name="fecha" value="{{ old('fecha', $registro->fecha->format('Y-m-d')) }}" max="{{ date('Y-m-d') }}"
+                            <input type="date" name="fecha" value="{{ $requiereRevisionFecha ? $registro->fecha->format('Y-m-d') : old('fecha', $registro->fecha->format('Y-m-d')) }}" max="{{ date('Y-m-d') }}" @readonly($requiereRevisionFecha)
                                 class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('fecha') border-red-500 @enderror">
                         </div>
                         @error('fecha') <p class="text-red-600 text-sm mt-1"><i class="fa-solid fa-circle-exclamation mr-1"></i>{{ $message }}</p> @enderror
+                        @if($requiereRevisionFecha)
+                            <p class="text-amber-800 text-sm mt-2">Cambiar la fecha requiere revisión online porque el animal fue trasladado o está inactivo. Puedes corregir los demás datos conservando la fecha original.</p>
+                        @endif
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">Sesión</label>
@@ -109,6 +101,7 @@
                             </select>
                             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none"><i class="fa-solid fa-chevron-down text-gray-400"></i></div>
                         </div>
+                        @error('sesion') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-2">Litros <span class="text-red-600">*</span></label>
@@ -132,6 +125,7 @@
                             </select>
                             <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none"><i class="fa-solid fa-chevron-down text-gray-400"></i></div>
                         </div>
+                        @error('calidad') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
                     </div>
                 </div>
             </div>
@@ -146,6 +140,7 @@
                 </div>
                 <textarea name="observaciones" rows="3" placeholder="Notas adicionales..."
                     class="w-full px-4 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all resize-none">{{ old('observaciones', $registro->observaciones) }}</textarea>
+                @error('observaciones') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
             </div>
 
            {{-- Botones --}}
@@ -175,14 +170,5 @@
             </button>
         </form>
     </div>
-        </div>
-    </form>
 </div>
-
-<script>
-document.getElementById('animal_id').addEventListener('change', function () {
-    const fincaId = this.options[this.selectedIndex].getAttribute('data-finca');
-    if (fincaId) document.getElementById('finca_id').value = fincaId;
-});
-</script>
 @endsection

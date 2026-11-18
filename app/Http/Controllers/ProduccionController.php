@@ -2,39 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Produccion;
 use App\Models\Animal;
 use App\Models\Finca;
+use App\Models\Produccion;
+use App\Services\ProduccionService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class ProduccionController extends Controller
 {
-    // ─── Tipos de animal que pueden producir leche ─────────────────────────────
-    private const TIPOS_PRODUCTIVOS = ['vaca', 'novilla'];
-
     // ─── index ─────────────────────────────────────────────────────────────────
 
-    public function index(Request $request)
+    public function index(Request $request, ProduccionService $service)
     {
         $userId = Auth::id();
-        $hoy    = Carbon::today();
+        $hoy = Carbon::today();
 
         // Estadísticas globales
-        $totalHoy    = Produccion::where('user_id', $userId)->whereDate('fecha', $hoy)->sum('litros');
-        $totalSemana = Produccion::where('user_id', $userId)
+        $totalHoy = Produccion::autorizadasPara($userId)->whereDate('fecha', $hoy)->sum('litros');
+        $totalSemana = Produccion::autorizadasPara($userId)
             ->whereBetween('fecha', [$hoy->copy()->startOfWeek(), $hoy->copy()->endOfWeek()])
             ->sum('litros');
-        $totalMes = Produccion::where('user_id', $userId)
+        $totalMes = Produccion::autorizadasPara($userId)
             ->whereMonth('fecha', $hoy->month)
             ->whereYear('fecha', $hoy->year)
             ->sum('litros');
-        $totalRegistros = Produccion::where('user_id', $userId)->count();
+        $totalRegistros = Produccion::autorizadasPara($userId)->count();
 
         // Top 5 animales del mes
         $topAnimales = Produccion::with('animal')
-            ->where('user_id', $userId)
+            ->autorizadasPara($userId)
             ->whereMonth('fecha', $hoy->month)
             ->whereYear('fecha', $hoy->year)
             ->selectRaw('animal_id, SUM(litros) as total_litros, COUNT(*) as total_registros')
@@ -44,39 +42,50 @@ class ProduccionController extends Controller
             ->get();
 
         // Datos para el gráfico de los últimos 7 días
-        $chartDias    = [];
-        $chartLitros  = [];
+        $chartDias = [];
+        $chartLitros = [];
         for ($i = 6; $i >= 0; $i--) {
             $dia = $hoy->copy()->subDays($i);
-            $chartDias[]   = $dia->format('d/m');
-            $chartLitros[] = (float) Produccion::where('user_id', $userId)
+            $chartDias[] = $dia->format('d/m');
+            $chartLitros[] = (float) Produccion::autorizadasPara($userId)
                 ->whereDate('fecha', $dia)
                 ->sum('litros');
         }
 
         // Listado filtrable
         $query = Produccion::with(['animal', 'finca'])
-            ->where('user_id', $userId);
+            ->autorizadasPara($userId);
 
-        if ($request->filled('finca_id'))    $query->where('finca_id', $request->finca_id);
-        if ($request->filled('animal_id'))   $query->where('animal_id', $request->animal_id);
-        if ($request->filled('sesion'))      $query->where('sesion', $request->sesion);
-        if ($request->filled('calidad'))     $query->where('calidad', $request->calidad);
-        if ($request->filled('fecha_desde')) $query->whereDate('fecha', '>=', $request->fecha_desde);
-        if ($request->filled('fecha_hasta')) $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        if ($request->filled('finca_id')) {
+            $query->where('finca_id', $request->finca_id);
+        }
+        if ($request->filled('animal_id')) {
+            $query->where('animal_id', $request->animal_id);
+        }
+        if ($request->filled('sesion')) {
+            $query->where('sesion', $request->sesion);
+        }
+        if ($request->filled('calidad')) {
+            $query->where('calidad', $request->calidad);
+        }
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha', '>=', $request->fecha_desde);
+        }
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha', '<=', $request->fecha_hasta);
+        }
 
         $registros = $query->orderBy('fecha', 'desc')
             ->paginate(15)
             ->appends($request->query());
 
-        $fincas   = Finca::where('user_id', $userId)->orderBy('nombre')->get();
-        $animales = Animal::where('user_id', $userId)
-            ->where('estado', 'activo')
-            ->whereIn('tipo', self::TIPOS_PRODUCTIVOS)
+        $fincas = Finca::where('user_id', $userId)->orderBy('nombre')->get();
+        $animales = $service->animalesElegibles($request->user())
+            ->with('finca')
             ->orderBy('nombre')
             ->get();
 
-        $sesiones  = Produccion::getSesiones();
+        $sesiones = Produccion::getSesiones();
         $calidades = Produccion::getCalidades();
 
         return view('produccion.index', compact(
@@ -88,26 +97,24 @@ class ProduccionController extends Controller
 
     // ─── create ────────────────────────────────────────────────────────────────
 
-    public function create(Request $request)
+    public function create(Request $request, ProduccionService $service)
     {
         $fincas = Finca::where('user_id', Auth::id())
             ->where('activa', true)
             ->orderBy('nombre')
             ->get();
 
-        $animales = Animal::where('user_id', Auth::id())
-            ->where('estado', 'activo')
-            ->whereIn('tipo', self::TIPOS_PRODUCTIVOS)
+        $animales = $service->animalesElegibles($request->user())
             ->with('finca')
             ->orderBy('nombre')
             ->get();
 
-        $sesiones  = Produccion::getSesiones();
+        $sesiones = Produccion::getSesiones();
         $calidades = Produccion::getCalidades();
-        $codigo    = Produccion::generarCodigo();
+        $codigo = Produccion::generarCodigo();
 
         $animalPresel = $request->filled('animal_id')
-            ? Animal::where('user_id', Auth::id())->find($request->animal_id)
+            ? $animales->firstWhere('id', $request->integer('animal_id'))
             : null;
 
         return view('produccion.create', compact(
@@ -117,65 +124,23 @@ class ProduccionController extends Controller
 
     // ─── store ─────────────────────────────────────────────────────────────────
 
-    public function store(Request $request)
+    public function store(Request $request, ProduccionService $service)
     {
-        $validated = $request->validate([
-            'animal_id'     => 'required|exists:animales,id',
-            'finca_id'      => 'required|exists:fincas,id',
-            'fecha'         => 'required|date|before_or_equal:today',
-            'sesion'        => 'nullable|in:manana,tarde,noche',
-            'litros'        => 'required|numeric|min:0.01|max:999.99',
-            'calidad'       => 'nullable|in:normal,buena,excelente,rechazada',
-            'observaciones' => 'nullable|string|max:1000',
-        ], [
-            'animal_id.required'        => 'Debes seleccionar un animal.',
-            'finca_id.required'         => 'Debes seleccionar una finca.',
-            'fecha.required'            => 'La fecha es obligatoria.',
-            'fecha.before_or_equal'     => 'La fecha no puede ser futura.',
-            'litros.required'           => 'Los litros producidos son obligatorios.',
-            'litros.min'                => 'La producción debe ser mayor a 0 litros.',
-            'litros.max'                => 'El valor máximo permitido es 999.99 litros.',
-        ]);
-
-        // Verificar que el animal pertenece al usuario y es productivo
-        $animal = Animal::where('id', $validated['animal_id'])
-            ->where('user_id', Auth::id())
-            ->whereIn('tipo', self::TIPOS_PRODUCTIVOS)
-            ->first();
-
-        if (!$animal) {
-            return back()->withErrors(['animal_id' => 'El animal seleccionado no es válido o no produce leche.']);
-        }
-
-        // Verificar que la finca pertenece al usuario
-        $finca = Finca::where('id', $validated['finca_id'])
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if (!$finca) {
-            return back()->withErrors(['finca_id' => 'No tienes permiso sobre esta finca.']);
-        }
-
-        $validated['user_id'] = Auth::id();
-        $validated['codigo']  = Produccion::generarCodigo();
-
-        Produccion::create($validated);
+        $registro = $service->create($request->user(), $request->all());
 
         return redirect()->route('produccion.index')
-            ->with('success', 'Producción ' . $validated['codigo'] . ' registrada exitosamente.');
+            ->with('success', 'Producción '.$registro->codigo.' registrada exitosamente.');
     }
 
     // ─── show ──────────────────────────────────────────────────────────────────
 
-    public function show(int $id)
+    public function show(int $id, ProduccionService $service)
     {
-        $registro = Produccion::with(['animal', 'finca'])
-            ->where('user_id', Auth::id())
-            ->findOrFail($id);
+        $registro = $service->findForUser(Auth::user(), $id);
 
         // Registros del mismo animal en el mismo mes para comparar
         $historialAnimal = Produccion::where('animal_id', $registro->animal_id)
-            ->where('user_id', Auth::id())
+            ->autorizadasPara(Auth::id())
             ->where('id', '!=', $id)
             ->orderBy('fecha', 'desc')
             ->limit(10)
@@ -186,60 +151,24 @@ class ProduccionController extends Controller
 
     // ─── edit ──────────────────────────────────────────────────────────────────
 
-    public function edit(int $id)
+    public function edit(int $id, ProduccionService $service)
     {
-        $registro = Produccion::where('user_id', Auth::id())->findOrFail($id);
+        $registro = $service->findForUser(Auth::user(), $id);
+        $requiereRevisionFecha = $service->requiereRevisionFecha($registro);
 
-        $fincas = Finca::where('user_id', Auth::id())->orderBy('nombre')->get();
-        $animales = Animal::where('user_id', Auth::id())
-            ->where('estado', 'activo')
-            ->whereIn('tipo', self::TIPOS_PRODUCTIVOS)
-            ->with('finca')
-            ->orderBy('nombre')
-            ->get();
-
-        $sesiones  = Produccion::getSesiones();
+        $sesiones = Produccion::getSesiones();
         $calidades = Produccion::getCalidades();
 
         return view('produccion.edit', compact(
-            'registro', 'fincas', 'animales', 'sesiones', 'calidades'
+            'registro', 'requiereRevisionFecha', 'sesiones', 'calidades'
         ));
     }
 
     // ─── update ────────────────────────────────────────────────────────────────
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id, ProduccionService $service)
     {
-        $registro = Produccion::where('user_id', Auth::id())->findOrFail($id);
-
-        $validated = $request->validate([
-            'animal_id'     => 'required|exists:animales,id',
-            'finca_id'      => 'required|exists:fincas,id',
-            'fecha'         => 'required|date|before_or_equal:today',
-            'sesion'        => 'nullable|in:manana,tarde,noche',
-            'litros'        => 'required|numeric|min:0.01|max:999.99',
-            'calidad'       => 'nullable|in:normal,buena,excelente,rechazada',
-            'observaciones' => 'nullable|string|max:1000',
-        ]);
-
-        $animal = Animal::where('id', $validated['animal_id'])
-            ->where('user_id', Auth::id())
-            ->whereIn('tipo', self::TIPOS_PRODUCTIVOS)
-            ->first();
-
-        if (!$animal) {
-            return back()->withErrors(['animal_id' => 'El animal no es válido o no produce leche.']);
-        }
-
-        $finca = Finca::where('id', $validated['finca_id'])
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if (!$finca) {
-            return back()->withErrors(['finca_id' => 'No tienes permiso sobre esta finca.']);
-        }
-
-        $registro->update($validated);
+        $registro = $service->update($request->user(), $id, $request->all());
 
         return redirect()->route('produccion.show', $registro->id)
             ->with('success', 'Registro de producción actualizado exitosamente.');
@@ -249,7 +178,7 @@ class ProduccionController extends Controller
 
     public function destroy(int $id)
     {
-        $registro = Produccion::where('user_id', Auth::id())->findOrFail($id);
+        $registro = Produccion::autorizadasPara(Auth::id())->findOrFail($id);
         $registro->delete();
 
         return redirect()->route('produccion.index')
@@ -258,54 +187,54 @@ class ProduccionController extends Controller
 
     // ─── API: datos del gráfico (7 o 30 días) ─────────────────────────────────
 
-   public function apiChart(Request $request)
-{
-    $userId = Auth::id();
-    $rango  = $request->get('rango', '7dias');
-    $hoy    = Carbon::today();
+    public function apiChart(Request $request)
+    {
+        $userId = Auth::id();
+        $rango = $request->get('rango', '7dias');
+        $hoy = Carbon::today();
 
-    $data = [];
+        $data = [];
 
-    if ($rango === '7dias') {
-        for ($i = 6; $i >= 0; $i--) {
-            $dia    = $hoy->copy()->subDays($i);
-            $data[] = [
-                'fecha'  => $dia->format('d/m'),
-                'litros' => (float) Produccion::where('user_id', $userId)
-                    ->whereDate('fecha', $dia)
-                    ->sum('litros'),
+        if ($rango === '7dias') {
+            for ($i = 6; $i >= 0; $i--) {
+                $dia = $hoy->copy()->subDays($i);
+                $data[] = [
+                    'fecha' => $dia->format('d/m'),
+                    'litros' => (float) Produccion::autorizadasPara($userId)
+                        ->whereDate('fecha', $dia)
+                        ->sum('litros'),
+                ];
+            }
+        } elseif ($rango === '30dias') {
+            for ($i = 29; $i >= 0; $i--) {
+                $dia = $hoy->copy()->subDays($i);
+                $data[] = [
+                    'fecha' => $dia->format('d/m'),
+                    'litros' => (float) Produccion::autorizadasPara($userId)
+                        ->whereDate('fecha', $dia)
+                        ->sum('litros'),
+                ];
+            }
+        } elseif ($rango === 'anio') {
+            $mesesNombres = [
+                1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr',
+                5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago',
+                9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic',
             ];
+            for ($m = 1; $m <= 12; $m++) {
+                $inicio = Carbon::create($hoy->year, $m, 1)->startOfMonth();
+                $fin = $inicio->copy()->endOfMonth();
+                $data[] = [
+                    'fecha' => $mesesNombres[$m],
+                    'litros' => (float) Produccion::autorizadasPara($userId)
+                        ->whereBetween('fecha', [$inicio, $fin])
+                        ->sum('litros'),
+                ];
+            }
         }
-    } elseif ($rango === '30dias') {
-        for ($i = 29; $i >= 0; $i--) {
-            $dia    = $hoy->copy()->subDays($i);
-            $data[] = [
-                'fecha'  => $dia->format('d/m'),
-                'litros' => (float) Produccion::where('user_id', $userId)
-                    ->whereDate('fecha', $dia)
-                    ->sum('litros'),
-            ];
-        }
-    } elseif ($rango === 'anio') {
-        $mesesNombres = [
-            1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr',
-            5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago',
-            9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic',
-        ];
-        for ($m = 1; $m <= 12; $m++) {
-            $inicio = Carbon::create($hoy->year, $m, 1)->startOfMonth();
-            $fin    = $inicio->copy()->endOfMonth();
-            $data[] = [
-                'fecha'  => $mesesNombres[$m],
-                'litros' => (float) Produccion::where('user_id', $userId)
-                    ->whereBetween('fecha', [$inicio, $fin])
-                    ->sum('litros'),
-            ];
-        }
+
+        return response()->json($data);
     }
-
-    return response()->json($data);
-}
 
     // ─── porAnimal ─────────────────────────────────────────────────────────────
 
@@ -314,13 +243,13 @@ class ProduccionController extends Controller
         $animal = Animal::where('user_id', Auth::id())->findOrFail($animalId);
 
         $registros = Produccion::where('animal_id', $animalId)
-            ->where('user_id', Auth::id())
+            ->autorizadasPara(Auth::id())
             ->orderBy('fecha', 'desc')
             ->paginate(15);
 
-        $totalAnimal   = (float) Produccion::where('animal_id', $animalId)->where('user_id', Auth::id())->sum('litros');
-        $promedioAnimal = (float) Produccion::where('animal_id', $animalId)->where('user_id', Auth::id())->avg('litros');
-        $totalRegistros = Produccion::where('animal_id', $animalId)->where('user_id', Auth::id())->count();
+        $totalAnimal = (float) Produccion::where('animal_id', $animalId)->autorizadasPara(Auth::id())->sum('litros');
+        $promedioAnimal = (float) Produccion::where('animal_id', $animalId)->autorizadasPara(Auth::id())->avg('litros');
+        $totalRegistros = Produccion::where('animal_id', $animalId)->autorizadasPara(Auth::id())->count();
 
         return view('produccion.por_animal', compact(
             'animal', 'registros', 'totalAnimal', 'promedioAnimal', 'totalRegistros'

@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class Produccion extends Model
 {
@@ -19,21 +20,39 @@ class Produccion extends Model
     ];
 
     protected $casts = [
-        'fecha'  => 'date',
+        'fecha' => 'date',
         'litros' => 'decimal:2',
     ];
 
     // ─── Relaciones ────────────────────────────────────────────────────────────
 
-    public function animal() { return $this->belongsTo(Animal::class); }
-    public function finca()  { return $this->belongsTo(Finca::class); }
-    public function user()   { return $this->belongsTo(User::class); }
+    public function animal()
+    {
+        return $this->belongsTo(Animal::class);
+    }
+
+    public function finca()
+    {
+        return $this->belongsTo(Finca::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     // ─── Scopes ────────────────────────────────────────────────────────────────
 
     public function scopeDelUsuario($query)
     {
         return $query->where('user_id', auth()->id());
+    }
+
+    public function scopeAutorizadasPara(Builder $query, int $userId): Builder
+    {
+        return $query->where('producciones.user_id', $userId)
+            ->whereHas('animal', fn ($animal) => $animal->where('user_id', $userId))
+            ->whereHas('finca', fn ($finca) => $finca->delUsuario($userId));
     }
 
     public function scopeHoy($query)
@@ -52,7 +71,7 @@ class Produccion extends Model
     public function scopeEsteMes($query)
     {
         return $query->whereMonth('fecha', Carbon::now()->month)
-                     ->whereYear('fecha', Carbon::now()->year);
+            ->whereYear('fecha', Carbon::now()->year);
     }
 
     // ─── Código autogenerado ───────────────────────────────────────────────────
@@ -61,7 +80,8 @@ class Produccion extends Model
     {
         $ultimo = static::withTrashed()->latest('id')->first();
         $numero = $ultimo ? $ultimo->id + 1 : 1;
-        return 'PROD-' . str_pad($numero, 6, '0', STR_PAD_LEFT);
+
+        return 'PROD-'.str_pad($numero, 6, '0', STR_PAD_LEFT);
     }
 
     // ─── Catálogos estáticos ───────────────────────────────────────────────────
@@ -70,16 +90,16 @@ class Produccion extends Model
     {
         return [
             'manana' => 'Mañana',
-            'tarde'  => 'Tarde',
-            'noche'  => 'Noche',
+            'tarde' => 'Tarde',
+            'noche' => 'Noche',
         ];
     }
 
     public static function getCalidades(): array
     {
         return [
-            'normal'    => 'Normal',
-            'buena'     => 'Buena',
+            'normal' => 'Normal',
+            'buena' => 'Buena',
             'excelente' => 'Excelente',
             'rechazada' => 'Rechazada',
         ];
