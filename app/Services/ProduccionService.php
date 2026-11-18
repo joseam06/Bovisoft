@@ -2,18 +2,20 @@
 
 namespace App\Services;
 
+use App\Exceptions\ProduccionVersionConflict;
 use App\Models\Animal;
 use App\Models\Finca;
 use App\Models\Produccion;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 class ProduccionService
 {
+    public function __construct(private readonly ProductionJournal $journal) {}
+
     public const TIPOS_PRODUCTIVOS = ['vaca', 'novilla'];
 
     public const REVISION_FECHA = 'Cambiar la fecha requiere revisión online porque el animal fue trasladado o está inactivo. Conserva la fecha original para guardar las demás correcciones.';
@@ -37,11 +39,11 @@ class ProduccionService
             || (string) $registro->animal->finca_id !== (string) $registro->finca_id;
     }
 
-    public function create(User $user, array $input): Produccion
+    public function create(User $user, array $input, ?string $clientUuid = null): Produccion
     {
         $data = $this->validate($input);
 
-        return DB::transaction(function () use ($user, $data) {
+        return $this->journal->transaction($user->id, function () use ($user, $data, $clientUuid) {
             $animal = Animal::where('user_id', $user->id)->lockForUpdate()->find($data['animal_id']);
             if (! $animal || $animal->estado !== 'activo' || ! in_array($animal->tipo, self::TIPOS_PRODUCTIVOS, true)) {
                 throw ValidationException::withMessages(['animal_id' => 'Selecciona un animal activo y productivo de tu cuenta.']);
@@ -57,13 +59,20 @@ class ProduccionService
                 throw ValidationException::withMessages(['finca_id' => 'El animal no pertenece a la finca seleccionada.']);
             }
 
-            return Produccion::create($data + ['user_id' => $user->id, 'codigo' => Produccion::generarCodigo()]);
+            $record = new Produccion($data + ['user_id' => $user->id, 'codigo' => $this->journal->nextCode()]);
+            if ($clientUuid !== null) {
+                $record->client_uuid = $clientUuid;
+            }
+            $record->save();
+            $this->journal->record($record);
+
+            return $record;
         });
     }
 
     public function update(User $user, int $id, array $input): Produccion
     {
-        return DB::transaction(function () use ($user, $id, $input) {
+        return $this->journal->transaction($user->id, function () use ($user, $id, $input) {
             $registro = Produccion::autorizadasPara($user->id)->lockForUpdate()->findOrFail($id);
             // Recheck the original references while locked; inactivity or a move
             // does not invalidate the original attribution of a historical record.
@@ -74,6 +83,9 @@ class ProduccionService
             $registro->setRelation('finca', $finca);
 
             $data = $this->validate($input, updating: true);
+            if ((int) $data['base_version'] !== $registro->version) {
+                throw new ProduccionVersionConflict($registro);
+            }
             $errors = [];
             foreach (['animal_id', 'finca_id'] as $field) {
                 if (array_key_exists($field, $data) && (string) $data[$field] !== (string) $registro->$field) {
@@ -89,10 +101,27 @@ class ProduccionService
                 throw ValidationException::withMessages($errors);
             }
 
-            unset($data['animal_id'], $data['finca_id']);
+            unset($data['animal_id'], $data['finca_id'], $data['base_version']);
+            $registro->version++;
             $registro->update($data);
+            $this->journal->record($registro);
 
             return $registro;
+        });
+    }
+
+    public function delete(User $user, int $id, array $input): void
+    {
+        $this->journal->transaction($user->id, function () use ($user, $id, $input) {
+            $record = Produccion::autorizadasPara($user->id)->lockForUpdate()->findOrFail($id);
+            $data = Validator::make($input, ['base_version' => 'required|integer|min:1'])->validate();
+            if ((int) $data['base_version'] !== $record->version) {
+                throw new ProduccionVersionConflict($record);
+            }
+            $record->version++;
+            $record->save();
+            $record->delete();
+            $this->journal->record($record, 'remove');
         });
     }
 
@@ -100,7 +129,7 @@ class ProduccionService
     {
         $referenceRule = $updating ? 'sometimes|required|integer|min:1' : 'required|integer|min:1';
 
-        return Validator::make($input, [
+        $rules = [
             'animal_id' => $referenceRule,
             'finca_id' => $referenceRule,
             'fecha' => 'required|date_format:Y-m-d|before_or_equal:today',
@@ -108,7 +137,12 @@ class ProduccionService
             'litros' => 'required|numeric|min:0.01|max:999.99|decimal:0,2',
             'calidad' => 'nullable|in:normal,buena,excelente,rechazada',
             'observaciones' => 'nullable|string|max:1000',
-        ], [
+        ];
+        if ($updating) {
+            $rules['base_version'] = 'required|integer|min:1';
+        }
+
+        return Validator::make($input, $rules, [
             'animal_id.required' => 'Debes seleccionar un animal.',
             'finca_id.required' => 'Debes seleccionar una finca.',
             'fecha.required' => 'La fecha es obligatoria.',

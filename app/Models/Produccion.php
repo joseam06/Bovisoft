@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Produccion extends Model
 {
@@ -22,7 +23,16 @@ class Produccion extends Model
     protected $casts = [
         'fecha' => 'date',
         'litros' => 'decimal:2',
+        'version' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Produccion $record) {
+            $record->client_uuid ??= (string) Str::uuid();
+            $record->version ??= 1;
+        });
+    }
 
     // ─── Relaciones ────────────────────────────────────────────────────────────
 

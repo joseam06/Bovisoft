@@ -9,6 +9,11 @@ if (! in_array($engine, ['sqlite', 'mysql', 'pgsql'], true)) {
 }
 
 if (! in_array($engine, PDO::getAvailableDrivers(), true)) {
+    if ($engine === 'pgsql' && ! getenv('BOVISOFT_PGSQL_EXTENSION_ATTEMPTED')) {
+        putenv('BOVISOFT_PGSQL_EXTENSION_ATTEMPTED=1');
+        $process = proc_open([PHP_BINARY, '-d', 'extension=pdo_pgsql', __FILE__, $engine], [STDIN, STDOUT, STDERR], $pipes, dirname(__DIR__));
+        exit(is_resource($process) ? proc_close($process) : 2);
+    }
     fwrite(STDERR, "No está disponible el controlador PDO de $engine.\n");
     exit(2);
 }
@@ -21,7 +26,7 @@ $quotedName = $engine === 'mysql' ? '`'.$database.'`' : '"'.$database.'"';
 
 try {
     if ($engine !== 'sqlite') {
-        $port = $engine === 'mysql' ? 3306 : 5432;
+        $port = $engine === 'mysql' ? 3306 : 55432;
         $username = $engine === 'mysql' ? 'root' : 'postgres';
         $dsn = "$engine:host=127.0.0.1;port=$port".($engine === 'pgsql' ? ';dbname=postgres' : '');
         try {
@@ -44,11 +49,14 @@ try {
 
     putenv('BOVISOFT_TEST_ENGINE='.$engine);
     putenv('BOVISOFT_TEST_DATABASE='.$database);
-    $process = proc_open([
-        PHP_BINARY, dirname(__DIR__).'/vendor/bin/phpunit',
+    $command = [PHP_BINARY];
+    if ($engine === 'pgsql' && getenv('BOVISOFT_PGSQL_EXTENSION_ATTEMPTED')) {
+        array_push($command, '-d', 'extension=pdo_pgsql');
+    }
+    $process = proc_open(array_merge($command, [dirname(__DIR__).'/vendor/bin/phpunit',
         '--configuration', dirname(__DIR__).'/phpunit.xml',
-        '--filter', 'ProduccionTest|FincaAuthorizationTest', '--no-progress',
-    ], [STDIN, STDOUT, STDERR], $pipes, dirname(__DIR__));
+        '--filter', 'ProduccionTest|FincaAuthorizationTest|ProductionSync', '--no-progress',
+    ]), [STDIN, STDOUT, STDERR], $pipes, dirname(__DIR__));
     if (! is_resource($process)) {
         throw new RuntimeException('No se pudo iniciar PHPUnit.');
     }

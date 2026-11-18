@@ -111,7 +111,7 @@ class ProduccionController extends Controller
 
         $sesiones = Produccion::getSesiones();
         $calidades = Produccion::getCalidades();
-        $codigo = Produccion::generarCodigo();
+        $codigo = 'Se asignará al guardar';
 
         $animalPresel = $request->filled('animal_id')
             ? $animales->firstWhere('id', $request->integer('animal_id'))
@@ -176,10 +176,9 @@ class ProduccionController extends Controller
 
     // ─── destroy ───────────────────────────────────────────────────────────────
 
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id, ProduccionService $service)
     {
-        $registro = Produccion::autorizadasPara(Auth::id())->findOrFail($id);
-        $registro->delete();
+        $service->delete($request->user(), $id, $request->all());
 
         return redirect()->route('produccion.index')
             ->with('success', 'Registro eliminado exitosamente.');

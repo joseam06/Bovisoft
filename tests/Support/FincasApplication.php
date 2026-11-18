@@ -40,7 +40,7 @@ final class FincasApplication
             } else {
                 // Explicit local test settings; never inherit DB_* credentials.
                 $connection['host'] = '127.0.0.1';
-                $connection['port'] = $engine === 'mysql' ? 3306 : 5432;
+                $connection['port'] = $engine === 'mysql' ? 3306 : 55432;
                 $connection['username'] = $engine === 'mysql' ? 'root' : 'postgres';
                 $connection['password'] = '';
                 $connection['unix_socket'] = '';
@@ -62,6 +62,7 @@ final class FincasApplication
                 'mail.default' => 'array',
                 'logging.default' => 'null',
                 'hashing.bcrypt.rounds' => 4,
+                'offline.production.enabled' => true,
             ]);
         });
 

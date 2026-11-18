@@ -48,6 +48,6 @@ for (const [method, suffix, body] of [
 
 5. Vuelve como A y comprueba que su finca sigue existiendo y conserva el nombre y estado previos a los intentos de B. La suite automatizada compara además todas las columnas originales, incluidos `updated_at` y `deleted_at`.
 
-El servidor conserva CSRF y sesiones reales en esta SQLite ficticia. Usa solo datos de demostración: la clave de aplicación y las contraseñas son públicas de prueba. No utiliza conexiones MySQL/PostgreSQL ni configuración cacheada de despliegue. No se ha validado compatibilidad de ejecución con PostgreSQL en esta fase.
+El servidor conserva CSRF y sesiones reales en esta SQLite ficticia. Usa solo datos de demostración: la clave de aplicación y las contraseñas son públicas de prueba. Este servidor de navegador no utiliza conexiones MySQL/PostgreSQL ni configuración cacheada de despliegue. Para las suites multibase y el protocolo de sincronización consulta `docs/production-sync.md`.
 
-Producción y offline quedan fuera del cambio. Regla pendiente para la futura edición histórica: conservar animal y finca originales; si el animal fue trasladado o está inactivo, revisar online cualquier cambio de fecha.
+Antes de usar Producción con una base ficticia preparada en una fase anterior, ejecuta `rtk proxy php tests/manual/fincas.php migrate`. Se conservan sus datos y se aplican exclusivamente allí las migraciones nuevas.

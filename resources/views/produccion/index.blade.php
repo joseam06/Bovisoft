@@ -3,6 +3,7 @@
 @section('title', 'Producción Lechera')
 
 @section('content')
+@error('base_version') <p class="bg-amber-50 text-amber-900 rounded-xl p-4 mb-4">{{ $message }}</p> @enderror
 <div class="animate-slide-up space-y-6">
 
     {{-- Encabezado --}}
@@ -282,6 +283,7 @@
                                     <form action="{{ route('produccion.destroy', $r) }}" method="POST"
                                         onsubmit="return confirm('¿Eliminar este registro de producción?')">
                                         @csrf @method('DELETE')
+                                        <input type="hidden" name="base_version" value="{{ $r->version }}">
                                         <button type="submit"
                                             class="p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors shadow-sm" title="Eliminar">
                                             <i class="fa-solid fa-trash text-xs"></i>

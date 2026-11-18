@@ -3,6 +3,7 @@
 @section('title', 'Producción — ' . $registro->codigo)
 
 @section('content')
+@error('base_version') <p class="bg-amber-50 text-amber-900 rounded-xl p-4 mb-4">{{ $message }}</p> @enderror
 <div class="animate-slide-up space-y-6">
 
     {{-- Header --}}
@@ -25,6 +26,7 @@
             <form action="{{ route('produccion.destroy', $registro) }}" method="POST"
                 onsubmit="return confirm('¿Eliminar este registro?')">
                 @csrf @method('DELETE')
+                <input type="hidden" name="base_version" value="{{ $registro->version }}">
                 <button type="submit"
                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg transition-all">
                     <i class="fa-solid fa-trash"></i> Eliminar

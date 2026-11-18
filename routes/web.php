@@ -8,6 +8,14 @@ use App\Http\Controllers\PotreroController;
 use App\Http\Controllers\SaludController;
 use App\Http\Controllers\FinanzasController;
 use App\Http\Controllers\ReportesController;
+use App\Http\Controllers\ProductionSyncController;
+
+Route::prefix('api/offline/v1/produccion')->middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'throttle:60,1'])->group(function () {
+    Route::post('snapshots', [ProductionSyncController::class, 'snapshot']);
+    Route::get('snapshots/{snapshot}', [ProductionSyncController::class, 'page'])->whereUuid('snapshot');
+    Route::get('changes', [ProductionSyncController::class, 'changes']);
+    Route::post('operations', [ProductionSyncController::class, 'push']);
+});
 
 Route::get('/', function () {
     return view('welcome');

@@ -23,6 +23,8 @@
 
     <form action="{{ route('produccion.update', $registro) }}" method="POST">
         @csrf @method('PUT')
+        <input type="hidden" name="base_version" value="{{ old('base_version', $registro->version) }}">
+        @error('base_version') <p class="bg-amber-50 text-amber-900 rounded-xl p-4 mb-4">{{ $message }}</p> @enderror
         <div class="glass-effect rounded-2xl shadow-2xl p-8 border-4 border-white/50 space-y-8">
 
             {{-- SECCIÓN 1: Identificación --}}
@@ -164,6 +166,7 @@
             onsubmit="return confirm('¿Estás seguro de eliminar este registro de producción? Esta acción no se puede deshacer.')">
             @csrf
             @method('DELETE')
+            <input type="hidden" name="base_version" value="{{ $registro->version }}">
             <button type="submit"
                 class="px-6 py-4 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-xl transition-all border-2 border-red-300 flex items-center gap-2">
                 <i class="fa-solid fa-trash"></i> Eliminar Registro

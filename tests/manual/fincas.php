@@ -14,8 +14,14 @@ require dirname(__DIR__, 2).'/vendor/autoload.php';
 $database = sys_get_temp_dir().'/bovisoft-fincas-browser-'.substr(sha1(dirname(__DIR__, 2)), 0, 12).'.sqlite';
 
 if (PHP_SAPI === 'cli') {
+    if (($argv[1] ?? '') === 'migrate' && file_exists($database)) {
+        FincasApplication::create($database, browser: true);
+        $status = Artisan::call('migrate', ['--force' => true]);
+        echo "Migraciones aplicadas solo a la SQLite ficticia: $database\n";
+        exit($status);
+    }
     if (($argv[1] ?? '') !== 'prepare') {
-        fwrite(STDERR, "Uso: php tests/manual/fincas.php prepare\n");
+        fwrite(STDERR, "Uso: php tests/manual/fincas.php prepare|migrate\n");
         exit(1);
     }
 

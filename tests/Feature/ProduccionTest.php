@@ -305,6 +305,7 @@ class ProduccionTest extends FincasTestCase
     private function payload(): array
     {
         return ['animal_id' => $this->animal->id, 'finca_id' => $this->finca->id,
+            'base_version' => 1,
             'fecha' => '2026-11-16', 'sesion' => 'manana', 'litros' => '12.35',
             'calidad' => 'buena', 'observaciones' => 'Medición ficticia'];
     }
