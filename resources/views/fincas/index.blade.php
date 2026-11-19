@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends(($offlineTemplate ?? false) ? 'offline.fragment' : 'layouts.dashboard')
 
 @section('title', 'Mis Fincas')
 

@@ -4,16 +4,20 @@
     <link rel="icon" href="/favicon.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    @unless($offlineShell ?? false)
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @endunless
     <title>@yield('title', 'Dashboard') - Bovisoft</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="/vendor/inter/inter.css">
+    @unless($offlineShell ?? false)
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @endunless
     
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
@@ -128,7 +132,7 @@
     </style>
     
     <script>
-        tailwind.config = {
+        if (window.tailwind) window.tailwind.config = {
             theme: {
                 extend: {
                     colors: {
@@ -151,10 +155,10 @@
     </script>
 </head>
 
-<body class="bg-gradient-main min-h-screen">
+<body class="bovi-dashboard bg-gradient-main min-h-screen" data-workspace-shell="{{ ($workspaceShell ?? false) ? 'true' : 'false' }}" data-bovi-private="{{ ($offlineShell ?? false) ? 'false' : 'true' }}" data-bovi-account="{{ ($offlineShell ?? false) ? '' : auth()->id() }}">
 
     <!-- SIDEBAR -->
-    <aside id="sidebar" class="group fixed left-0 top-0 h-screen bg-gradient-sidebar shadow-2xl transition-all duration-300 ease-in-out w-20 hover:w-64 z-40 overflow-hidden border-r-4 border-red-700/50">
+    <aside id="sidebar" aria-label="Navegación principal" class="group fixed left-0 top-0 h-screen bg-gradient-sidebar shadow-2xl transition-all duration-300 ease-in-out w-20 hover:w-64 z-40 overflow-hidden border-r-4 border-red-700/50">
         
         <!-- Logo / Brand -->
         <div class="p-4 flex items-center space-x-3 border-b border-red-900/50">
@@ -162,6 +166,7 @@
                 <img src="{{ asset('images/logored.png') }}" alt="Bovisoft Logo" class="w-full h-full object-contain">
             </div>
             <span class="text-white font-bold text-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Bovisoft</span>
+            <button id="nav-close" type="button" class="bovi-mobile-only ml-auto text-white rounded-xl" aria-label="Cerrar menú"><i class="fa-solid fa-xmark text-xl" aria-hidden="true"></i></button>
         </div>
 
         <!-- Navigation Menu -->
@@ -217,24 +222,27 @@
             </a>-->
             <!--
             <form method="POST" action="{{ route('logout') }}" id="logout-form">
+                @unless($offlineShell ?? false)
                 @csrf
+                @endunless
                 <button type="submit" class="sidebar-link w-full flex items-center px-4 py-3 text-white/70 rounded-xl hover:bg-red-700/30 hover:text-white transition-all duration-200">
                     <i class="fa-solid fa-right-from-bracket text-xl w-6 flex-shrink-0"></i>
                     <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap font-medium">Cerrar Sesión</span>
                 </button>
             </form>
             </a-->
-        </div>
     </aside>
+    <button id="nav-backdrop" type="button" aria-label="Cerrar menú" hidden></button>
 
     <!-- MAIN CONTENT -->
-    <div class="ml-20 min-h-screen transition-all duration-300">
+    <div id="app-content" class="app-content ml-20 min-h-screen transition-all duration-300">
         
         <!-- TOP HEADER -->
-        <header class="glass-effect sticky top-0 z-30 shadow-xl">
-            <div class="flex items-center justify-between px-6 py-4">
+        <header class="app-header glass-effect sticky top-0 z-30 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4">
+                <button id="nav-toggle" type="button" class="bovi-mobile-only text-red-800 rounded-xl" aria-label="Abrir menú" aria-controls="sidebar" aria-expanded="false"><i class="fa-solid fa-bars text-xl" aria-hidden="true"></i></button>
                 <!-- Search Bar - Desactivada temporalmente -->
-<div class="flex-1 max-w-lg">
+<div class="hidden xl:block flex-1 max-w-lg">
     <div class="relative">
         <input type="text"
                placeholder="Búsqueda próximamente..."
@@ -246,11 +254,11 @@
 </div>
 
                 <!-- Right Side Icons -->
-                <div class="flex items-center space-x-4 ml-6">
+                <div class="app-header-actions flex flex-wrap items-center gap-2 sm:gap-4 min-w-0">
                     <!-- Notifications -->
                     <!-- REEMPLAZAR el botón de notificaciones -->
 <div class="relative" id="campanita-container">
-    <button onclick="toggleCampanita()" id="btn-campanita"
+    <button onclick="toggleCampanita()" id="btn-campanita" aria-label="Notificaciones" aria-controls="dropdown-campanita"
         class="relative p-3 text-red-700 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all focus:outline-none">
         <i class="fa-solid fa-bell text-xl"></i>
         <span id="badge-campanita" class="hidden absolute top-2 right-2 w-5 h-5 bg-red-500 rounded-full text-white text-xs font-bold flex items-center justify-center pulse-glow"></span>
@@ -283,18 +291,20 @@
         </div>
     </div>
 </div>
-          
+                    <span id="offline-indicator" role="status" aria-live="polite" class="text-red-800 font-semibold text-sm" hidden>
+                        <i id="offline-indicator-icon" class="fa-solid fa-cloud-arrow-down mr-1" aria-hidden="true"></i><span id="offline-indicator-text">Estás usando BoviSoft sin conexión</span>
+                    </span>
 
                 <!-- User Profile con Dropdown -->
 <div class="relative flex items-center space-x-3 pl-4 border-l-2 border-red-200">
-    <button type="button" onclick="toggleUserMenu()" id="user-menu-btn"
+    <button type="button" onclick="toggleUserMenu()" id="user-menu-btn" aria-label="Menú de mi cuenta" aria-controls="user-dropdown"
         class="flex items-center space-x-3 rounded-xl px-2 py-1.5 hover:bg-red-50 transition-all focus:outline-none">
-        <div class="text-right hidden sm:block">
-            <p class="text-sm font-semibold text-gray-700">{{ auth()->user()->name ?? 'Usuario' }}</p>
+        <div class="bovi-account-summary text-right">
+            <p data-account-field="name" class="text-sm font-semibold text-gray-700">{{ ($offlineShell ?? false) ? '' : (auth()->user()->name ?? 'Usuario') }}</p>
             <p class="text-xs text-gray-500">Administrador</p>
         </div>
-        <div class="w-12 h-12 bg-gradient-to-br from-red-600 to-red-900 rounded-xl flex items-center justify-center shadow-md overflow-hidden flex-shrink-0">
-            @if(auth()->user()->foto_url)
+        <div data-account-avatar class="w-12 h-12 bg-gradient-to-br from-red-600 to-red-900 rounded-xl flex items-center justify-center shadow-md overflow-hidden flex-shrink-0">
+            @if(!($offlineShell ?? false) && auth()->user()?->foto_url)
             <img src="{{ auth()->user()->foto_url }}" alt="Foto" class="w-full h-full object-cover">
             @else
             <i class="fa-solid fa-user text-white text-lg"></i>
@@ -308,8 +318,8 @@
         class="hidden absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-2xl border-2 border-red-100 overflow-hidden z-50">
         <!-- Cabecera del dropdown -->
         <div class="bg-gradient-to-r from-red-600 to-red-800 px-4 py-3">
-            <p class="text-white font-bold text-sm truncate">{{ auth()->user()->name ?? 'Usuario' }}</p>
-            <p class="text-red-200 text-xs truncate">{{ auth()->user()->email ?? '' }}</p>
+            <p data-account-field="name" class="text-white font-bold text-sm truncate">{{ ($offlineShell ?? false) ? '' : (auth()->user()->name ?? 'Usuario') }}</p>
+            <p data-account-field="email" class="text-red-200 text-xs truncate">{{ ($offlineShell ?? false) ? '' : (auth()->user()->email ?? '') }}</p>
         </div>
         <!-- Opciones -->
         <div class="py-2">
@@ -322,7 +332,9 @@
             </a>
             <div class="mx-4 my-1 h-px bg-gray-100"></div>
             <form method="POST" action="{{ route('logout') }}">
+                @unless($offlineShell ?? false)
                 @csrf
+                @endunless
                 <button type="submit"
                     class="w-full flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-700 transition-all">
                     <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -339,9 +351,32 @@
             </div>
         </header>
 
+        @include('offline.feedback')
+
         <!-- PAGE CONTENT -->
-        <main class="p-6">
+        <main class="app-main p-6" data-offline-module="{{ request()->routeIs('animales.show', 'animales.edit') ? 'animales' : (request()->routeIs('fincas.show', 'fincas.edit') ? 'fincas' : '') }}" data-offline-record="{{ request()->routeIs('animales.show', 'animales.edit') ? $animal->client_uuid : (request()->routeIs('fincas.show', 'fincas.edit') ? $finca->client_uuid : '') }}" data-offline-version="{{ request()->routeIs('animales.show', 'animales.edit') ? $animal->version : (request()->routeIs('fincas.show', 'fincas.edit') ? $finca->version : '') }}">
+            @unless($offlineShell ?? false)
+                @if($errors->any())
+                <div role="alert" class="mb-5 p-5 bg-white rounded-xl text-red-800 shadow-xl">
+                    <p class="font-bold">Revisa los cambios antes de continuar</p>
+                    <ul class="list-disc pl-5 mt-2">
+                        @foreach($errors->all() as $message)<li>{{ $message }}</li>@endforeach
+                    </ul>
+                    @if($errors->has('base_version'))
+                    <p class="mt-2">Las correcciones enviadas siguen en el formulario. Reabre la edición para consultar la versión actual antes de reenviarlas.</p>
+                    @endif
+                </div>
+                @endif
+            @endunless
             @yield('content')
+            @unless($offlineShell ?? false)
+                @if(request()->routeIs('animales.show', 'animales.edit'))
+                    @php($offlineBootstrap = [['module' => 'fincas', 'record' => \App\Services\WorkspaceJournal::serialize($animal->finca)], ['module' => 'animales', 'record' => \App\Services\WorkspaceJournal::serialize($animal)]])
+                    <script id="offline-record-data" type="application/json">{!! json_encode($offlineBootstrap, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+                @elseif(request()->routeIs('fincas.show', 'fincas.edit'))
+                    <script id="offline-record-data" type="application/json">{!! json_encode([['module' => 'fincas', 'record' => \App\Services\WorkspaceJournal::serialize($finca)]], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+                @endif
+            @endunless
         </main>
         
         <!-- FOOTER -->
@@ -377,6 +412,7 @@
 </script>
 
 
+@unless($offlineShell ?? false)
 <script>
     // ---- CAMPANITA ----
     var alertasCargadas = false;
@@ -482,6 +518,7 @@
         }
     });
 </script>
+@endunless
 
 </body>
 </html>

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'workspace' => ['enabled' => env('OFFLINE_WORKSPACE_ENABLED', false)],
     'production' => [
         'enabled' => env('OFFLINE_PRODUCTION_SYNC_ENABLED', false),
         'history_days' => 90,

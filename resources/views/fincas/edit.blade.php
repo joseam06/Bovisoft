@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends(($offlineTemplate ?? false) ? 'offline.fragment' : 'layouts.dashboard')
 
 @section('title', 'Editar Finca')
 
@@ -13,7 +13,7 @@
                 </span>
                 Editar Finca
             </h1>
-            <p class="text-red-100 mt-2 ml-16">{{ $finca->nombre }} ({{ $finca->codigo }})</p>
+            <p class="text-red-100 mt-2 ml-16"><span data-offline-field="nombre">{{ $finca->nombre }}</span> (<span data-offline-field="codigo">{{ $finca->codigo }}</span>)</p>
         </div>
         <a href="{{ route('fincas.show', $finca) }}" class="px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-xl transition-all backdrop-blur-sm border-2 border-white/30 shadow-lg">
             <i class="fa-solid fa-arrow-left mr-2"></i>Volver
@@ -25,6 +25,7 @@
         <form action="{{ route('fincas.update', $finca) }}" method="POST">
             @csrf
             @method('PUT')
+            <input type="hidden" name="base_version" value="{{ old('base_version', $finca->version) }}">
 
             <!-- Información Básica -->
             <div class="mb-8">
@@ -232,11 +233,11 @@
                     <div class="mt-3 grid grid-cols-2 gap-4">
                         <div class="p-3 bg-blue-50 border-2 border-blue-200 rounded-xl">
                             <p class="text-xs text-gray-600 mb-1">Latitud:</p>
-                            <p class="font-mono font-bold text-gray-800" id="latitud-display">{{ $finca->latitud }}</p>
+                            <input type="number" step="0.00000001" min="-90" max="90" required aria-label="Latitud" name="latitud" id="latitud" value="{{ old('latitud', $finca->latitud) }}" class="w-full font-mono font-bold text-gray-800 rounded-lg border-gray-300">
                         </div>
                         <div class="p-3 bg-blue-50 border-2 border-blue-200 rounded-xl">
                             <p class="text-xs text-gray-600 mb-1">Longitud:</p>
-                            <p class="font-mono font-bold text-gray-800" id="longitud-display">{{ $finca->longitud }}</p>
+                            <input type="number" step="0.00000001" min="-180" max="180" required aria-label="Longitud" name="longitud" id="longitud" value="{{ old('longitud', $finca->longitud) }}" class="w-full font-mono font-bold text-gray-800 rounded-lg border-gray-300">
                         </div>
                     </div>
 
@@ -247,8 +248,6 @@
                     @enderror
                 </div>
 
-                <input type="hidden" name="latitud" id="latitud" value="{{ old('latitud', $finca->latitud) }}">
-                <input type="hidden" name="longitud" id="longitud" value="{{ old('longitud', $finca->longitud) }}">
             </div>
 
             <!-- Estado -->
@@ -261,6 +260,7 @@
                 </div>
 
                 <div class="flex items-center p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+                    <input type="hidden" name="activa" value="0">
                     <input type="checkbox" 
                            name="activa" 
                            id="activa" 
@@ -324,8 +324,6 @@
         function updateCoordinates(lat, lng) {
             document.getElementById('latitud').value = lat.toFixed(8);
             document.getElementById('longitud').value = lng.toFixed(8);
-            document.getElementById('latitud-display').textContent = lat.toFixed(8);
-            document.getElementById('longitud-display').textContent = lng.toFixed(8);
         }
         
         map.on('click', function(e) {

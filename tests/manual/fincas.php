@@ -11,7 +11,9 @@ use Tests\Support\FincasApplication;
 
 require dirname(__DIR__, 2).'/vendor/autoload.php';
 
-$database = sys_get_temp_dir().'/bovisoft-fincas-browser-'.substr(sha1(dirname(__DIR__, 2)), 0, 12).'.sqlite';
+$prefix = getenv('BOVISOFT_WORKSPACE_DEMO') === '1' ? 'bovisoft-workspace-browser-'
+    : (getenv('BOVISOFT_OFFLINE_DEMO') === '1' ? 'bovisoft-offline-browser-' : 'bovisoft-fincas-browser-');
+$database = sys_get_temp_dir().'/'.$prefix.substr(sha1(dirname(__DIR__, 2)), 0, 12).'.sqlite';
 
 if (PHP_SAPI === 'cli') {
     if (($argv[1] ?? '') === 'migrate' && file_exists($database)) {
@@ -30,6 +32,9 @@ if (PHP_SAPI === 'cli') {
         exit(1);
     }
 
+    if (! getenv('BOVISOFT_BROWSER_TEST_PASSWORD')) {
+        throw new RuntimeException('Define BOVISOFT_BROWSER_TEST_PASSWORD con una clave local exclusiva para datos ficticios.');
+    }
     $handle = fopen($database, 'x');
     fclose($handle);
     $app = FincasApplication::create($database, browser: true);
@@ -42,7 +47,7 @@ if (PHP_SAPI === 'cli') {
         $user = User::factory()->create([
             'name' => 'Cuenta ficticia '.strtoupper($tag),
             'email' => 'fincas-'.$tag.'@example.test',
-            'password' => 'DemoFincas2026!',
+            'password' => getenv('BOVISOFT_BROWSER_TEST_PASSWORD'),
         ]);
         $finca = Finca::create(['user_id' => $user->id, 'codigo' => 'DEMO-FIN-'.$tag,
             'nombre' => 'Finca ficticia '.strtoupper($tag), 'activa' => true,
@@ -56,7 +61,7 @@ if (PHP_SAPI === 'cli') {
     }
 
     echo "SQLite de pruebas: $database\n";
-    echo "Clave de ambas cuentas ficticias: DemoFincas2026!\n";
+    echo "La contraseña es la indicada mediante BOVISOFT_BROWSER_TEST_PASSWORD al crear la base.\n";
     exit;
 }
 

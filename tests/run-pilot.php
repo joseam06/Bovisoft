@@ -3,6 +3,7 @@
 // Runs only the pilot suites against a new disposable local database.
 // No .env, application bootstrap, or deployment configuration is loaded here.
 $engine = $argv[1] ?? 'sqlite';
+$filter = $argv[2] ?? 'ProduccionTest|FincaAuthorizationTest|ProductionSync|OfflineReadTest|WorkspaceSyncTest';
 if (! in_array($engine, ['sqlite', 'mysql', 'pgsql'], true)) {
     fwrite(STDERR, "Uso: php tests/run-pilot.php sqlite|mysql|pgsql\n");
     exit(1);
@@ -11,7 +12,7 @@ if (! in_array($engine, ['sqlite', 'mysql', 'pgsql'], true)) {
 if (! in_array($engine, PDO::getAvailableDrivers(), true)) {
     if ($engine === 'pgsql' && ! getenv('BOVISOFT_PGSQL_EXTENSION_ATTEMPTED')) {
         putenv('BOVISOFT_PGSQL_EXTENSION_ATTEMPTED=1');
-        $process = proc_open([PHP_BINARY, '-d', 'extension=pdo_pgsql', __FILE__, $engine], [STDIN, STDOUT, STDERR], $pipes, dirname(__DIR__));
+        $process = proc_open([PHP_BINARY, '-d', 'extension=pdo_pgsql', __FILE__, $engine, $filter], [STDIN, STDOUT, STDERR], $pipes, dirname(__DIR__));
         exit(is_resource($process) ? proc_close($process) : 2);
     }
     fwrite(STDERR, "No está disponible el controlador PDO de $engine.\n");
@@ -48,6 +49,7 @@ try {
     }
 
     putenv('BOVISOFT_TEST_ENGINE='.$engine);
+    echo 'Filtro: '.$filter."\n";
     putenv('BOVISOFT_TEST_DATABASE='.$database);
     $command = [PHP_BINARY];
     if ($engine === 'pgsql' && getenv('BOVISOFT_PGSQL_EXTENSION_ATTEMPTED')) {
@@ -55,7 +57,7 @@ try {
     }
     $process = proc_open(array_merge($command, [dirname(__DIR__).'/vendor/bin/phpunit',
         '--configuration', dirname(__DIR__).'/phpunit.xml',
-        '--filter', 'ProduccionTest|FincaAuthorizationTest|ProductionSync', '--no-progress',
+        '--filter', $filter, '--no-progress',
     ]), [STDIN, STDOUT, STDERR], $pipes, dirname(__DIR__));
     if (! is_resource($process)) {
         throw new RuntimeException('No se pudo iniciar PHPUnit.');

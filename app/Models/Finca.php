@@ -10,7 +10,7 @@ use App\Models\Potrero;
 
 class Finca extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Models\Concerns\SyncsWorkspace;
 
     protected $fillable = [
         'nombre',

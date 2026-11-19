@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BoviSoft - Gestión Inteligente Ganadera</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="/vendor/inter/inter.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
         
         * {
             margin: 0;
@@ -83,7 +83,7 @@
         }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="bovi-public text-gray-800">
 
     <!-- HEADER / NAV (con efecto flotante) -->
     <header id="mainNav" class="fixed w-full top-0 left-0 bg-white/95 backdrop-blur-md shadow-md z-50 border-b border-red-100 transition-all duration-300">
@@ -96,7 +96,8 @@
                     <p class="text-xs text-gray-500 font-medium">Gestión Ganadera</p>
                 </div>
             </div>
-            <nav class="hidden md:flex gap-8 text-gray-700 font-semibold">
+            <button id="public-nav-toggle" type="button" class="bovi-mobile-only text-red-800 rounded-xl" aria-label="Abrir navegación" aria-controls="public-nav" aria-expanded="false"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
+            <nav id="public-nav" aria-label="Navegación principal" class="hidden md:flex gap-8 text-gray-700 font-semibold">
                 <a href="#inicio" class="hover:text-red-600 transition-colors relative group">
                     Inicio
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-red-600 group-hover:w-full transition-all"></span>
@@ -365,7 +366,7 @@
     </footer>
 
     <!-- OVERLAY AUTH MEJORADO -->
-    <div id="authOverlay" class="fixed inset-0 z-[999] hidden" aria-hidden="true">
+    <div id="authOverlay" role="dialog" aria-modal="true" aria-label="Acceso a BoviSoft" class="fixed inset-0 z-[999] hidden" aria-hidden="true">
         <!-- Fondo -->
         <div id="authBackdrop" class="absolute inset-0 bg-black/80 backdrop-blur-md opacity-0 transition-opacity duration-300"></div>
 

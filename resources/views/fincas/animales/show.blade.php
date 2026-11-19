@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends(($offlineTemplate ?? false) ? 'offline.fragment' : 'layouts.dashboard')
 
 @section('title', $animal->nombre ?: $animal->codigo)
 
@@ -13,8 +13,8 @@
             </a>
             <div>
                 <h1 class="text-3xl font-bold text-white flex items-center gap-3">
-                    {{ $animal->nombre ?: 'Animal ' . $animal->codigo }}
-                    <span class="px-3 py-1 text-white text-sm font-bold rounded-full shadow-lg
+                    <span data-offline-field="nombre">{{ $animal->nombre ?: 'Animal ' . $animal->codigo }}</span>
+                    <span data-offline-field="tipo" class="px-3 py-1 text-white text-sm font-bold rounded-full shadow-lg
                         @if($animal->tipo === 'vaca')     bg-pink-500
                         @elseif($animal->tipo === 'toro') bg-blue-500
                         @elseif($animal->tipo === 'ternero') bg-green-500
@@ -23,7 +23,7 @@
                         {{ ucfirst($animal->tipo) }}
                     </span>
                     {{-- Badge estado --}}
-                    <span class="px-3 py-1 text-sm font-bold rounded-full shadow-lg
+                    <span data-offline-field="estado" class="px-3 py-1 text-sm font-bold rounded-full shadow-lg
                         @if($animal->estado === 'activo')   bg-green-500 text-white
                         @elseif($animal->estado === 'vendido') bg-blue-500 text-white
                         @elseif($animal->estado === 'muerto')  bg-gray-600 text-white
@@ -32,7 +32,7 @@
                         {{ ucfirst($animal->estado) }}
                     </span>
                 </h1>
-                <p class="text-red-100 mt-1">{{ $animal->codigo }}@if($animal->numero) &nbsp;·&nbsp; N° {{ $animal->numero }}@endif</p>
+                <p class="text-red-100 mt-1"><span data-offline-field="codigo">{{ $animal->codigo }}</span>@if($animal->numero)<span data-offline-if="numero"> &nbsp;·&nbsp; N° <span data-offline-field="numero">{{ $animal->numero }}</span></span>@endif</p>
             </div>
         </div>
         <div class="flex gap-3">
@@ -44,6 +44,7 @@
                   onsubmit="return confirm('¿Estás seguro de eliminar este animal? Esta acción no se puede deshacer.')">
                 @csrf
                 @method('DELETE')
+                <input type="hidden" name="base_version" value="{{ $animal->version }}">
                 <button type="submit"
                         class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all font-bold shadow-xl">
                     <i class="fa-solid fa-trash mr-2"></i>Eliminar
@@ -70,59 +71,59 @@
                 <div class="p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200">
                     <i class="fa-solid fa-barcode text-gray-600 text-2xl mb-2"></i>
                     <p class="text-xs text-gray-600 mb-1">Código</p>
-                    <p class="text-lg font-bold text-gray-800 font-mono">{{ $animal->codigo }}</p>
+                    <p data-offline-field="codigo" class="text-lg font-bold text-gray-800 font-mono">{{ $animal->codigo }}</p>
                 </div>
 
                 <!-- Número -->
                 <div class="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl border-2 border-indigo-200">
                     <i class="fa-solid fa-hashtag text-indigo-600 text-2xl mb-2"></i>
                     <p class="text-xs text-gray-600 mb-1">Número</p>
-                    <p class="text-lg font-bold text-gray-800">{{ $animal->numero ?: '—' }}</p>
+                    <p data-offline-field="numero" class="text-lg font-bold text-gray-800">{{ $animal->numero ?: '—' }}</p>
                 </div>
 
                 <!-- Nombre -->
                 <div class="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200">
                     <i class="fa-solid fa-tag text-blue-600 text-2xl mb-2"></i>
                     <p class="text-xs text-gray-600 mb-1">Nombre</p>
-                    <p class="text-lg font-bold text-gray-800">{{ $animal->nombre ?: 'Sin nombre' }}</p>
+                    <p data-offline-field="nombre" class="text-lg font-bold text-gray-800">{{ $animal->nombre ?: 'Sin nombre' }}</p>
                 </div>
 
                 <!-- Sexo -->
                 <div class="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border-2 border-purple-200">
                     <i class="fa-solid fa-{{ $animal->sexo === 'macho' ? 'mars' : 'venus' }} text-purple-600 text-2xl mb-2"></i>
                     <p class="text-xs text-gray-600 mb-1">Sexo</p>
-                    <p class="text-lg font-bold text-gray-800">{{ ucfirst($animal->sexo) }}</p>
+                    <p data-offline-field="sexo" class="text-lg font-bold text-gray-800">{{ ucfirst($animal->sexo) }}</p>
                 </div>
 
                 <!-- Raza -->
                 <div class="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200">
                     <i class="fa-solid fa-dna text-green-600 text-2xl mb-2"></i>
                     <p class="text-xs text-gray-600 mb-1">Raza</p>
-                    <p class="text-lg font-bold text-gray-800">{{ $animal->raza ?: 'No especificada' }}</p>
+                    <p data-offline-field="raza" class="text-lg font-bold text-gray-800">{{ $animal->raza ?: 'No especificada' }}</p>
                 </div>
 
                 <!-- Edad -->
                 <div class="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border-2 border-orange-200">
                     <i class="fa-solid fa-calendar text-orange-600 text-2xl mb-2"></i>
                     <p class="text-xs text-gray-600 mb-1">Edad</p>
-                    <p class="text-lg font-bold text-gray-800">{{ $animal->edad }}</p>
+                    <p data-offline-field="edad" class="text-lg font-bold text-gray-800">{{ $animal->edad }}</p>
                 </div>
 
                 <!-- Peso -->
                 <div class="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl border-2 border-yellow-200">
                     <i class="fa-solid fa-weight-scale text-yellow-600 text-2xl mb-2"></i>
                     <p class="text-xs text-gray-600 mb-1">Peso Actual</p>
-                    <p class="text-lg font-bold text-gray-800">
+                    <p data-offline-field="peso_actual" class="text-lg font-bold text-gray-800">
                         {{ $animal->peso_actual ? number_format($animal->peso_actual, 2) . ' kg' : 'N/A' }}
                     </p>
                 </div>
 
                 <!-- Color -->
                 @if($animal->color)
-                <div class="p-4 bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl border-2 border-pink-200">
+                <div data-offline-if="color" class="p-4 bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl border-2 border-pink-200">
                     <i class="fa-solid fa-palette text-pink-600 text-2xl mb-2"></i>
                     <p class="text-xs text-gray-600 mb-1">Color</p>
-                    <p class="text-lg font-bold text-gray-800">{{ $animal->color }}</p>
+                    <p data-offline-field="color" class="text-lg font-bold text-gray-800">{{ $animal->color }}</p>
                 </div>
                 @endif
 
@@ -130,7 +131,7 @@
                 <div class="p-4 bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl border-2 border-teal-200">
                     <i class="fa-solid fa-heartbeat text-teal-600 text-2xl mb-2"></i>
                     <p class="text-xs text-gray-600 mb-1">Estado</p>
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold
+                    <span data-offline-field="estado" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold
                         @if($animal->estado === 'activo')   bg-green-100 text-green-800
                         @elseif($animal->estado === 'vendido') bg-blue-100 text-blue-800
                         @elseif($animal->estado === 'muerto')  bg-gray-200 text-gray-700
@@ -144,16 +145,16 @@
                 <div class="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border-2 border-red-200 col-span-2">
                     <i class="fa-solid fa-map-marker-alt text-red-600 text-2xl mb-2"></i>
                     <p class="text-xs text-gray-600 mb-1">Finca</p>
-                    <p class="text-lg font-bold text-gray-800">{{ $animal->finca->nombre }}</p>
-                    <p class="text-xs text-gray-500 mt-1">{{ $animal->finca->codigo }}</p>
+                    <p data-offline-field="finca_uuid" class="text-lg font-bold text-gray-800">{{ $animal->finca->nombre }}</p>
+                    <p data-offline-field="finca_codigo" class="text-xs text-gray-500 mt-1">{{ $animal->finca->codigo }}</p>
                 </div>
 
                 <!-- Potrero -->
                 @if($animal->potrero)
-                <div class="p-4 bg-gradient-to-br from-lime-50 to-lime-100 rounded-xl border-2 border-lime-200">
+                <div data-offline-if="potrero_id" class="p-4 bg-gradient-to-br from-lime-50 to-lime-100 rounded-xl border-2 border-lime-200">
                     <i class="fa-solid fa-map text-lime-600 text-2xl mb-2"></i>
                     <p class="text-xs text-gray-600 mb-1">Potrero</p>
-                    <p class="text-lg font-bold text-gray-800">{{ $animal->potrero->nombre }}</p>
+                    <p data-offline-field="potrero_id" class="text-lg font-bold text-gray-800">{{ $animal->potrero->nombre }}</p>
                 </div>
                 @endif
             </div>
@@ -171,12 +172,12 @@
 
                 <div class="space-y-3">
                     @if($animal->fecha_nacimiento)
-                    <div class="flex items-start">
+                    <div data-offline-if="fecha_nacimiento" class="flex items-start">
                         <i class="fa-solid fa-birthday-cake text-blue-600 mt-1 mr-3"></i>
                         <div>
                             <p class="text-xs text-gray-500">Fecha de Nacimiento</p>
-                            <p class="font-medium text-gray-800">{{ $animal->fecha_nacimiento->format('d/m/Y') }}</p>
-                            <p class="text-xs text-blue-600 mt-1">{{ $animal->edad }}</p>
+                            <p data-offline-field="fecha_nacimiento" class="font-medium text-gray-800">{{ $animal->fecha_nacimiento->format('d/m/Y') }}</p>
+                            <p data-offline-field="edad" class="text-xs text-blue-600 mt-1">{{ $animal->edad }}</p>
                         </div>
                     </div>
                     @endif
@@ -185,16 +186,16 @@
                         <i class="fa-solid fa-clipboard-check text-green-600 mt-1 mr-3"></i>
                         <div>
                             <p class="text-xs text-gray-500">Registrado el</p>
-                            <p class="font-medium text-gray-800">{{ $animal->created_at->format('d/m/Y H:i') }}</p>
+                            <p data-offline-field="created_at" class="font-medium text-gray-800">{{ $animal->created_at->format('d/m/Y H:i') }}</p>
                         </div>
                     </div>
 
                     @if($animal->updated_at->ne($animal->created_at))
-                    <div class="flex items-start">
+                    <div data-offline-if="has_update" class="flex items-start">
                         <i class="fa-solid fa-clock-rotate-left text-orange-600 mt-1 mr-3"></i>
                         <div>
                             <p class="text-xs text-gray-500">Última actualización</p>
-                            <p class="font-medium text-gray-800">{{ $animal->updated_at->format('d/m/Y H:i') }}</p>
+                            <p data-offline-field="updated_at" class="font-medium text-gray-800">{{ $animal->updated_at->format('d/m/Y H:i') }}</p>
                         </div>
                     </div>
                     @endif
@@ -233,7 +234,7 @@
 
     <!-- ── Observaciones ── -->
     @if($animal->observaciones)
-    <div class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 mb-6">
+    <div data-offline-if="observaciones" class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 mb-6">
         <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
             <span class="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center mr-3 shadow-lg">
                 <i class="fa-solid fa-notes-medical text-white"></i>
@@ -241,7 +242,7 @@
             Observaciones
         </h2>
         <div class="p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-            <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $animal->observaciones }}</p>
+            <p data-offline-field="observaciones" class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $animal->observaciones }}</p>
         </div>
     </div>
     @endif
@@ -312,7 +313,7 @@
             <div class="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
                 <i class="fa-solid fa-heart-pulse text-gray-400 text-2xl"></i>
             </div>
-            <p class="text-gray-600 font-medium mb-1">Sin registros sanitarios</p>
+            <p class="text-gray-600 font-medium mb-1">{{ ($offlineTemplate ?? false) ? 'Consulta el historial sanitario con conexión' : 'Sin registros sanitarios' }}</p>
             <p class="text-sm text-gray-500 mb-4">Registra vacunaciones y tratamientos de este animal</p>
             <a href="{{ route('salud.create', ['animal_id' => $animal->id]) }}"
                class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white text-sm font-bold rounded-xl shadow-lg transition-all">

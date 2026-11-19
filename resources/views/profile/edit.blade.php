@@ -113,14 +113,14 @@
         </div>
 
         {{-- Modal de cámara --}}
-        <div id="modal-camara" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+        <div id="modal-camara" role="dialog" aria-modal="true" aria-label="Cámara de perfil" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-lg">
                 <div class="bg-gradient-to-r from-red-600 to-red-800 p-4 flex items-center justify-between">
                     <h3 class="text-white font-bold text-lg flex items-center space-x-2">
                         <i class="fa-solid fa-camera"></i>
                         <span>Tomar foto</span>
                     </h3>
-                    <button onclick="cerrarCamara()" class="text-white/80 hover:text-white">
+                    <button onclick="cerrarCamara()" aria-label="Cerrar cámara" class="text-white/80 hover:text-white">
                         <i class="fa-solid fa-xmark text-xl"></i>
                     </button>
                 </div>

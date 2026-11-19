@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends(($offlineTemplate ?? false) ? 'offline.fragment' : 'layouts.dashboard')
 
 @section('title', 'Gestión de Animales')
 
@@ -295,6 +295,7 @@
                                               onsubmit="return confirm('¿Estás seguro de eliminar este animal?')">
                                             @csrf
                                             @method('DELETE')
+                                            <input type="hidden" name="base_version" value="{{ $animal->version }}">
                                             <button type="submit" 
                                                     class="w-9 h-9 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center transition-all shadow-md hover:shadow-lg"
                                                     title="Eliminar">

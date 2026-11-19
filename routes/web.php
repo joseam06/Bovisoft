@@ -9,6 +9,20 @@ use App\Http\Controllers\SaludController;
 use App\Http\Controllers\FinanzasController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ProductionSyncController;
+use App\Http\Controllers\OfflineReadController;
+
+Route::get('/offline/produccion', [OfflineReadController::class, 'page'])->name('offline.produccion');
+Route::get('/offline/session', [OfflineReadController::class, 'session']);
+Route::get('/offline/asset-manifest', [OfflineReadController::class, 'assets']);
+Route::redirect('/offline/workspace', '/dashboard');
+Route::get('/offline-shell', [OfflineReadController::class, 'workspace']);
+Route::prefix('api/offline/v1/workspace')->middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'throttle:240,1'])->group(function () {
+    Route::get('views', \App\Http\Controllers\OfflineViewController::class);
+    Route::post('snapshots', [\App\Http\Controllers\WorkspaceSyncController::class, 'snapshot']);
+    Route::get('snapshots/{snapshot}', [\App\Http\Controllers\WorkspaceSyncController::class, 'page'])->whereUuid('snapshot');
+    Route::get('changes', [\App\Http\Controllers\WorkspaceSyncController::class, 'changes']);
+    Route::post('operations', [\App\Http\Controllers\WorkspaceSyncController::class, 'operation']);
+});
 
 Route::prefix('api/offline/v1/produccion')->middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'throttle:60,1'])->group(function () {
     Route::post('snapshots', [ProductionSyncController::class, 'snapshot']);

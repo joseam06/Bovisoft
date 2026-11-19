@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends(($offlineTemplate ?? false) ? 'offline.fragment' : 'layouts.dashboard')
 
 @section('title', $finca->nombre)
 
@@ -12,18 +12,18 @@
             </a>
             <div>
                 <h1 class="text-3xl font-bold text-white flex items-center">
-                    {{ $finca->nombre }}
+                    <span data-offline-field="nombre">{{ $finca->nombre }}</span>
                     @if($finca->activa)
-                        <span class="ml-3 px-3 py-1 bg-green-500 text-white text-sm font-bold rounded-full shadow-lg">
+                        <span data-offline-field="activa" class="ml-3 px-3 py-1 bg-green-500 text-white text-sm font-bold rounded-full shadow-lg">
                             <i class="fa-solid fa-check-circle mr-1"></i>Activa
                         </span>
                     @else
-                        <span class="ml-3 px-3 py-1 bg-gray-500 text-white text-sm font-bold rounded-full shadow-lg">
+                        <span data-offline-field="activa" class="ml-3 px-3 py-1 bg-gray-500 text-white text-sm font-bold rounded-full shadow-lg">
                             <i class="fa-solid fa-pause-circle mr-1"></i>Inactiva
                         </span>
                     @endif
                 </h1>
-                <p class="text-red-100 mt-1">{{ $finca->codigo }}</p>
+                <p data-offline-field="codigo" class="text-red-100 mt-1">{{ $finca->codigo }}</p>
             </div>
         </div>
         <div class="flex gap-3">
@@ -39,6 +39,7 @@
             <form action="{{ route('fincas.destroy', $finca) }}" method="POST" class="inline" onsubmit="return confirm('¿Estás seguro de eliminar esta finca? Esta acción no se puede deshacer.')">
                 @csrf
                 @method('DELETE')
+                <input type="hidden" name="base_version" value="{{ $finca->version }}">
                 <button type="submit" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all font-bold shadow-xl">
                     <i class="fa-solid fa-trash mr-2"></i>Eliminar
                 </button>
@@ -64,7 +65,7 @@
                         <i class="fa-solid fa-ruler-combined text-orange-600 text-2xl"></i>
                     </div>
                     <p class="text-xs text-gray-600 mb-1">Área Total</p>
-                    <p class="text-2xl font-bold text-gray-800">
+                    <p data-offline-field="area" class="text-2xl font-bold text-gray-800">
                         @if($finca->area)
                             {{ number_format($finca->area, 2) }}
                         @else
@@ -80,7 +81,7 @@
                         <i class="fa-solid fa-cow text-red-600 text-2xl"></i>
                     </div>
                     <p class="text-xs text-gray-600 mb-1">Total Animales</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ $finca->total_animales }}</p>
+                    <p data-offline-field="total_animales" class="text-2xl font-bold text-gray-800">{{ $finca->total_animales }}</p>
                     <p class="text-xs text-red-600 font-medium">cabezas</p>
                 </div>
 
@@ -122,9 +123,9 @@
                     <p class="text-xs text-gray-600 mb-1">Estado</p>
                     <p class="text-lg font-bold text-gray-800">
                         @if($finca->activa)
-                            <span class="text-green-600">Operativa</span>
+                            <span data-offline-field="operativa" class="text-green-600">Operativa</span>
                         @else
-                            <span class="text-gray-600">Inactiva</span>
+                            <span data-offline-field="operativa" class="text-gray-600">Inactiva</span>
                         @endif
                     </p>
                 </div>
@@ -142,48 +143,48 @@
 
             <div class="space-y-3">
                 @if($finca->direccion)
-                <div class="flex items-start">
+                <div data-offline-if="direccion" class="flex items-start">
                     <i class="fa-solid fa-location-dot text-red-600 mt-1 mr-3"></i>
                     <div>
                         <p class="text-xs text-gray-500">Dirección</p>
-                        <p class="font-medium text-gray-800">{{ $finca->direccion }}</p>
+                        <p data-offline-field="direccion" class="font-medium text-gray-800">{{ $finca->direccion }}</p>
                     </div>
                 </div>
                 @endif
 
                 @if($finca->municipio)
-                <div class="flex items-start">
+                <div data-offline-if="municipio" class="flex items-start">
                     <i class="fa-solid fa-city text-blue-600 mt-1 mr-3"></i>
                     <div>
                         <p class="text-xs text-gray-500">Municipio</p>
-                        <p class="font-medium text-gray-800">{{ $finca->municipio }}</p>
+                        <p data-offline-field="municipio" class="font-medium text-gray-800">{{ $finca->municipio }}</p>
                     </div>
                 </div>
                 @endif
 
                 @if($finca->departamento)
-                <div class="flex items-start">
+                <div data-offline-if="departamento" class="flex items-start">
                     <i class="fa-solid fa-flag text-orange-600 mt-1 mr-3"></i>
                     <div>
                         <p class="text-xs text-gray-500">Departamento</p>
-                        <p class="font-medium text-gray-800">{{ $finca->departamento }}</p>
+                        <p data-offline-field="departamento" class="font-medium text-gray-800">{{ $finca->departamento }}</p>
                     </div>
                 </div>
                 @endif
 
                 @if($finca->latitud && $finca->longitud)
-                <div class="flex items-start">
+                <div data-offline-if="has_coordinates" class="flex items-start">
                     <i class="fa-solid fa-map-pin text-green-600 mt-1 mr-3"></i>
                     <div>
                         <p class="text-xs text-gray-500">Coordenadas</p>
-                        <p class="font-mono text-sm text-gray-700">{{ number_format($finca->latitud, 6) }}, {{ number_format($finca->longitud, 6) }}</p>
+                        <p data-offline-field="coordinates" class="font-mono text-sm text-gray-700">{{ number_format($finca->latitud, 6) }}, {{ number_format($finca->longitud, 6) }}</p>
                     </div>
                 </div>
                 @endif
 
                 <div class="pt-3 border-t-2 border-gray-200">
                     <p class="text-xs text-gray-500 mb-1">Registrada el</p>
-                    <p class="font-medium text-gray-800">{{ $finca->created_at->format('d/m/Y H:i') }}</p>
+                    <p data-offline-field="created_at" class="font-medium text-gray-800">{{ $finca->created_at->format('d/m/Y H:i') }}</p>
                 </div>
             </div>
         </div>
@@ -191,14 +192,14 @@
 
     @if($finca->descripcion)
     <!-- Descripción -->
-    <div class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 mb-6">
+    <div data-offline-if="descripcion" class="glass-effect rounded-2xl shadow-xl p-6 border-4 border-white/50 mb-6">
         <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
             <span class="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center mr-3 shadow-lg">
                 <i class="fa-solid fa-align-left text-white"></i>
             </span>
             Descripción
         </h2>
-        <p class="text-gray-700 leading-relaxed">{{ $finca->descripcion }}</p>
+        <p data-offline-field="descripcion" class="text-gray-700 leading-relaxed">{{ $finca->descripcion }}</p>
     </div>
     @endif
 
@@ -211,7 +212,7 @@
             </span>
             Ubicación en el Mapa
         </h2>
-        <div id="map" class="rounded-xl shadow-lg border-4 border-gray-300" style="height: 400px;"></div>
+        <div id="map" data-offline-map class="rounded-xl shadow-lg border-4 border-gray-300" style="height: 400px;"></div>
     </div>
     @endif
 
@@ -334,15 +335,17 @@ function toggleEstadoFinca() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        }
+        },
+        body: JSON.stringify({base_version: {{ $finca->version }}})
     })
     .then(function(response) { return response.json(); })
     .then(function(data) {
         if (data.success) {
             location.reload();
         } else {
-            alert('Error al cambiar el estado');
+            alert(data.message || 'Error al cambiar el estado');
             textoEstado.textContent = originalText;
             btn.disabled = false;
         }

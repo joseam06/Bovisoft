@@ -2,6 +2,110 @@
 @tailwind components;
 @tailwind utilities;
 
+#offline-indicator[hidden], #offline-feedback[hidden], #offline-feedback [hidden], #workspace-main [hidden] { display: none !important; }
+#offline-feedback button:disabled, #workspace-main button:disabled { opacity: .5; cursor: not-allowed; }
+#workspace-main input, #workspace-main select, #workspace-main textarea { max-width: 100%; }
+#workspace-main > .mb-5 a, #workspace-main > .flex.mb-6 a { color: #fff; }
+
 [x-cloak] {
     display: none;
+}
+
+/* Shared presentation for the same online/offline Blade views. */
+[hidden] { display: none !important; }
+.bovi-mobile-only { display: none; }
+.app-content, .app-main, .app-main :where(.grid,.flex) > * { min-width: 0; }
+.app-main :where(h1,h2,h3,p,dd,dt,label), .app-header [data-account-field] { overflow-wrap: anywhere; }
+.app-main :where(input,select,textarea), .bovi-auth :where(input,select,textarea) { max-width: 100%; }
+.app-main :where(img,video,canvas) { max-width: 100%; }
+.app-main :where([id="map"],[id$="-map"],.leaflet-container) { width: 100%; max-width: 100%; min-width: 0; }
+.bovi-table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+.bovi-table-scroll table { width: 100%; }
+.bovi-table-wide { min-width: 44rem; }
+.bovi-table-compact { min-width: 26rem; }
+.bovi-table-scroll:focus-visible, .bovi-dashboard :where(a,button,input,select,textarea):focus-visible,
+.bovi-auth :where(a,button,input,select,textarea):focus-visible { outline: 3px solid #dc2626; outline-offset: 3px; }
+#sidebar { overflow-y: auto; overflow-x: hidden; height: 100dvh; }
+#sidebar:focus-within { width: 16rem; }
+#sidebar:focus-within .opacity-0 { opacity: 1; }
+#nav-backdrop { position: fixed; inset: 0; z-index: 35; background: rgb(0 0 0 / .55); }
+.app-header :where(#user-dropdown,#dropdown-campanita) { max-height: calc(100dvh - 6rem); overflow-y: auto; }
+#user-dropdown .truncate { white-space: normal; overflow-wrap: anywhere; }
+.jetstream-modal > div:last-child, #modal-camara > div { max-height: calc(100dvh - 2rem); overflow-y: auto; overscroll-behavior: contain; }
+#modal-camara, #authOverlay { overflow-y: auto; overscroll-behavior: contain; }
+#authOverlay > .relative { min-height: 100dvh; }
+#authPanel { margin-block: auto; }
+
+@media (max-width: 1023px), (hover: none) and (pointer: coarse) {
+    .bovi-mobile-only { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+    .bovi-dashboard #sidebar { width: min(18rem, calc(100vw - 2rem)); transform: translateX(-100%); transition: transform .2s ease; }
+    .bovi-dashboard.bovi-nav-open #sidebar { transform: translateX(0); }
+    .bovi-dashboard #sidebar .opacity-0 { opacity: 1; }
+    .bovi-dashboard #sidebar nav { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
+    .bovi-dashboard .app-content { margin-left: 0; }
+    /* A tall sticky header covered toolbar actions and focused form fields. */
+    .bovi-dashboard .app-header { position: relative; }
+    .bovi-dashboard .app-header > div { flex-wrap: nowrap; gap: .5rem; padding: .75rem; align-items: flex-start; }
+    .bovi-dashboard .app-header-actions { flex: 1; display: grid; grid-template-columns: 44px minmax(0,1fr); gap: .5rem; align-items: center; }
+    .app-header-actions > #campanita-container { grid-column: 1; grid-row: 1; position: static; }
+    .app-header-actions > div:last-child { grid-column: 2; grid-row: 1; justify-self: end; padding-left: .5rem; margin: 0; max-width: 100%; }
+    .app-header-actions #offline-indicator { grid-column: 1 / -1; grid-row: 2; font-size: .8125rem; line-height: 1.4; overflow-wrap: anywhere; }
+    .app-header .bovi-account-summary { display: block; max-width: min(42vw, 13rem); }
+    .app-header [data-account-avatar] { width: 44px; height: 44px; }
+    .app-header #user-menu-btn { gap: .5rem; }
+    .app-header #user-menu-btn > * { margin-left: 0; }
+    .app-header #dropdown-campanita { left: .75rem; right: .75rem; top: 100%; width: auto; max-width: none; }
+    .app-header #user-dropdown { width: min(20rem, calc(100vw - 1.5rem)); }
+    .bovi-dashboard .app-main { padding: 1rem; }
+    .app-main :where(.flex.items-center.justify-between,.flex.justify-end) { flex-wrap: wrap; gap: .75rem; }
+    .app-main :where(.flex.gap-2,.flex.gap-3,.flex.gap-4,.flex.space-x-2,.flex.space-x-3,.flex.space-x-4) { flex-wrap: wrap; gap: .75rem; }
+    .app-main :where(.space-x-2,.space-x-3,.space-x-4) > * { margin-left: 0; }
+    .app-main h1.flex, .app-main h2.flex { flex-wrap: wrap; }
+    .app-main :where(h1,h2) > :where(.w-10,.w-12), .app-main a.w-12 { flex-shrink: 0; }
+    .app-main :where(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),select,textarea),
+    .bovi-auth :where(input:not([type="checkbox"]):not([type="radio"]),select,textarea),
+    #authPanel :where(input:not([type="checkbox"]),select,textarea) { font-size: 16px; min-height: 44px; }
+    .app-main :where(button,a[class*="py-"]), .app-header button, .bovi-auth :where(button,a[class*="py-"]),
+    #authPanel button, #modal-camara button { min-height: 44px; }
+    .app-main table :where(button,a[class*="p-"]) { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    .app-main [class~="md:grid-cols-4"] { grid-template-columns: repeat(2,minmax(0,1fr)); }
+    .app-main canvas { width: 100% !important; }
+    #mainNav { position: relative; }
+    #mainNav > div { flex-wrap: wrap; gap: .75rem; padding: 1rem; }
+    #mainNav > div > div { flex: 1; }
+    #mainNav > div > [data-open] { order: 3; width: 100%; }
+    #mainNav #public-nav { display: none; order: 4; flex-basis: 100%; flex-wrap: wrap; gap: .5rem; }
+    #mainNav #public-nav[data-open="true"] { display: flex; }
+    #public-nav a { padding: .75rem; min-height: 44px; }
+    .bovi-public #inicio { padding-top: 3rem; }
+}
+
+@media (max-width: 639px) {
+    .app-main :where(.p-8,.p-6) { padding: 1rem; }
+    .app-main :where(h1.text-3xl,h1.text-4xl) { font-size: 1.75rem; line-height: 1.25; }
+    .app-main h2.text-2xl { font-size: 1.375rem; }
+    .app-main .ml-16 { margin-left: 0; }
+    .app-main .flex.gap-3 > :where(button,a,form) { max-width: 100%; }
+    .app-main :where(.col-span-2,.sm\:col-span-2) { grid-column: auto; }
+    .app-main .grid-cols-2, .app-main .grid-cols-3 { grid-template-columns: minmax(0,1fr); }
+    .app-main .grid { gap: 1rem; }
+    .app-main :where(.text-4xl,.text-5xl) { font-size: 2rem; }
+    .bovi-auth .max-w-md > .p-8, #authPanel > .p-8 { padding: 1.25rem; }
+    #authPanel .flex.items-center.gap-3 { flex-wrap: wrap; }
+    #authSubtitle { flex-basis: 100%; }
+    #authOverlay > .relative { align-items: flex-start; padding: .75rem; }
+    #authPanel { margin-block: .5rem; }
+    .jetstream-modal { padding: .75rem; }
+    .jetstream-modal :where(.flex-row,.justify-end) { flex-wrap: wrap; gap: .75rem; }
+    #modal-camara { align-items: flex-start; }
+    #modal-camara > div { margin-block: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bovi-dashboard .animate-slide-up, .bovi-dashboard .pulse-glow { animation: none; }
+    .bovi-dashboard #sidebar { transition: none; }
+}
+@media (hover: none) {
+    .bovi-dashboard .card-hover:hover { transform: none; }
+    .bovi-dashboard .animate-slide-up { animation: none; }
 }

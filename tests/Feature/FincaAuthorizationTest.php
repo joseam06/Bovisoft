@@ -73,9 +73,9 @@ class FincaAuthorizationTest extends FincasTestCase
         $this->assertSame('Nombre actualizado', $this->finca->fresh()->nombre);
         $this->assertSame($this->owner->id, (int) $this->finca->fresh()->user_id);
 
-        $this->postJson('/fincas/'.$this->finca->id.'/toggle-estado')
+        $this->postJson('/fincas/'.$this->finca->id.'/toggle-estado', ['base_version' => 2])
             ->assertOk()->assertJsonPath('activa', false);
-        $this->delete('/fincas/'.$this->finca->id)->assertRedirect(route('fincas.index'));
+        $this->delete('/fincas/'.$this->finca->id, ['base_version' => 3])->assertRedirect(route('fincas.index'));
         $this->assertSoftDeleted('fincas', ['id' => $this->finca->id]);
     }
 
@@ -224,7 +224,7 @@ class FincaAuthorizationTest extends FincasTestCase
 
     private function updatePayload(): array
     {
-        return ['nombre' => 'Nombre actualizado', 'area' => 12.5,
+        return ['nombre' => 'Nombre actualizado', 'area' => 12.5, 'base_version' => 1,
             'latitud' => 4.6, 'longitud' => -74.2, 'activa' => true];
     }
 }

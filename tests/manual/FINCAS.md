@@ -19,8 +19,8 @@ Abre http://127.0.0.1:8091/login con estas cuentas de demostración:
 
 | Cuenta | Contraseña ficticia |
 | --- | --- |
-| fincas-a@example.test | DemoFincas2026! |
-| fincas-b@example.test | DemoFincas2026! |
+| fincas-a@example.test | La indicada en `BOVISOFT_BROWSER_TEST_PASSWORD` al crear la base |
+| fincas-b@example.test | La indicada en `BOVISOFT_BROWSER_TEST_PASSWORD` al crear la base |
 
 1. Entra como A. Comprueba `/fincas`, `/animales`, `/potreros` y `/api/fincas/mapa`: solo deben aparecer los datos de A. Abre el detalle y edición de su finca; modifica su nombre y alterna su estado. El mapa solo incluye fincas activas con coordenadas.
 2. Prueba `/fincas/ID_A/animales`, `/api/fincas/ID_A/potreros` y `/fincas/ID_A/potreros`. Las dos primeras rutas devuelven JSON; la tercera reutiliza el listado de potreros filtrado.
@@ -48,6 +48,6 @@ for (const [method, suffix, body] of [
 
 5. Vuelve como A y comprueba que su finca sigue existiendo y conserva el nombre y estado previos a los intentos de B. La suite automatizada compara además todas las columnas originales, incluidos `updated_at` y `deleted_at`.
 
-El servidor conserva CSRF y sesiones reales en esta SQLite ficticia. Usa solo datos de demostración: la clave de aplicación y las contraseñas son públicas de prueba. Este servidor de navegador no utiliza conexiones MySQL/PostgreSQL ni configuración cacheada de despliegue. Para las suites multibase y el protocolo de sincronización consulta `docs/production-sync.md`.
+El servidor conserva CSRF y sesiones reales en esta SQLite ficticia. Antes de crear la base, define `BOVISOFT_BROWSER_TEST_PASSWORD` con una clave local exclusiva de pruebas; no la guardes en archivos versionados. La clave de aplicación del bootstrap es ficticia. Este servidor de navegador no utiliza conexiones MySQL/PostgreSQL ni configuración cacheada de despliegue. Para las suites multibase y el protocolo de sincronización consulta `docs/production-sync.md`.
 
 Antes de usar Producción con una base ficticia preparada en una fase anterior, ejecuta `rtk proxy php tests/manual/fincas.php migrate`. Se conservan sus datos y se aplican exclusivamente allí las migraciones nuevas.

@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Restablecer Contraseña - Bovisoft</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="/vendor/inter/inter.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap');
         body { font-family: 'Inter', sans-serif; }
     </style>
 </head>
-<body class="min-h-screen text-gray-800"
+<body class="bovi-auth min-h-screen text-gray-800"
       style="background: linear-gradient(135deg, #7c2d12 0%, #991b1b 25%, #dc2626 50%, #b91c1c 75%, #450a0a 100%); background-attachment: fixed;">
 
     {{-- Fondo con blur igual al backdrop del overlay --}}

@@ -63,6 +63,7 @@ final class FincasApplication
                 'logging.default' => 'null',
                 'hashing.bcrypt.rounds' => 4,
                 'offline.production.enabled' => true,
+                'offline.workspace.enabled' => true,
             ]);
         });
 
