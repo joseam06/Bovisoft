@@ -9,20 +9,20 @@
             <td width="33%">
                 <div class="kpi-card green">
                     <div class="kpi-label">Total Ingresos</div>
-                    <div class="kpi-value" style="font-size:14px;">${{ number_format($totalIngresos, 0, ',', '.') }}</div>
+                    <div class="kpi-value" style="font-size:14px;">$<span data-report-stat="totalIngresos">{{ \App\Services\Money::format($totalIngresos) }}</span></div>
                 </div>
             </td>
             <td width="33%">
                 <div class="kpi-card">
                     <div class="kpi-label">Total Egresos</div>
-                    <div class="kpi-value" style="font-size:14px;">${{ number_format($totalEgresos, 0, ',', '.') }}</div>
+                    <div class="kpi-value" style="font-size:14px;">$<span data-report-stat="totalEgresos">{{ \App\Services\Money::format($totalEgresos) }}</span></div>
                 </div>
             </td>
             <td width="33%">
                 <div class="kpi-card {{ $balance >= 0 ? 'green' : '' }}">
                     <div class="kpi-label">Balance</div>
                     <div class="kpi-value {{ $balance >= 0 ? 'balance-positivo' : 'balance-negativo' }}" style="font-size:14px;">
-                        {{ $balance >= 0 ? '+' : '' }}${{ number_format($balance, 0, ',', '.') }}
+                        <span data-report-sign>{{ $balance >= 0 ? '+' : '' }}</span>$<span data-report-stat="balance">{{ \App\Services\Money::format($balance) }}</span>
                     </div>
                 </div>
             </td>
@@ -47,15 +47,15 @@
             <th>Barra proporcional</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="ingresos">
         @foreach($ingresos as $ing)
         @php $pct = $maxMonto > 0 ? min(100, ($ing->monto / $maxMonto) * 100) : 0; @endphp
         <tr>
-            <td style="font-family: monospace; font-size:9px;">{{ $ing->codigo }}</td>
-            <td><span class="badge badge-green">{{ $tiposIngLabel[$ing->tipo] ?? ucfirst($ing->tipo) }}</span></td>
-            <td>{{ $ing->finca->nombre ?? '—' }}</td>
-            <td>{{ $ing->fecha->format('d/m/Y') }}</td>
-            <td style="font-weight:bold; color:#15803d;">${{ number_format($ing->monto, 0, ',', '.') }}</td>
+            <td style="font-family: monospace; font-size:9px;"><span data-offline-owner="ingresos" data-offline-field="codigo">{{ $ing->codigo }}</span></td>
+            <td><span class="badge badge-green"><span data-offline-owner="ingresos" data-offline-field="tipo">{{ $tiposIngLabel[$ing->tipo] ?? ucfirst($ing->tipo) }}</span></span></td>
+            <td><span data-offline-owner="ingresos" data-offline-field="finca_nombre">{{ $ing->finca->nombre ?? '—' }}</span></td>
+            <td><span data-offline-owner="ingresos" data-offline-field="fecha">{{ $ing->fecha->format('d/m/Y') }}</span></td>
+            <td style="font-weight:bold; color:#15803d;">$<span data-offline-owner="ingresos" data-offline-field="monto">{{ \App\Services\Money::format($ing->monto) }}</span></td>
             <td style="width:100px;">
                 <div class="bar-wrap">
                     <div class="bar-fill-green" style="width:{{ number_format($pct, 1) }}%;"></div>
@@ -67,7 +67,7 @@
     <tfoot>
         <tr>
             <td colspan="4">TOTAL INGRESOS</td>
-            <td>${{ number_format($totalIngresos, 0, ',', '.') }}</td>
+            <td>$<span data-report-stat="totalIngresos">{{ \App\Services\Money::format($totalIngresos) }}</span></td>
             <td></td>
         </tr>
     </tfoot>
@@ -93,15 +93,15 @@
             <th>Barra proporcional</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="egresos">
         @foreach($egresos as $egr)
         @php $pct = $maxMonto > 0 ? min(100, ($egr->monto / $maxMonto) * 100) : 0; @endphp
         <tr>
-            <td style="font-family: monospace; font-size:9px;">{{ $egr->codigo }}</td>
-            <td><span class="badge badge-red">{{ $catsEgrLabel[$egr->categoria] ?? ucfirst($egr->categoria) }}</span></td>
-            <td>{{ $egr->finca->nombre ?? '—' }}</td>
-            <td>{{ $egr->fecha->format('d/m/Y') }}</td>
-            <td style="font-weight:bold; color:#b91c1c;">${{ number_format($egr->monto, 0, ',', '.') }}</td>
+            <td style="font-family: monospace; font-size:9px;"><span data-offline-owner="egresos" data-offline-field="codigo">{{ $egr->codigo }}</span></td>
+            <td><span class="badge badge-red"><span data-offline-owner="egresos" data-offline-field="categoria">{{ $catsEgrLabel[$egr->categoria] ?? ucfirst($egr->categoria) }}</span></span></td>
+            <td><span data-offline-owner="egresos" data-offline-field="finca_nombre">{{ $egr->finca->nombre ?? '—' }}</span></td>
+            <td><span data-offline-owner="egresos" data-offline-field="fecha">{{ $egr->fecha->format('d/m/Y') }}</span></td>
+            <td style="font-weight:bold; color:#b91c1c;">$<span data-offline-owner="egresos" data-offline-field="monto">{{ \App\Services\Money::format($egr->monto) }}</span></td>
             <td style="width:100px;">
                 <div class="bar-wrap">
                     <div class="bar-fill-red" style="width:{{ number_format($pct, 1) }}%;"></div>
@@ -113,7 +113,7 @@
     <tfoot>
         <tr>
             <td colspan="4">TOTAL EGRESOS</td>
-            <td>${{ number_format($totalEgresos, 0, ',', '.') }}</td>
+            <td>$<span data-report-stat="totalEgresos">{{ \App\Services\Money::format($totalEgresos) }}</span></td>
             <td></td>
         </tr>
     </tfoot>
@@ -127,7 +127,7 @@
 <div class="section-title">Costos de Salud Animal (cruzados desde modulo Salud)</div>
 <div class="obs-box">
     En el periodo seleccionado se registraron costos sanitarios por un total de
-    <strong>${{ number_format($costosSalud, 0, ',', '.') }} COP</strong>.
+    <strong>$<span data-report-stat="costosSalud">{{ \App\Services\Money::format($costosSalud) }}</span> COP</strong>.
     Estos costos provienen del modulo de Salud y pueden haberse registrado tambien como egresos de categoria "Salud Animal".
 </div>
 @endif
@@ -139,22 +139,22 @@
     <tbody>
         <tr>
             <td style="width:60%; font-weight:bold;">Total Ingresos del periodo</td>
-            <td style="color:#15803d; font-weight:bold;">${{ number_format($totalIngresos, 0, ',', '.') }} COP</td>
+            <td style="color:#15803d; font-weight:bold;">$<span data-report-stat="totalIngresos">{{ \App\Services\Money::format($totalIngresos) }}</span> COP</td>
         </tr>
         <tr>
             <td style="font-weight:bold;">Total Egresos del periodo</td>
-            <td style="color:#b91c1c; font-weight:bold;">${{ number_format($totalEgresos, 0, ',', '.') }} COP</td>
+            <td style="color:#b91c1c; font-weight:bold;">$<span data-report-stat="totalEgresos">{{ \App\Services\Money::format($totalEgresos) }}</span> COP</td>
         </tr>
         @if($costosSalud > 0)
         <tr>
             <td>Costos de salud (referencia)</td>
-            <td style="color:#7e22ce;">${{ number_format($costosSalud, 0, ',', '.') }} COP</td>
+            <td style="color:#7e22ce;">$<span data-report-stat="costosSalud">{{ \App\Services\Money::format($costosSalud) }}</span> COP</td>
         </tr>
         @endif
         <tr style="background-color: {{ $balance >= 0 ? '#d1fae5' : '#fee2e2' }};">
             <td style="font-weight:bold; font-size:12px;">BALANCE (Ingresos - Egresos)</td>
             <td class="{{ $balance >= 0 ? 'balance-positivo' : 'balance-negativo' }}" style="font-size:13px;">
-                {{ $balance >= 0 ? '+' : '' }}${{ number_format($balance, 0, ',', '.') }} COP
+                <span data-report-sign>{{ $balance >= 0 ? '+' : '' }}</span>$<span data-report-stat="balance">{{ \App\Services\Money::format($balance) }}</span> COP
             </td>
         </tr>
     </tbody>

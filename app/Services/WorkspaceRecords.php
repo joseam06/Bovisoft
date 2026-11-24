@@ -20,16 +20,24 @@ class WorkspaceRecords
 
     public function find(User $user, string $module, int|string $key, bool $uuid = false, bool $trashed = false): Model
     {
-        $query = $module === 'fincas' ? Finca::query() : Animal::query();
+        $class = WorkspaceModules::MODELS[$module] ?? throw new \InvalidArgumentException('Módulo no disponible.');
+        $query = $class::query();
+        if (in_array($module,['ingresos','egresos'],true)) $query=FinancialService::authorized($class,$user->id);
         if ($trashed) {
             $query->withTrashed();
         }
         $record = $query->where('user_id', $user->id)->where($uuid ? 'client_uuid' : 'id', $key)->lockForUpdate()->firstOrFail();
+        if ($module === 'perfil') return $record;
+        if (in_array($module, ['ingresos','egresos'], true)) {
+            if ($record->animal_id) Animal::where('user_id', $user->id)->findOrFail($record->animal_id);
+            if ($module === 'egresos' && $record->salud_id) \App\Models\Salud::where('user_id', $user->id)->findOrFail($record->salud_id);
+        }
         if ($record instanceof Finca) {
             Gate::forUser($user)->authorize('view', $record);
         } else {
             $finca = Finca::delUsuario($user->id)->findOrFail($record->finca_id);
             Gate::forUser($user)->authorize('view', $finca);
+            if (in_array($module, ['produccion', 'salud'], true)) Animal::where('user_id', $user->id)->findOrFail($record->animal_id);
         }
 
         return $record;
@@ -47,6 +55,28 @@ class WorkspaceRecords
                     throw new WorkspaceVersionConflict($record);
                 }
             }
+            if ($module === 'produccion') {
+                $service = app(ProduccionService::class);
+                try {
+                    if ($type === 'create') return $service->create($user, $input, $uuid);
+                    if ($type === 'update') return $service->update($user, $record->id, $input);
+                    $service->delete($user, $record->id, $input);
+                    return \App\Models\Produccion::withTrashed()->findOrFail($record->id);
+                } catch (\App\Exceptions\ProduccionVersionConflict $error) {
+                    throw new WorkspaceVersionConflict($error->current);
+                }
+            }
+            if ($module === 'perfil') {
+                if ($type !== 'update') throw ValidationException::withMessages(['perfil'=>'Solo se admite actualizar el nombre de la cuenta activa.']);
+                $data = Validator::make($input, ['name'=>'required|string|max:255','email'=>'prohibited','password'=>'prohibited','current_password'=>'prohibited','photo'=>'prohibited'])->validate();
+                $user->name = $data['name'];$user->save();
+                $fresh=\App\Models\WorkspaceProfile::where('user_id',$user->id)->firstOrFail();
+                if ((int)$fresh->version === (int)$record->version) $fresh->touch();
+                return $fresh;
+            }
+            if ($module === 'potreros') return app(PotreroService::class)->write($user, $type, $input, $record, $uuid);
+            if ($module === 'salud') return app(SaludService::class)->write($user, $type, $input, $record, $uuid);
+            if (in_array($module, ['ingresos','egresos'], true)) return app(FinancialService::class)->write($user, $module, $type, $input, $record, $uuid);
             if ($type === 'toggle') {
                 $record->activa = ! $record->activa;
                 $record->save();
@@ -63,9 +93,7 @@ class WorkspaceRecords
                         throw ValidationException::withMessages(['historial' => 'El registro tiene historial relacionado y se conserva. Para retirarlo del inventario cambia su estado; no se eliminará su historial.']);
                     }
                 }
-                $oldPotrero = $record instanceof Animal ? $record->potrero_id : null;
                 $record->delete();
-                $this->recount($user, [$oldPotrero]);
 
                 return $record;
             }
@@ -88,7 +116,6 @@ class WorkspaceRecords
                 $rules['codigo'] = ['sometimes', 'required', 'string', 'max:255', Rule::unique($module, 'codigo')];
             }
             $data = Validator::make($input, $rules)->validate();
-            $oldPotrero = null;
             if ($module === 'animales') {
                 $finca = Finca::delUsuario($user->id)->lockForUpdate()->find($data['finca_id']);
                 if (! $finca || (($creating || (int) $record->finca_id !== (int) $finca->id) && ! $finca->activa)) {
@@ -98,7 +125,14 @@ class WorkspaceRecords
                 if (! empty($data['potrero_id']) && ! Potrero::where('user_id', $user->id)->where('finca_id', $finca->id)->whereKey($data['potrero_id'])->lockForUpdate()->exists()) {
                     throw ValidationException::withMessages(['potrero_id' => 'El potrero no pertenece a la finca seleccionada o no está autorizado.']);
                 }
-                $oldPotrero = $record?->potrero_id;
+                if (! empty($data['potrero_id'])) {
+                    $potrero = Potrero::where('user_id', $user->id)->lockForUpdate()->findOrFail($data['potrero_id']);
+                    $assigning = ! $record || (int) $record->potrero_id !== $potrero->id || ($record->estado !== 'activo' && ($data['estado'] ?? '') === 'activo');
+                    $count = Animal::where('user_id', $user->id)->where('potrero_id', $potrero->id)->where('estado', 'activo')->count();
+                    if ($assigning && ($potrero->estado !== 'activo' || ($potrero->capacidad_animales && $count >= $potrero->capacidad_animales))) {
+                        throw ValidationException::withMessages(['potrero_id' => 'El potrero no está activo o no tiene capacidad disponible.']);
+                    }
+                }
                 $data['potrero_id'] ??= null;
                 if ($record?->ingreso_venta_id && isset($data['estado']) && $data['estado'] !== $record->estado) {
                     throw ValidationException::withMessages(['estado' => 'Revisa la venta en Finanzas antes de cambiar el estado de este animal.']);
@@ -115,20 +149,18 @@ class WorkspaceRecords
             } else {
                 $record->fill($data)->save();
             }
-            if ($record instanceof Animal) {
-                $this->recount($user, [$oldPotrero, $record->potrero_id]);
-            }
 
             return $record;
         });
     }
 
-    private function recount(User $user, array $ids): void
+    public function refreshOccupancy(int $owner, array $ids): void
     {
         foreach (array_unique(array_filter($ids)) as $id) {
-            Potrero::where('user_id', $user->id)->whereKey($id)->update([
-                'animales_actuales' => Animal::where('user_id', $user->id)->where('potrero_id', $id)->where('estado', 'activo')->count(),
-            ]);
+            $potrero = Potrero::where('user_id', $owner)->lockForUpdate()->find($id);
+            if (! $potrero) continue;
+            $count = Animal::where('user_id', $owner)->where('potrero_id', $id)->where('estado', 'activo')->count();
+            if ($potrero->animales_actuales !== $count) $potrero->fill(['animales_actuales' => $count])->save();
         }
     }
 }

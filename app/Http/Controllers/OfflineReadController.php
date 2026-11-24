@@ -39,7 +39,7 @@ class OfflineReadController extends Controller
         abort_unless(File::exists(public_path('build/manifest.json')), 503, 'Construye los recursos antes de preparar la consulta offline.');
         $manifest = json_decode(File::get(public_path('build/manifest.json')), true, flags: JSON_THROW_ON_ERROR);
         $urls = ['/offline-shell', '/offline-store.js', '/workspace-store.js', '/favicon.ico', '/images/logored.png', '/images/logoblackred.png',
-            '/vendor/fontawesome/css/all.min.css', '/vendor/fontawesome/webfonts/fa-solid-900.woff2', '/vendor/inter/inter.css'];
+            '/vendor/fontawesome/css/all.min.css', '/vendor/fontawesome/webfonts/fa-solid-900.woff2', '/vendor/inter/inter.css', '/vendor/chart/chart.js'];
         $visited = [];
         $visit = function ($key) use (&$visit, &$visited, &$urls, $manifest) {
             if (isset($visited[$key])) {
@@ -73,10 +73,13 @@ class OfflineReadController extends Controller
         sort($urls);
         $fingerprints = array_map(fn ($url) => $url === '/offline-shell'
             ? $url : $url.':'.hash_file('sha256', public_path(ltrim($url, '/'))), $urls);
-        foreach (['fincas', 'fincas/animales'] as $module) {
+        foreach (['fincas', 'fincas/animales', 'potreros', 'produccion', 'salud'] as $module) {
             foreach (['index', 'create', 'show', 'edit'] as $view) {
                 $fingerprints[] = hash_file('sha256', resource_path('views/'.$module.'/'.$view.'.blade.php'));
             }
+        }
+        foreach (['finanzas','alertas','reportes','profile'] as $directory) {
+            foreach (File::allFiles(resource_path('views/'.$directory)) as $file) $fingerprints[]=hash_file('sha256',$file->getPathname());
         }
         $version = hash('sha256', json_encode($fingerprints).hash_file('sha256', public_path('sw.js'))
             .hash_file('sha256', public_path('offline-store.js'))

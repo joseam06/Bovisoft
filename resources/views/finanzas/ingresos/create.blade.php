@@ -23,6 +23,8 @@
 
     <form action="{{ route('finanzas.ingresos.store') }}" method="POST" id="form-ingreso">
         @csrf
+        @include('finanzas.operation')
+<input type="hidden" name="animal_base_version" value="{{ old('animal_base_version', $animalPresel?->version) }}">
         <div class="glass-effect rounded-2xl shadow-2xl p-8 border-4 border-white/50 space-y-8">
 
             {{-- ══ SECCIÓN 1: Identificación ══ --}}
@@ -115,7 +117,7 @@
                             class="w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('animal_id') border-red-500 @enderror">
                             <option value="">Seleccionar animal...</option>
                             @foreach($animales as $a)
-                                <option value="{{ $a->id }}"
+                                <option value="{{ $a->id }}" data-version="{{ $a->version }}"
                                     data-finca="{{ $a->finca_id }}"
                                     data-tipo="{{ $a->tipo }}"
                                     data-raza="{{ $a->raza ?? 'N/A' }}"
@@ -187,7 +189,7 @@
                                 <i class="fa-solid fa-dollar-sign text-gray-400"></i>
                             </div>
                             <input type="number" name="monto" value="{{ old('monto') }}"
-                                step="1" min="0" placeholder="0"
+                                step="0.01" min="0" max="999999999999.99" placeholder="0"
                                 class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('monto') border-red-500 @enderror">
                         </div>
                         @error('monto') <p class="text-red-600 text-sm mt-1"><i class="fa-solid fa-circle-exclamation mr-1"></i>{{ $message }}</p> @enderror
@@ -341,4 +343,5 @@
     if (animalSelect.value) actualizarFichaAnimal();
 })();
 </script>
+<script>document.addEventListener('DOMContentLoaded',()=>{const animal=document.querySelector('main [name=animal_id]'),version=document.querySelector('main [name=animal_base_version]');if(animal&&version){const update=()=>version.value=animal.selectedOptions[0]?.dataset.version||'';animal.addEventListener('change',update);update();}});</script>
 @endsection

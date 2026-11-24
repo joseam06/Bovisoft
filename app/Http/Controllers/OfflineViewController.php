@@ -42,6 +42,8 @@ class OfflineViewController extends Controller
             }
         }
 
+        $views += app(\App\Services\OfflineModuleViews::class)->render($farm, $animal);
+        $views += app(\App\Services\OfflineRemainingViews::class)->render($farm, $animal, $request->user());
         return response()->json(['account_id' => $request->user()->id, 'views' => $views])
             ->header('Cache-Control', 'no-store, private');
     }

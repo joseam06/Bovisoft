@@ -9,25 +9,25 @@
             <td width="25%">
                 <div class="kpi-card">
                     <div class="kpi-label">Total Animales</div>
-                    <div class="kpi-value">{{ $totalAnimales }}</div>
+                    <div class="kpi-value"><span data-report-stat="totalAnimales">{{ $totalAnimales }}</span></div>
                 </div>
             </td>
             <td width="25%">
                 <div class="kpi-card green">
                     <div class="kpi-label">Vacas Activas</div>
-                    <div class="kpi-value">{{ $vacasActivas }}</div>
+                    <div class="kpi-value"><span data-report-stat="vacasActivas">{{ $vacasActivas }}</span></div>
                 </div>
             </td>
             <td width="25%">
                 <div class="kpi-card blue">
                     <div class="kpi-label">Vendidos</div>
-                    <div class="kpi-value">{{ $vendidos }}</div>
+                    <div class="kpi-value"><span data-report-stat="vendidos">{{ $vendidos }}</span></div>
                 </div>
             </td>
             <td width="25%">
                 <div class="kpi-card orange">
                     <div class="kpi-label">En Carencia</div>
-                    <div class="kpi-value">{{ $enCarencia }}</div>
+                    <div class="kpi-value"><span data-report-stat="enCarencia">{{ $enCarencia }}</span></div>
                 </div>
             </td>
         </tr>
@@ -51,7 +51,7 @@
             <th>Estado</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="animales">
         @foreach($animales as $animal)
         @php
             $estadoBadge = match($animal->estado) {
@@ -69,14 +69,14 @@
             };
         @endphp
         <tr>
-            <td style="font-family: monospace;">{{ $animal->codigo }}</td>
-            <td>{{ $animal->nombre ?? '—' }}</td>
-            <td><span class="badge {{ $tipoBadge }}">{{ ucfirst($animal->tipo) }}</span></td>
-            <td>{{ $animal->raza ?? '—' }}</td>
-            <td>{{ $animal->edad ?? '—' }}</td>
-            <td>{{ $animal->peso_actual ? number_format($animal->peso_actual, 1) : '—' }}</td>
-            <td>{{ $animal->finca->nombre ?? '—' }}</td>
-            <td><span class="badge {{ $estadoBadge }}">{{ ucfirst($animal->estado) }}</span></td>
+            <td style="font-family: monospace;"><span data-offline-owner="animales" data-offline-field="codigo">{{ $animal->codigo }}</span></td>
+            <td><span data-offline-owner="animales" data-offline-field="nombre">{{ $animal->nombre ?? '—' }}</span></td>
+            <td><span class="badge {{ $tipoBadge }}"><span data-offline-owner="animales" data-offline-field="tipo">{{ ucfirst($animal->tipo) }}</span></span></td>
+            <td><span data-offline-owner="animales" data-offline-field="raza">{{ $animal->raza ?? '—' }}</span></td>
+            <td><span data-offline-owner="animales" data-offline-field="edad">{{ $animal->edad ?? '—' }}</span></td>
+            <td><span data-offline-owner="animales" data-offline-field="peso_actual">{{ $animal->peso_actual ? number_format($animal->peso_actual, 1) : '—' }}</span></td>
+            <td><span data-offline-owner="animales" data-offline-field="finca_nombre">{{ $animal->finca->nombre ?? '—' }}</span></td>
+            <td><span class="badge {{ $estadoBadge }}"><span data-offline-owner="animales" data-offline-field="estado">{{ ucfirst($animal->estado) }}</span></span></td>
         </tr>
         @endforeach
     </tbody>
@@ -96,7 +96,7 @@
             <th>% del total</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="conteoTipos">
         @php
             $tiposLabel = ['vaca' => 'Vaca', 'toro' => 'Toro', 'ternero' => 'Ternero', 'novilla' => 'Novilla'];
         @endphp
@@ -104,14 +104,14 @@
         <tr>
             <td>{{ $tiposLabel[$tipo] ?? ucfirst($tipo) }}</td>
             <td>{{ $cantidad }}</td>
-            <td>{{ $totalAnimales > 0 ? number_format(($cantidad / $totalAnimales) * 100, 1) : 0 }}%</td>
+            <td><span data-report-stat="totalAnimales">{{ $totalAnimales > 0 ? number_format(($cantidad / $totalAnimales) * 100, 1) : 0 }}</span>%</td>
         </tr>
         @endforeach
     </tbody>
     <tfoot>
         <tr>
             <td>TOTAL</td>
-            <td>{{ $totalAnimales }}</td>
+            <td><span data-report-stat="totalAnimales">{{ $totalAnimales }}</span></td>
             <td>100%</td>
         </tr>
     </tfoot>
@@ -121,10 +121,10 @@
 <div class="section-title">Observaciones del Periodo</div>
 <div class="obs-box">
     @if($totalAnimales > 0)
-        Peso promedio del hato: <strong>{{ $pesoPromedio ? number_format($pesoPromedio, 1) . ' kg' : 'No registrado' }}</strong>.
-        Total de animales en el inventario: <strong>{{ $totalAnimales }}</strong>,
-        de los cuales <strong>{{ $vendidos }}</strong> han sido vendidos
-        y <strong>{{ $enCarencia }}</strong> se encuentran actualmente en periodo de carencia sanitaria.
+        Peso promedio del hato: <strong><span data-report-stat="pesoPromedio">{{ $pesoPromedio ? number_format($pesoPromedio, 1) . ' kg' : 'No registrado' }}</span></strong>.
+        Total de animales en el inventario: <strong><span data-report-stat="totalAnimales">{{ $totalAnimales }}</span></strong>,
+        de los cuales <strong><span data-report-stat="vendidos">{{ $vendidos }}</span></strong> han sido vendidos
+        y <strong><span data-report-stat="enCarencia">{{ $enCarencia }}</span></strong> se encuentran actualmente en periodo de carencia sanitaria.
     @else
         No se encontraron animales para el periodo y filtros seleccionados.
     @endif

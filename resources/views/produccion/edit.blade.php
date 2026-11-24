@@ -11,7 +11,7 @@
                 <span class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
                     <i class="fa-solid fa-pen text-purple-700 text-xl"></i>
                 </span>
-                Editar {{ $registro->codigo }}
+                Editar <span data-offline-owner="produccion" data-offline-field="codigo">{{ $registro->codigo }}</span>
             </h1>
             <p class="text-red-100 mt-1 ml-16">Modificar registro de producción</p>
         </div>

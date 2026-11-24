@@ -2,6 +2,13 @@ import {storeReady as identityStoreReady, ensureWorker, workerCall, identity} fr
 import {createAutomaticVault, seal, readVault} from './workspace-crypto';
 import {acknowledge, applyDelta as applyRemoteChanges, nextOperation, missingParents, prepareOperation, sameActor, syncError, retryAfterMs, backoffMs} from './sync/protocol';
 import {leadership} from './sync/leadership';
+import {modules} from './sync/protocol';
+import {enrich, hydrateModule, relatedForm, validateLocal, localDate, addDays} from './sync/module-views';
+import {updateDashboard} from './sync/dashboard';
+import {hydrateFinance,financialForm,validateFinancial} from './sync/finance';
+import {alerts,hydrateAlerts,hydrateBell} from './sync/alerts';
+import {renderReport,hydrateReports} from './sync/reports';
+import {cents,format as formatMoney} from './sync/money';
 
 if (document.getElementById('offline-indicator')) startWorkspace();
 
@@ -36,6 +43,8 @@ function startWorkspace() {
     function comparison(value) {
         if (!value || value.deleted) return '<p>Registro eliminado o no disponible.</p>';
         const names = {nombre:'Nombre',codigo:'Código',numero:'Número',area:'Área (ha)',descripcion:'Descripción',direccion:'Dirección',municipio:'Municipio',departamento:'Departamento',latitud:'Latitud',longitud:'Longitud',activa:'Activa',tipo:'Tipo',sexo:'Sexo',raza:'Raza',fecha_nacimiento:'Nacimiento',peso_actual:'Peso (kg)',color:'Color',estado:'Estado',observaciones:'Observaciones',finca_uuid:'Finca',potrero_id:'Potrero'};
+        Object.assign(names,{animal_uuid:'Animal',potrero_uuid:'Potrero',capacidad_animales:'Capacidad',animales_actuales:'Ocupación',tipo_pasto:'Tipo de pasto',dias_descanso:'Días de descanso',fecha_ultima_rotacion:'Última rotación',fecha:'Fecha',sesion:'Turno',litros:'Litros',calidad:'Calidad',nombre_producto:'Producto o evento',fecha_aplicacion:'Aplicación',proxima_aplicacion:'Próxima aplicación',costo:'Costo',dias_carencia:'Días de carencia',diagnostico:'Diagnóstico'});
+        Object.assign(names,{name:'Nombre de la cuenta',monto:'Importe',categoria:'Categoría',comprador_nombre:'Comprador',comprador_telefono:'Teléfono del comprador',comprador_documento:'Documento del comprador',salud_uuid:'Evento sanitario'});
         return `<p class="text-sm mb-2">Versión ${esc(value.version || 1)}</p><dl class="space-y-2">${Object.entries(names).filter(([field])=>field in value).map(([field,title])=>{
             let text = value[field];
             if (field === 'finca_uuid') text = projected().fincas[text]?.nombre || 'Finca no disponible';
@@ -96,9 +105,12 @@ function startWorkspace() {
     async function nativeViews() {
         const account=String(session.account_id),result=await api('/views');
         if(String(result.account_id)!==account)throw new Error('La cuenta cambió durante la actualización de las vistas.');
-        for(const module of ['fincas','animales'])for(const kind of ['index','create','show','edit','index-empty','create-empty']){
+        for(const module of Object.keys(modules))for(const kind of ['index','create','show','edit','index-empty','create-empty'])if(typeof result.views?.[module]?.[kind]!=='string')throw new Error('Faltan vistas habituales.');
+        for(const module of Object.keys(result.views))for(const kind of Object.keys(result.views[module])){
             if(typeof result.views?.[module]?.[kind]!=='string')throw new Error('Faltan vistas habituales. La copia anterior se conserva.');
-            const doc=new DOMParser().parseFromString(result.views[module][kind],'text/html'),page=extractPage(doc,'/'+module);
+            const doc=new DOMParser().parseFromString(result.views[module][kind],'text/html');
+            if(kind.startsWith('print_')){doc.querySelectorAll('script').forEach(n=>n.remove());result.views[module][kind]=doc.documentElement.outerHTML;continue;}
+            const page=extractPage(doc,'/'+module);
             if(!page)throw new Error('La vista habitual está incompleta. La copia anterior se conserva.');
             const root=doc.querySelector('main');root.innerHTML=page.html;
             result.views[module][kind]=root.outerHTML;
@@ -133,6 +145,7 @@ function startWorkspace() {
         const decoded = await readVault(stored);
         const now = await (await workspaceStore()).security();
         if (now.accountId !== stored.accountId || now.epoch !== security.epoch || now.pendingLogout) return false;
+        for(const module of Object.keys(modules))decoded.base[module] ||= {};
         vault = stored; data = decoded; key = stored.automaticKey; epoch = now.epoch; active = true;
         applyProfile(data.profile);
         document.body.dataset.offlineReady = 'true';
@@ -153,6 +166,16 @@ function startWorkspace() {
         }
         return response.json();
     }
+    async function downloadApi(path, body, expected) {
+        for(let attempt=0;;attempt++){
+            const state=await (await workspaceStore()).security();
+            if(!sameActor(state,expected)||state.pendingLogout)throw syncError('BOVI_RUN_SUPERSEDED','La cuenta cambió durante la actualización.');
+            try{return await api(path,body);}catch(failure){
+                if(failure.status!==429||attempt>=4)throw failure;
+                await new Promise(resolve=>setTimeout(resolve,Math.max(1000,failure.delay||2000)));
+            }
+        }
+    }
     function projected(source = data) {
         const result = structuredClone(source.base);
         for (const op of source.queue) {
@@ -161,16 +184,28 @@ function startWorkspace() {
                 version:op.type === 'create' ? 1 : op.base_version + 1, deleted:op.type === 'delete',
                 codigo:previous.codigo || 'Código al sincronizar'};
         }
-        return result;
+        for(const op of source.queue)if(op.module==='ingresos'){
+            const income=result.ingresos[op.record_uuid],animal=result.animales[income?.animal_uuid];
+            if(!animal||income.tipo!=='venta_animal')continue;
+            if(op.type==='create'){animal.estado='vendido';animal.potrero_uuid=null;animal.potrero_id=null;animal.venta_registrada=true;animal.ingreso_venta_uuid=op.record_uuid;animal.version++;}
+            if(op.type==='delete'&&animal.ingreso_venta_uuid===op.record_uuid){animal.estado='activo';animal.venta_registrada=false;animal.ingreso_venta_uuid=null;animal.version++;}
+        }
+        for(const op of source.queue)if(op.module==='egresos'){
+            const expense=result.egresos[op.record_uuid],health=result.salud[expense?.salud_uuid];if(health)health.version++;
+        }
+        for(const health of Object.values(result.salud||{}))health.egreso_vinculado=Object.values(result.egresos||{}).some(e=>!e.deleted&&e.salud_uuid===health.record_uuid);
+        return enrich(result);
     }
     function findRecord(module,id,source=data) {
         if(!source)return null;
         const rows=projected(source)[module];
         return rows[id] || Object.values(rows).find(row=>String(row.id)===String(id)) || null;
     }
+    const recordPath=(module,id)=>module==='perfil'?'/perfil':['ingresos','egresos'].includes(module)?'/finanzas/'+module+'/'+(id==='create'?'nuevo':id):'/'+module+'/'+id;
+    function routeInfo(path){const financial=path.match(/^\/finanzas\/(ingresos|egresos)(?:\/([^/]+))?$/);return financial?[financial[0],financial[1],financial[2]==='nuevo'?'create':financial[2],null]:path==='/perfil'?[path,'perfil','self','edit']:null;}
     function canonicalPath(path) {
-        const url=new URL(path,location.href), match=url.pathname.match(/^\/(fincas|animales)\/([^/]+)(\/edit)?$/);
-        if(match){const row=findRecord(match[1],match[2]);if(row?.id)url.pathname='/'+match[1]+'/'+row.id+(match[3]||'');}
+        const url=new URL(path,location.href), match=routeInfo(url.pathname)||url.pathname.match(/^\/(fincas|animales|potreros|produccion|salud)\/([^/]+)(\/edit)?$/);
+        if(match){const row=findRecord(match[1],match[2]);if(row?.id)url.pathname=recordPath(match[1],row.id)+(match[3]&&match[1]!=='perfil'?'/edit':'');}
         return url.pathname+url.search;
     }
     async function seedCurrentRecord() {
@@ -191,10 +226,11 @@ function startWorkspace() {
         if(live){
             const originals=element.querySelectorAll('canvas');
             clone.querySelectorAll('canvas').forEach((canvas,i)=>{
+                if(['distribucionChart','produccionChart','chartProduccion'].includes(canvas.id))return;
                 try{const img=document.createElement('img');img.src=originals[i].toDataURL();img.alt='Gráfica guardada';img.className=canvas.className;canvas.replaceWith(img);}catch{canvas.remove();}
             });
         }
-        clone.querySelectorAll('script,meta,input[name="_token"],input[type="password"]').forEach(node=>node.remove());
+        clone.querySelectorAll('script,meta,input[name="_token"],input[type="password"],input[name="photo"],input[type="file"]').forEach(node=>node.remove());
         clone.querySelectorAll('*').forEach(node=>{
             for(const attribute of [...node.attributes])if(attribute.name.startsWith('on'))node.removeAttribute(attribute.name);
             if(node.tagName==='IMG'&&node.src&&!node.src.startsWith('data:')&&new URL(node.src,location.href).origin!==location.origin)node.remove();
@@ -202,7 +238,7 @@ function startWorkspace() {
         return {html:clone.innerHTML,title:doc.title,path,module:element.dataset.offlineModule||'',uuid:element.dataset.offlineRecord||'',version:Number(element.dataset.offlineVersion||0)};
     }
     async function cacheCurrentPage() {
-        if(!data||!key||localView||shell||!/^\/(dashboard|fincas|animales|produccion)(\/|$)/.test(location.pathname))return;
+        if(!data||!key||localView||shell||!/^\/(dashboard|fincas|animales|potreros|produccion|salud|finanzas|perfil|alertas|reportes)(\/|$)/.test(location.pathname))return;
         const page=extractPage(document,location.pathname+location.search,true);
         if(!page)return;
         await mutate(working=>{working.pages||={};working.pages[page.path]=page;});
@@ -211,7 +247,7 @@ function startWorkspace() {
         if(warmPromise||!connected()||!key)return warmPromise;
         warmPromise=(async()=>{
             const paths=new Set(['/dashboard','/fincas','/fincas/create','/animales','/animales/create']);
-            if(/^\/(fincas|animales)\/\d+(\/edit)?$/.test(location.pathname)){
+            if(/^\/(fincas|animales|potreros|produccion|salud)\/\d+(\/edit)?$/.test(location.pathname)){
                 paths.add(location.pathname.replace(/\/edit$/,''));paths.add(location.pathname.replace(/\/edit$/,'')+'/edit');
             }
             for(const path of paths){
@@ -285,14 +321,18 @@ function startWorkspace() {
     function renderCachedPage(force, supplied = null) {
         const path=location.pathname+location.search, cached=supplied || data.pages?.[path] || data.pages?.[location.pathname];
         if(!cached)return false;
-        if(!force&&main.querySelector('form')&&dirtyForms.has(main.querySelector('form')))return true;
+        if(!force&&[...main.querySelectorAll('form')].some(form=>dirtyForms.has(form)))return true;
         const row=cached.module&&cached.uuid&&findRecord(cached.module,cached.uuid);
         if(cached.uuid&&(!row||row.deleted))return false;
         const controls=!force?[...main.querySelectorAll('#busqueda,#buscar-finca,#filtro-tipo,#filtro-finca,#filtro-estado,#ordenar')].map(input=>[input.id,input.value]):[];
+        main.querySelectorAll('canvas').forEach(canvas=>window.Chart?.getChart(canvas)?.destroy());
+        if(main.dataset.cachedPath!==path){delete main.dataset.chartDays;main.dataset.cachedPath=path;}
         main.id='workspace-main';main.innerHTML=cached.html;document.title=cached.title;document.body.dataset.offlineRendered='true';
         main.dataset.offlineModule=cached.module;main.dataset.offlineRecord=cached.uuid;
-        if(row)hydrateFields(row);
+        if(row){if(['potreros','produccion','salud','ingresos','egresos'].includes(cached.module))hydrateModule(main,cached.module,row,projected(),data.views,path);else hydrateFields(row);}
         if(!cached.uuid&&!hydrateCollection(location.pathname))return false;
+        if(cached.module==='perfil')hydrateProfile();
+        if(['ingresos','egresos'].includes(cached.module)&&row){main.querySelectorAll('[data-offline-field=monto]').forEach(n=>n.textContent=formatMoney(row.monto));}
         main.querySelectorAll('a[href]').forEach(anchor=>{const url=new URL(anchor.href,location.href);if(url.origin===location.origin)anchor.href=canonicalPath(url.pathname+url.search);});
         hydrateNormalForm(row,cached.module);
         // The normal scripts remain outside the cached main. Delegate these actions
@@ -302,6 +342,11 @@ function startWorkspace() {
         return true;
     }
     function hydrateCollection(path) {
+        if(path==='/finanzas'||path==='/reportes'){hydrateFinance(main,projected(),data,path==='/reportes'?'/reportes?periodo=todos':location.href);if(path==='/reportes')hydrateReports(main,projected(),navigate);return true;}
+        if(path==='/alertas'){hydrateAlerts(main,alerts(projected(),data.references.alert_rules));return true;}
+
+        if(/^\/fincas\/[^/]+\/potreros$/.test(path))path='/potreros';
+        if(['potreros','produccion','salud'].includes(path.split('/')[1])){const model=projected();hydrateModule(main,path.split('/')[1],null,model,data.views,location.pathname+location.search);updateDashboard(main,model,data);return true;}
         const model=projected(), farms=Object.values(model.fincas).filter(f=>!f.deleted);
         const animals=Object.values(model.animales).filter(a=>!a.deleted&&model.fincas[a.finca_uuid]&&!model.fincas[a.finca_uuid].deleted);
         const upper=value=>value?String(value)[0].toUpperCase()+String(value).slice(1):'N/A';
@@ -369,11 +414,12 @@ function startWorkspace() {
         const counts={Total:animals.length,'Total Animales':animals.length,'Total Fincas':farms.length,'Fincas Activas':farms.filter(f=>f.activa).length,'Área Total':farms.reduce((sum,f)=>sum+Number(f.area||0),0).toFixed(1),Vacas:animals.filter(a=>a.tipo==='vaca').length,Toros:animals.filter(a=>a.tipo==='toro').length,Novillas:animals.filter(a=>a.tipo==='novilla').length,Terneros:animals.filter(a=>a.tipo==='ternero').length};
         main.querySelectorAll('p').forEach(label=>{const value=counts[label.textContent.trim()];if(value!==undefined&&label.nextElementSibling?.tagName==='H3')label.nextElementSibling.textContent=value;});
         if(main.querySelector('#contador-fincas-card'))main.querySelector('#contador-fincas-card').textContent=farms.filter(f=>f.activa).length;
+        if(path==='/dashboard')updateDashboard(main,model,data);
         return true;
     }
     function hydrateNormalForm(row,module) {
-        const form=main.querySelector('form[action]');
-        if(!form||form.querySelector('input[name="_method"]')?.value==='DELETE')return;
+        const form=module==='perfil'?main.querySelector('form:has([name=name])'):main.querySelector('form[action]');
+        if(!form||form.method.toUpperCase()==='GET'||form.querySelector('input[name="_method"]')?.value==='DELETE')return;
         if(row){
             for(const input of form.elements){
                 if(input.name in row&&input.name!=='codigo'&&input.type!=='hidden'){
@@ -382,6 +428,9 @@ function startWorkspace() {
             }
         }
         const code=form.querySelector('input[readonly]');if(code)code.value=row?.codigo||'Código al sincronizar';
+        if(['ingresos','egresos'].includes(module)){financialForm(form,row,module,projected());return;}
+        if(module==='perfil'){hydrateProfile();return;}
+        relatedForm(form,row,module,projected());
         if(module==='animales'||location.pathname.startsWith('/animales')){
             const select=form.querySelector('[name="finca_id"]');
             if(select){
@@ -389,7 +438,7 @@ function startWorkspace() {
                 const prior=select.value;select.replaceChildren(new Option('Selecciona una finca',''));
                 for(const farm of Object.values(projected().fincas).filter(f=>!f.deleted&&(f.activa||f.record_uuid===selected)))select.add(new Option(farm.nombre,String(farm.id||farm.record_uuid)));
                 const farm=selected&&findRecord('fincas',selected);select.value=farm?String(farm.id||farm.record_uuid):prior;
-                populatePotreros(form,row?.potrero_id);
+                populatePotreros(form,row?.potrero_uuid||row?.potrero_id);
             }
         }
     }
@@ -398,12 +447,13 @@ function startWorkspace() {
         if(!select||!farmInput)return;
         const farm=findRecord('fincas',farmInput.value);const prior=selected??select.value;
         select.replaceChildren(new Option('Sin potrero',''));select.disabled=false;
-        for(const p of data.references.potreros.filter(p=>p.finca_uuid===farm?.record_uuid))select.add(new Option(p.nombre,String(p.id)));
+        for(const p of Object.values(projected().potreros||{}).filter(p=>!p.deleted&&p.finca_uuid===farm?.record_uuid&&p.estado==='activo'))select.add(new Option(p.nombre,String(p.id||p.record_uuid)));
         select.value=prior??'';
         const message=form.querySelector('#potrero-message');if(message)message.hidden=true;
     }
     function enableOfflineForm() {
         if(connected()||!data)return;
+        const email=main.querySelector('[name=email]');if(email)email.readOnly=true;
         main.querySelectorAll('form').forEach(form=>{
             if(form.querySelector('[name="finca_id"]'))populatePotreros(form);
         });
@@ -413,35 +463,50 @@ function startWorkspace() {
             event.stopImmediatePropagation();populatePotreros(event.target.form);
         }
     },true);
+    function hydrateProfile(){
+        const row=Object.values(projected().perfil)[0];if(!row)return;
+        const name=main.querySelector('[name=name]');if(name&&!dirtyForms.has(name.form))name.value=row.name;
+        const version=name?.form.querySelector('[name=base_version]');if(version)version.value=row.version;
+        const email=main.querySelector('[name=email]');if(email){email.value=data.profile.email;email.readOnly=!connected();email.title='El correo solo se cambia con conexión.';}
+        main.querySelectorAll('button').forEach(button=>{if(button.querySelector('.fa-camera,.fa-folder-open'))button.dataset.onlineOnly='true';});
+    }
     async function queueValues(module,row,values) {
         const uuid=row?.record_uuid||crypto.randomUUID();
         await mutate(working=>{
             const current=projected(working);
             if(row&&current[module][uuid]?.version!==row.version)throw new Error('El registro cambió. Revisa los datos actuales antes de guardar.');
+            if(!['ingresos','egresos','perfil'].includes(module))validateLocal(module,row,values,current);
+            if(['ingresos','egresos'].includes(module))validateFinancial(module,values,current);
             if(module==='animales'&&(!current.fincas[values.finca_uuid]||current.fincas[values.finca_uuid].deleted))throw new Error('Selecciona una finca disponible.');
-            const dependsOn=working.queue.filter(op=>op.record_uuid===uuid||module==='animales'&&op.module==='fincas'&&op.record_uuid===values.finca_uuid).map(op=>op.operation_uuid);
+            const dependsOn=working.queue.filter(op=>op.record_uuid===uuid||modules[module].parents.some(parent=>op.module===parent.module&&op.record_uuid===values[parent.field])).map(op=>op.operation_uuid);
             working.queue.push({operation_uuid:crypto.randomUUID(),record_uuid:uuid,module,type:row?'update':'create',...(row?{base_version:row.version}:{}),data:values,before:row&&structuredClone(row),status:'pending',started:false,dependsOn});
         });
         notice('Guardado en este dispositivo. Pendiente de sincronizar.');
         return uuid;
     }
     async function saveNormalForm(form,module,row) {
+        const origin=location.href;
         const values=Object.fromEntries(new FormData(form));
         const version=Number(values.base_version || row?.version || 0);
         if(row&&version&&version!==row.version)throw new Error('El registro cambió desde que abriste la edición. Tus valores siguen en el formulario.');
-        for(const field of ['_token','_method','base_version','codigo'])delete values[field];
-        if(module==='animales'){
+        for(const field of ['_token','_method','base_version','codigo','operation_uuid','record_uuid','device_uuid'])delete values[field];
+        if(module==='perfil'){if(values.email&&values.email!==data.profile.email)throw new Error('Cambiar el correo requiere conexión. Tus datos sensibles no se guardarán en la cola.');const name=values.name;for(const field of Object.keys(values))delete values[field];values.name=name;}
+        else if(module!=='fincas'){
             const farm=findRecord('fincas',values.finca_id);
             if(!farm)throw new Error('Selecciona una finca de tu cuenta.');
             values.finca_uuid=farm.record_uuid;delete values.finca_id;
-            values.potrero_id=values.potrero_id?Number(values.potrero_id):null;
+            if(module==='animales'){const p=values.potrero_id&&findRecord('potreros',values.potrero_id);values.potrero_uuid=p?.record_uuid||null;delete values.potrero_id;}
+            if(['ingresos','egresos'].includes(module)){const animal=values.animal_id&&findRecord('animales',values.animal_id);values.animal_uuid=animal?.record_uuid||null;delete values.animal_id;if(module==='ingresos'&&values.tipo==='venta_animal'&&animal)values.animal_base_version=animal.version;const health=values.salud_id&&findRecord('salud',values.salud_id);values.salud_uuid=health?.record_uuid||null;delete values.salud_id;}
+            if(['produccion','salud'].includes(module)){const animal=findRecord('animales',values.animal_id);if(!animal)throw new Error('Selecciona un animal autorizado.');values.animal_uuid=animal.record_uuid;delete values.animal_id;}
+            for(const [field,value]of Object.entries(values))if(value==='')values[field]=null;
         }else {
             const checkbox=form.querySelector('[name="activa"][type="checkbox"]');
             values.activa=checkbox?checkbox.checked:values.activa===undefined?(row?.activa??true):['1','true','on'].includes(String(values.activa));
         }
         for(const field of ['area','fecha_nacimiento','peso_actual'])if(values[field]==='')values[field]=null;
         const uuid=await queueValues(module,row,values);
-        navigate('/'+module+'/'+uuid);schedule(250);
+        if(location.href===origin)navigate(recordPath(module,uuid));else renderRoute(false);
+        schedule(250);
     }
     function label(module, uuid) {
         return data.queue.some(op => op.module === module && op.record_uuid === uuid)
@@ -477,6 +542,7 @@ function startWorkspace() {
         working.production=(working.production||[]).filter(r=>farmIds.has(Number(r.finca_id)));
     }
     async function refreshProduction() {
+        if(data?.schema>=4)return;
         if(productionRefreshing||!connected()||!key||!session?.production_enabled)return;
         productionRefreshing=true;
         const accountId=vault.accountId,expectedEpoch=epoch;
@@ -543,9 +609,10 @@ function startWorkspace() {
             if (!response.ok) throw new Error('No se pudo guardar la interfaz. Se reintentará automáticamente.');
             const manifest = await response.json();
             await workerCall({type:'PREPARE_SHELL',manifest:{...manifest,automaticMode:true}});
-            let snapshot = await api('/snapshots',{});
+            const expected={accountId,epoch:security.epoch};
+            let snapshot = await downloadApi('/snapshots',{},expected);
             const id = snapshot.snapshot_uuid, total = snapshot.total_records;
-            const base = {fincas:{},animales:{}}; let seen = 0;
+            const base = Object.fromEntries(Object.keys(modules).map(m=>[m,{}])); let seen = 0;
             while (true) {
                 if (String(snapshot.account_id) !== accountId || snapshot.snapshot_uuid !== id || snapshot.total_records !== total) throw new Error('La cuenta cambió durante la actualización.');
                 for (const row of snapshot.records) {
@@ -553,16 +620,16 @@ function startWorkspace() {
                     base[row.module][row.record_uuid] = row; seen++;
                 }
                 if (snapshot.complete) break;
-                snapshot = await api(`/snapshots/${id}?page=${snapshot.next_page}`);
+                snapshot = await downloadApi(`/snapshots/${id}?page=${snapshot.next_page}`,null,expected);
             }
             if (seen !== total || !snapshot.cursor) throw new Error('La actualización no terminó. Se reintentará automáticamente.');
             const views=await nativeViews(),profile=await accountProfile();
-            const working = {schema:2,deviceUuid:previous?.deviceUuid || crypto.randomUUID(),base,queue:previous?.queue || [],archive:previous?.archive || [],
+            const working = {schema:4,deviceUuid:previous?.deviceUuid || crypto.randomUUID(),base,queue:previous?.queue || [],archive:previous?.archive || [],
                 views,profile,
-                removals:structuredClone(previous?.removals||{fincas:{},animales:{}}),
+                removals:Object.fromEntries(Object.keys(modules).map(m=>[m,structuredClone(previous?.removals?.[m]||{})])),
                 pages:previous?.pages || {},references:snapshot.references,cursor:snapshot.cursor,production:previous?.production || [],productionReferences:previous?.productionReferences,productionBatches:previous?.productionBatches||[],productionDays:90,lastSync:previous?.lastSync || null};
-            for(const module of ['fincas','animales']){
-                for(const uuid of Object.keys(previous?.base[module]||{}))if(!base[module][uuid])working.removals[module][uuid]=true;
+            for(const module of Object.keys(modules)){
+                for(const uuid of Object.keys(previous?.base?.[module]||{}))if(!base[module][uuid])working.removals[module][uuid]=true;
                 for(const op of working.queue)if(op.module===module&&op.started&&!base[module][op.record_uuid])working.removals[module][op.record_uuid]=true;
                 for(const uuid of Object.keys(base[module]))delete working.removals[module][uuid];
             }
@@ -591,6 +658,8 @@ function startWorkspace() {
     }
     function renderControls() {
         indicator();
+        if(data?.base?.perfil){const profile=Object.values(projected().perfil)[0];if(profile)applyProfile({...data.profile,name:profile.name});}
+        if(data?.references.alert_rules){const urgent=alerts(projected(),data.references.alert_rules).filter(r=>['critico','urgente'].includes(r.nivel)).length,badge=$('badge-campanita');if(badge){badge.textContent=urgent>9?'9+':String(urgent);badge.classList.toggle('hidden',!urgent);}}
         if (!data || !key || !$('offline-changes')) return;
         const signature = JSON.stringify(data.queue);
         if (queueSignature !== signature) {
@@ -608,17 +677,22 @@ function startWorkspace() {
     function navigate(path) { localView = true; path = canonicalPath(path); history.pushState({}, '', path); editing = null; renderRoute(true); window.scrollTo(0,0); }
     function renderRoute(force) {
         if (!data || !key || !active || !localView && !shell) return;
-        const match=location.pathname.match(/^\/(fincas|animales)(?:\/([^/]+))?(?:\/(edit))?$/);
+        if(data.schema<4&&/^\/(potreros|produccion|salud|finanzas|perfil|alertas|reportes)/.test(location.pathname)){error('La ampliación de la copia local aún no terminó. Se completará automáticamente al reconectar.');return;}
+        const nested=location.pathname.match(/^\/fincas\/([^/]+)\/potreros$/);
+        const historyRoute=location.pathname.match(/^\/(produccion|salud)\/animal\/([^/]+)$/);
+        const match=routeInfo(location.pathname)||(historyRoute?[historyRoute[0],historyRoute[1],'animal',null]:(nested?'/potreros':location.pathname).match(/^\/(fincas|animales|potreros|produccion|salud)(?:\/([^/]+))?(?:\/(edit))?$/));
         if (match && data.views) {
             const [,module,id,edit]=match, model=projected();
-            const row=id&&id!=='create'?findRecord(module,id):null;
+            const row=module==='perfil'?Object.values(model.perfil)[0]:id&&id!=='create'?findRecord(module,id):null;
             let kind=!id?'index':id==='create'?'create':edit?'edit':'show';
+            if(historyRoute)kind='por_animal';
+            if(module==='salud'&&['preventivo','clinico','reproductivo','seguimiento'].includes(id))kind=id;
             if (['show','edit'].includes(kind)&&(!row||row.deleted)) {
                 notice('El registro ya no está disponible. Los cambios pendientes se conservan.');
                 history.replaceState({},'', '/'+module);return renderRoute(true);
             }
             const rows=Object.values(model[module]).filter(r=>!r.deleted);
-            if(kind==='index'&&!rows.length)kind='index-empty';
+            if(kind==='index'&&!rows.length&&module!=='salud')kind='index-empty';
             if(kind==='create'&&module==='animales'&&!Object.values(model.fincas).some(f=>!f.deleted&&f.activa))kind='create-empty';
             const html=data.views[module]?.[kind];
             if (html) {
@@ -632,9 +706,10 @@ function startWorkspace() {
                     container.querySelectorAll('a[href],form[action]').forEach(node=>{
                         const attribute=node.tagName==='A'?'href':'action',url=new URL(node.getAttribute(attribute),location.origin);
                         if(url.origin!==location.origin)return;
-                        if(row)url.pathname=url.pathname.replace('/'+module+'/0','/'+module+'/'+(row.id||row.record_uuid));
+                        if(row)url.pathname=url.pathname.replace(recordPath(module,0),recordPath(module,row.id||row.record_uuid));
                         if(farm)url.pathname=url.pathname.replace('/fincas/0','/fincas/'+(farm.id||farm.record_uuid));
-                        if(row&&url.searchParams.get('animal_id')==='0')url.searchParams.set('animal_id',row.id||row.record_uuid);
+                        const animal=module==='animales'?row:model.animales[row?.animal_uuid];
+                        if(animal&&url.searchParams.get('animal_id')==='0')url.searchParams.set('animal_id',animal.id||animal.record_uuid);
                         if(farm&&url.searchParams.get('finca')==='0')url.searchParams.set('finca',farm.id||farm.record_uuid);
                         node.setAttribute(attribute,url.pathname+url.search);
                     });
@@ -643,24 +718,30 @@ function startWorkspace() {
                 }
             }
         }
-        if(renderCachedPage(force))return;
-        if(location.pathname==='/produccion'){
-            const refs=data.productionReferences;
-            main.innerHTML=`<h1 class="text-3xl text-white font-bold mb-5">Producción de leche</h1><div class="glass-effect p-5 rounded-2xl shadow-xl"><p class="text-gray-700 mb-4">Historial descargado de ${data.productionDays} días. Consulta solamente; la creación y edición de Producción se mantiene online.</p><div class="overflow-x-auto"><table class="w-full text-sm text-left"><thead><tr><th class="p-2">Fecha</th><th class="p-2">Animal</th><th class="p-2">Litros</th><th class="p-2">Turno / observaciones</th></tr></thead><tbody>${data.production.map(r=>`<tr class="border-t border-gray-200"><td class="p-2">${esc(r.fecha)}</td><td class="p-2">${esc(refs?.animales.find(a=>a.id===r.animal_id)?.nombre||r.animal_id)}</td><td class="p-2">${esc(r.litros)}</td><td class="p-2">${esc(r.sesion)} · ${esc(r.calidad)} · ${esc(r.observaciones)}</td></tr>`).join('')}</tbody></table></div></div>`;
-            return;
+        if(/^\/reportes\/(preview|descargar)\//.test(location.pathname)){renderReport(main,projected(),data,location.href);return;}
+        const screen=location.pathname.slice(1);
+        if(['finanzas','alertas','reportes'].includes(screen)&&data.views[screen]){
+            const kind=screen==='alertas'&&!alerts(projected(),data.references.alert_rules).length?'index-empty':'index';
+            const doc=new DOMParser().parseFromString(data.views[screen][kind],'text/html'),page=extractPage(doc,location.href);page.module=screen;
+            if(renderCachedPage(force,page))return;
         }
+        if(renderCachedPage(force))return;
         main.innerHTML='<div class="glass-effect p-6 rounded-xl"><p>Esta pantalla todavía necesita conexión. Los datos y cambios guardados se conservan.</p><a href="/dashboard" class="text-red-800 underline">Volver al dashboard</a></div>';
     }
     async function remove(module, uuid) {
+        const origin=location.href;
         await mutate(working => {
             const current = projected(working), record = current[module][uuid];
             if (!record || record.deleted) throw new Error('Este registro ya no está disponible.');
-            if (module === 'fincas' && (Object.values(current.animales).some(a => a.finca_uuid === uuid && !a.deleted) || working.references.potreros.some(p => p.finca_uuid === uuid))) throw new Error('Mueve o elimina primero los animales y potreros de esta finca.');
-            const dependencies = working.queue.filter(op => op.record_uuid === uuid || module === 'fincas' && (op.data.finca_uuid === uuid || op.before?.finca_uuid === uuid)).map(op => op.operation_uuid);
+            if(module==='potreros'&&Object.values(current.animales).some(a=>!a.deleted&&(a.potrero_uuid===uuid||a.potrero_id&&a.potrero_id===record.id)))throw new Error('Reasigna primero los animales de este potrero.');
+            if(module==='salud'&&record.egreso_vinculado)throw new Error('Revisa el egreso vinculado en Finanzas con conexión antes de eliminar el evento.');
+            if (module === 'fincas' && (Object.values(current.animales).some(a => a.finca_uuid === uuid && !a.deleted) || Object.values(current.potreros).some(p => !p.deleted&&p.finca_uuid === uuid))) throw new Error('Mueve o elimina primero los animales y potreros de esta finca.');
+            const dependencies = working.queue.filter(op => op.record_uuid === uuid || modules[op.module].parents.some(parent=>parent.module===module&&(op.data[parent.field]===uuid||op.before?.[parent.field]===uuid))).map(op => op.operation_uuid);
             working.queue.push({operation_uuid:crypto.randomUUID(), record_uuid:uuid, module, type:'delete', base_version:record.version,
                 data:{}, before:record, status:'pending', started:false, dependsOn:dependencies});
         });
-        navigate('/'+module); renderControls(); schedule(250);
+        if(location.href===origin)navigate(['ingresos','egresos'].includes(module)?'/finanzas':'/'+module);else renderRoute(false);
+        renderControls(); schedule(250);
     }
     async function undo(id) {
         await mutate(working => {
@@ -668,7 +749,7 @@ function startWorkspace() {
             if (!op || op.type !== 'delete' || op.started) throw new Error('El envío ya comenzó. No se puede deshacer esta eliminación desde la cola.');
             working.queue = working.queue.filter(op => op.operation_uuid !== id);
         });
-        renderRoute(true);
+        renderRoute(false);
     }
     async function resolve(id, choice) {
         await mutate(working => {
@@ -686,12 +767,12 @@ function startWorkspace() {
             if (choice !== 'remote') {
                 if (choice === 'local' && (!current || current.deleted)) throw new Error('El registro fue eliminado en el servidor. Créalo como nuevo para conservar tu borrador.');
                 const uuid = choice === 'copy' ? crypto.randomUUID() : op.record_uuid;
-                const values = {...draft};
+                const values = {...draft};if(op.module==='ingresos'&&values.tipo==='venta_animal')values.animal_base_version=projected(working).animales[values.animal_uuid]?.version;
                 for (const field of ['id','record_uuid','version','codigo','deleted','module','venta_registrada']) delete values[field];
                 const type = choice === 'copy' ? 'create' : draft.deleted ? 'delete' : 'update';
                 working.queue.push({operation_uuid:crypto.randomUUID(), record_uuid:uuid, module:op.module, type,
                     ...(type === 'create' ? {} : {base_version:current.version}), data:type === 'delete' ? {} : values,
-                    before:current, status:'pending', started:false, dependsOn:[]});
+                    before:current, status:'pending', started:false, dependsOn:working.queue.filter(parent=>modules[op.module].parents.some(ref=>parent.module===ref.module&&parent.record_uuid===values[ref.field])).map(parent=>parent.operation_uuid)});
             }
         });
         renderRoute(true); schedule(250);
@@ -723,6 +804,7 @@ function startWorkspace() {
     }
     async function sync() {
         if (syncing || preparing || !key || !data || !connected()) return;
+        if(data.schema<4){await automaticDownload();if(data?.schema<4||!data||!key)return;}
         syncing = true;
         const run=actor();let leader,busy=false;
         const change=(callback,revision=null)=>mutate(callback,{},revision,{actor:run,lease:leader.token});
@@ -764,13 +846,14 @@ function startWorkspace() {
                     await assertActor(run);
                     const applied=await change(working=>{applyDelta(working,delta,run.accountId);return true;},revision);
                     if(!applied){delta={has_more:true};continue;}
-                    if(delta.changes.length && /^\/(fincas|animales)(\/|$)/.test(location.pathname)){
+                    if(delta.changes.length && /^\/(dashboard|fincas|animales|potreros|produccion|salud|finanzas|perfil|alertas|reportes)(\/|$)/.test(location.pathname)){
+                        if(location.pathname==='/dashboard'&&!localView&&!shell){hydrateCollection('/dashboard');continue;}
                         const form=main.querySelector('form'), nativeEdit=!localView&&!shell&&/\/edit$/.test(location.pathname);
                         if(nativeEdit){
                             // Keep online form listeners and map instances alive. A dirty
                             // form retains its original version and is never silently rebased.
                             const module=location.pathname.split('/')[1],row=findRecord(module,location.pathname.split('/')[2]);
-                            if(row&&!dirtyForms.has(form)){hydrateFields(row);hydrateNormalForm(row,module);}
+                            if(row&&!dirtyForms.has(form)){if(['potreros','produccion','salud'].includes(module))hydrateModule(main,module,row,projected(),data.views,location.pathname+location.search);else hydrateFields(row);hydrateNormalForm(row,module);}
                         }else{localView=true;renderRoute(false);}
                     }
                 } while(delta.has_more);
@@ -806,12 +889,16 @@ function startWorkspace() {
     document.addEventListener('input',event=>{ if(event.target.form) dirtyForms.add(event.target.form); });
     document.addEventListener('submit',event=>{
         const form = event.target, action = new URL(form.action,location.href);
-        const match = action.pathname.match(/^\/(fincas|animales)(?:\/([^/]+))?$/);
+        if(form.method.toUpperCase()==='GET'){
+            if(!connected()||localView){event.preventDefault();event.stopImmediatePropagation();navigate(action.pathname+'?'+new URLSearchParams(new FormData(form)));}
+            return;
+        }
+        const match = routeInfo(action.pathname)||action.pathname.match(/^\/(fincas|animales|potreros|produccion|salud)(?:\/([^/]+))?$/);
         if(!match&&!connected()&&action.pathname!=='/logout'&&form.method.toUpperCase()!=='GET'){
             event.preventDefault();event.stopImmediatePropagation();error('Este módulo todavía necesita conexión para guardar. Los valores del formulario se conservan.');return;
         }
         if (!match || (!data && connected())) return;
-        const record = match[2] && findRecord(match[1],match[2]);
+        const record = match[1]==='perfil'?Object.values(projected().perfil)[0]:match[2] && findRecord(match[1],match[2]);
         if (connected() && !localView && !data?.queue.some(op=>op.module===match[1]&&op.record_uuid===record?.record_uuid)) return;
         event.preventDefault(); event.stopImmediatePropagation();
         (async()=>{
@@ -824,10 +911,12 @@ function startWorkspace() {
     },true);
     document.addEventListener('click',event=>{
         const target = event.target.closest('a,button'); if(!target) return;
+        if(target.dataset.reportKind&&key&&(!connected()||localView)){event.preventDefault();event.stopImmediatePropagation();hydrateReports(main,projected(),navigate);target.onclick?.(event);return;}
         if(target.dataset.undo) undo(target.dataset.undo).catch(f=>error(f.message));
         if(target.dataset.resolve) resolve(target.dataset.id,target.dataset.resolve).catch(f=>error(f.message));
         if(target.dataset.delete) remove(target.dataset.module,target.dataset.delete).catch(f=>error(f.message));
-        if(target.closest('#btn-campanita') && (!connected()||shell)) {event.preventDefault();event.stopImmediatePropagation();notice('Las alertas del sistema requieren conexión.');return;}
+        if(target.closest('#btn-campanita') && key && (!connected()||localView||shell)) {event.preventDefault();event.stopImmediatePropagation();hydrateBell(alerts(projected(),data.references.alert_rules));$('dropdown-campanita')?.classList.toggle('hidden');return;}
+        if(target.dataset.onlineOnly&&!connected()){event.preventDefault();notice('Esta operación de cuenta requiere conexión.');return;}
         if(target.id==='btn-toggle-estado'&&(!connected()||localView)) {
             event.preventDefault();event.stopImmediatePropagation();
             const row=findRecord('fincas',location.pathname.split('/')[2]);
@@ -860,6 +949,7 @@ function startWorkspace() {
             await ensureWorker();
             if(navigator.onLine){try{session=await identity();connectionLost=false;}catch{connectionLost=true;}}
             const restored=await restore();
+            if(restored&&connected()&&session?.workspace_enabled&&data.schema<4)await automaticDownload();
             if(restored&&connected()&&session?.workspace_enabled){
                 const profile=await accountProfile();
                 if(!data.views){const views=await nativeViews();await mutate(working=>{working.views=views;working.profile=profile;});}

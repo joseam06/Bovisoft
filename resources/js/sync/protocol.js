@@ -1,7 +1,13 @@
 // Shared transport/state contract. Domain rules remain in Laravel services.
 export const modules = Object.freeze({
     fincas: {parents: []},
-    animales: {parents: [{module: 'fincas', field: 'finca_uuid'}]},
+    animales: {parents: [{module: 'fincas', field: 'finca_uuid'}, {module:'potreros',field:'potrero_uuid',optional:true}]},
+    potreros: {parents: [{module:'fincas',field:'finca_uuid'}]},
+    produccion: {parents: [{module:'fincas',field:'finca_uuid'},{module:'animales',field:'animal_uuid'}]},
+    salud: {parents: [{module:'fincas',field:'finca_uuid'},{module:'animales',field:'animal_uuid'}]},
+    ingresos:{parents:[{module:'fincas',field:'finca_uuid'},{module:'animales',field:'animal_uuid',optional:true}]},
+    egresos:{parents:[{module:'fincas',field:'finca_uuid'},{module:'animales',field:'animal_uuid',optional:true},{module:'salud',field:'salud_uuid',optional:true}]},
+    perfil:{parents:[]},
 });
 const uuid = value => typeof value === 'string' && /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(value);
 const equalUuid = (a,b) => uuid(a) && uuid(b) && a.toLowerCase() === b.toLowerCase();
@@ -17,7 +23,7 @@ function record(value, module, id = null) {
     requireValue(object(value) && !!modules[module] && uuid(value.record_uuid)
         && (id === null || equalUuid(value.record_uuid,id)) && Number.isSafeInteger(value.id) && value.id > 0
         && Number.isSafeInteger(value.version) && value.version > 0 && typeof value.deleted === 'boolean');
-    if (!value.deleted) for (const parent of modules[module].parents) requireValue(uuid(value[parent.field]));
+    if (!value.deleted) for (const parent of modules[module].parents) if(!parent.optional||value[parent.field])requireValue(uuid(value[parent.field]));
 }
 export function validateReply(reply, operation, accountId) {
     requireValue(object(reply) && reply.protocol === 1 && String(reply.account_id) === String(accountId)
@@ -29,11 +35,12 @@ export function validateReply(reply, operation, accountId) {
         requireValue(reply.record.version === (operation.type === 'create' ? 1 : operation.base_version + 1)
             && reply.record.deleted === (operation.type === 'delete'));
         if (operation.type !== 'delete') for (const parent of modules[operation.module].parents)
-            requireValue(equalUuid(reply.record[parent.field],operation.data[parent.field]));
+            if(!parent.optional||operation.data[parent.field])requireValue(equalUuid(reply.record[parent.field],operation.data[parent.field]));
     } else {
         requireValue([404,409,422].includes(reply.status) && typeof reply.error === 'string');
         if (reply.current !== undefined) record(reply.current,operation.module,operation.record_uuid);
     }
+    if(reply.related!==undefined){requireValue(Array.isArray(reply.related));for(const related of reply.related){requireValue(['animales','potreros','salud'].includes(related.module));record(related.record,related.module);}}
     return reply;
 }
 export function acknowledge(working, sent, reply, accountId) {
@@ -53,13 +60,14 @@ export function acknowledge(working, sent, reply, accountId) {
         } else working.base[operation.module][operation.record_uuid]=reply.record;
     }
     working.queue=working.queue.filter(op=>op.operation_uuid!==operation.operation_uuid);
+    for(const related of reply.related||[]){const value=related.record,base=working.base[related.module];if(!working.removals?.[related.module]?.[value.record_uuid]&&(!base[value.record_uuid]||base[value.record_uuid].version<=value.version))base[value.record_uuid]=value;}
 }
 export function nextOperation(working) {
     return working.queue.find(op=>modules[op.module] && ['pending','sending'].includes(op.status)
         && !op.dependsOn.some(id=>working.queue.some(parent=>parent.operation_uuid===id)));
 }
 export function missingParents(working, operation) {
-    return modules[operation.module].parents.some(parent=>!working.base[parent.module][operation.data[parent.field]]);
+    return modules[operation.module].parents.some(parent=>(!parent.optional||operation.data[parent.field])&&!working.base[parent.module][operation.data[parent.field]]);
 }
 export function prepareOperation(operation) {
     operation.started=true;operation.status='sending';
@@ -78,7 +86,7 @@ export function validateDelta(delta, accountId) {
         if(change.action==='upsert') {
             record(change.record,change.module);
             requireValue(!change.record.deleted && delta.valid[change.module].includes(change.record.record_uuid));
-            for(const parent of modules[change.module].parents) requireValue(delta.valid[parent.module].includes(change.record[parent.field]));
+            for(const parent of modules[change.module].parents) if(!parent.optional||change.record[parent.field])requireValue(delta.valid[parent.module].includes(change.record[parent.field]));
         } else requireValue(change.action==='remove' && uuid(change.record_uuid) && !delta.valid[change.module].includes(change.record_uuid));
     }
     return delta;

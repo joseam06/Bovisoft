@@ -1,5 +1,6 @@
+param([string]$RuntimeRoot = (Join-Path $env:TEMP 'bovisoft-browser-tests'))
 $ErrorActionPreference = 'Stop'
-$runtime = Join-Path $env:TEMP 'bovisoft-browser-tests'
+$runtime = $RuntimeRoot
 $python = Join-Path $runtime 'Scripts/python.exe'
 if (-not (Test-Path -LiteralPath $python)) {
     & rtk proxy python -m venv $runtime

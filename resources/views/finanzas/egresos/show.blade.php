@@ -13,7 +13,7 @@
                 <i class="fa-solid fa-arrow-left text-xl"></i>
             </a>
             <div>
-                <h1 class="text-3xl font-bold text-white">{{ $egreso->codigo }}</h1>
+                <h1 class="text-3xl font-bold text-white"><span data-offline-owner="egresos" data-offline-field="codigo">{{ $egreso->codigo }}</span></h1>
                 <p class="text-red-100 mt-1">Detalle del egreso</p>
             </div>
         </div>
@@ -45,44 +45,44 @@
             <dl class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
                 <div>
                     <dt class="text-gray-500 font-medium">Código</dt>
-                    <dd class="font-mono font-bold text-gray-800 mt-0.5">{{ $egreso->codigo }}</dd>
+                    <dd class="font-mono font-bold text-gray-800 mt-0.5"><span data-offline-owner="egresos" data-offline-field="codigo">{{ $egreso->codigo }}</span></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500 font-medium">Categoría</dt>
                     <dd class="mt-0.5">
                         <span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800">
-                            {{ $egreso->categoria_formateada }}
+                            <span data-offline-owner="egresos" data-offline-field="categoria_formateada">{{ $egreso->categoria_formateada }}</span>
                         </span>
                     </dd>
                 </div>
                 <div>
                     <dt class="text-gray-500 font-medium">Finca</dt>
-                    <dd class="font-bold text-gray-800 mt-0.5">{{ $egreso->finca->nombre ?? '—' }}</dd>
+                    <dd class="font-bold text-gray-800 mt-0.5"><span data-offline-owner="egresos" data-offline-field="finca_nombre">{{ $egreso->finca->nombre ?? '—' }}</span></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500 font-medium">Fecha</dt>
-                    <dd class="font-bold text-gray-800 mt-0.5">{{ $egreso->fecha->format('d/m/Y') }}</dd>
+                    <dd class="font-bold text-gray-800 mt-0.5"><span data-offline-owner="egresos" data-offline-field="fecha">{{ $egreso->fecha->format('d/m/Y') }}</span></dd>
                 </div>
                 @if($egreso->descripcion)
                 <div class="sm:col-span-2">
                     <dt class="text-gray-500 font-medium">Descripción</dt>
-                    <dd class="text-gray-800 mt-0.5">{{ $egreso->descripcion }}</dd>
+                    <dd class="text-gray-800 mt-0.5"><span data-offline-owner="egresos" data-offline-field="descripcion">{{ $egreso->descripcion }}</span></dd>
                 </div>
                 @endif
                 <div>
                     <dt class="text-gray-500 font-medium">Registrado</dt>
-                    <dd class="text-gray-700 mt-0.5">{{ $egreso->created_at->format('d/m/Y H:i') }}</dd>
+                    <dd class="text-gray-700 mt-0.5"><span data-offline-owner="egresos" data-offline-field="created_at">{{ $egreso->created_at->format('d/m/Y H:i') }}</span></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500 font-medium">Registrado por</dt>
-                    <dd class="text-gray-700 mt-0.5">{{ $egreso->user->name ?? '—' }}</dd>
+                    <dd class="text-gray-700 mt-0.5"><span data-offline-owner="egresos" data-offline-field="user">{{ $egreso->user->name ?? '—' }}</span></dd>
                 </div>
             </dl>
 
             @if($egreso->observaciones)
             <div class="mt-6 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
                 <p class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Observaciones</p>
-                <p class="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{{ $egreso->observaciones }}</p>
+                <p class="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap"><span data-offline-owner="egresos" data-offline-field="observaciones">{{ $egreso->observaciones }}</span></p>
             </div>
             @endif
         </div>
@@ -94,10 +94,10 @@
                 <div class="flex items-end justify-center gap-1 mb-2">
                     <span class="text-xl font-bold text-gray-500 mb-2">$</span>
                     <span class="text-5xl font-extrabold text-red-700">
-                        {{ number_format($egreso->monto, 0, ',', '.') }}
+                        <span data-offline-owner="egresos" data-offline-field="monto">{{ \App\Services\Money::format($egreso->monto) }}</span>
                     </span>
                 </div>
-                <p class="text-sm text-gray-500">COP — {{ $egreso->fecha->format('d/m/Y') }}</p>
+                <p class="text-sm text-gray-500">COP — <span data-offline-owner="egresos" data-offline-field="fecha">{{ $egreso->fecha->format('d/m/Y') }}</span></p>
             </div>
 
             <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl p-6">
@@ -142,21 +142,21 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div class="p-4 bg-red-50 rounded-xl border-2 border-red-100">
                 <p class="text-xs text-gray-500 font-medium mb-1">Código</p>
-                <p class="font-mono font-bold text-gray-800">{{ $egreso->animal->codigo }}</p>
+                <p class="font-mono font-bold text-gray-800"><span data-offline-owner="egresos" data-offline-field="animal_nombre">{{ $egreso->animal->codigo }}</span></p>
             </div>
             <div class="p-4 bg-red-50 rounded-xl border-2 border-red-100">
                 <p class="text-xs text-gray-500 font-medium mb-1">Nombre</p>
-                <p class="font-bold text-gray-800">{{ $egreso->animal->nombre ?? 'Sin nombre' }}</p>
+                <p class="font-bold text-gray-800"><span data-offline-owner="egresos" data-offline-field="animal_nombre">{{ $egreso->animal->nombre ?? 'Sin nombre' }}</span></p>
             </div>
             <div class="p-4 bg-red-50 rounded-xl border-2 border-red-100">
                 <p class="text-xs text-gray-500 font-medium mb-1">Tipo / Raza</p>
-                <p class="font-bold text-gray-800">{{ ucfirst($egreso->animal->tipo) }} — {{ $egreso->animal->raza ?? 'N/A' }}</p>
+                <p class="font-bold text-gray-800"><span data-offline-owner="egresos" data-offline-field="animal_nombre">{{ ucfirst($egreso->animal->tipo) }}</span> — <span data-offline-owner="egresos" data-offline-field="animal_nombre">{{ $egreso->animal->raza ?? 'N/A' }}</span></p>
             </div>
             <div class="p-4 bg-red-50 rounded-xl border-2 border-red-100">
                 <p class="text-xs text-gray-500 font-medium mb-1">Estado</p>
                 <span class="px-2 py-0.5 rounded-full text-xs font-bold
                     {{ $egreso->animal->estado === 'activo' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700' }}">
-                    {{ ucfirst($egreso->animal->estado) }}
+                    <span data-offline-owner="egresos" data-offline-field="animal_nombre">{{ ucfirst($egreso->animal->estado) }}</span>
                 </span>
             </div>
         </div>
@@ -175,20 +175,20 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div class="p-4 bg-purple-50 rounded-xl border-2 border-purple-100">
                 <p class="text-xs text-gray-500 font-medium mb-1">Código salud</p>
-                <p class="font-mono font-bold text-gray-800">{{ $egreso->salud->codigo }}</p>
+                <p class="font-mono font-bold text-gray-800"><span data-offline-owner="egresos" data-offline-field="salud_nombre">{{ $egreso->salud->codigo }}</span></p>
             </div>
             <div class="p-4 bg-purple-50 rounded-xl border-2 border-purple-100">
                 <p class="text-xs text-gray-500 font-medium mb-1">Producto</p>
-                <p class="font-bold text-gray-800">{{ $egreso->salud->nombre_producto }}</p>
+                <p class="font-bold text-gray-800"><span data-offline-owner="egresos" data-offline-field="salud_nombre">{{ $egreso->salud->nombre_producto }}</span></p>
             </div>
             <div class="p-4 bg-purple-50 rounded-xl border-2 border-purple-100">
                 <p class="text-xs text-gray-500 font-medium mb-1">Fecha aplicación</p>
-                <p class="font-bold text-gray-800">{{ $egreso->salud->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</p>
+                <p class="font-bold text-gray-800"><span data-offline-owner="egresos" data-offline-field="salud_nombre">{{ $egreso->salud->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</span></p>
             </div>
             <div class="p-4 bg-purple-50 rounded-xl border-2 border-purple-100">
                 <p class="text-xs text-gray-500 font-medium mb-1">Costo en salud</p>
                 <p class="font-bold text-gray-800">
-                    {{ $egreso->salud->costo ? '$' . number_format($egreso->salud->costo, 0, ',', '.') : '—' }}
+                    <span data-offline-owner="egresos" data-offline-field="salud_nombre">{{ $egreso->salud->costo ? '$' . number_format($egreso->salud->costo, 0, ',', '.') : '—' }}</span>
                 </p>
             </div>
         </div>
@@ -210,6 +210,7 @@
         <form action="{{ route('finanzas.egresos.destroy', $egreso->id) }}" method="POST"
             onsubmit="return confirm('¿Eliminar este egreso?')">
             @csrf
+        @include('finanzas.operation', ['movement' => $egreso])
             @method('DELETE')
             <button type="submit"
                 class="flex items-center gap-2 px-5 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-xl border-2 border-red-300 transition-all text-sm">

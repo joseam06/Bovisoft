@@ -18,9 +18,9 @@
                     <span class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
                         <i class="fa-solid fa-droplet text-purple-700 text-2xl"></i>
                     </span>
-                    Producción de {{ $animal->nombre ?? $animal->codigo }}
+                    Producción de <span data-offline-owner="animales" data-offline-field="nombre">{{ $animal->nombre ?? $animal->codigo }}</span>
                 </h1>
-                <p class="text-red-100 mt-1 ml-16">{{ $animal->finca->nombre ?? '' }} · {{ ucfirst($animal->tipo) }}</p>
+                <p class="text-red-100 mt-1 ml-16"><span data-offline-owner="animales" data-offline-field="finca_nombre">{{ $animal->finca->nombre ?? '' }}</span> · <span data-offline-owner="animales" data-offline-field="tipo">{{ ucfirst($animal->tipo) }}</span></p>
             </div>
         </div>
         <a href="{{ route('produccion.create', ['animal_id' => $animal->id]) }}"
@@ -33,17 +33,17 @@
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl p-5 text-center">
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total acumulado</p>
-            <p class="text-4xl font-extrabold text-purple-700">{{ number_format($totalAnimal, 1) }}</p>
+            <p class="text-4xl font-extrabold text-purple-700"><span data-offline-stat="totalAnimal">{{ number_format($totalAnimal, 1) }}</span></p>
             <p class="text-xs text-gray-500 mt-1">litros en total</p>
         </div>
         <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl p-5 text-center">
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Promedio por registro</p>
-            <p class="text-4xl font-extrabold text-blue-700">{{ number_format($promedioAnimal, 1) }}</p>
+            <p class="text-4xl font-extrabold text-blue-700"><span data-offline-stat="promedioAnimal">{{ number_format($promedioAnimal, 1) }}</span></p>
             <p class="text-xs text-gray-500 mt-1">litros promedio</p>
         </div>
         <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl p-5 text-center">
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Registros</p>
-            <p class="text-4xl font-extrabold text-gray-700">{{ $totalRegistros }}</p>
+            <p class="text-4xl font-extrabold text-gray-700"><span data-offline-stat="totalRegistros">{{ $totalRegistros }}</span></p>
             <p class="text-xs text-gray-500 mt-1">total histórico</p>
         </div>
     </div>
@@ -70,18 +70,18 @@
                             <th class="px-4 py-3 text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-100">
+                    <tbody data-offline-collection="produccion" class="bg-white divide-y divide-gray-100">
                         @foreach($registros as $r)
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-4 py-3 font-mono text-xs text-gray-600 font-medium">{{ $r->codigo }}</td>
-                            <td class="px-4 py-3 font-semibold text-gray-700">{{ $r->fecha->format('d/m/Y') }}</td>
-                            <td class="px-4 py-3 text-gray-600">{{ $r->sesion_formateada }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-gray-600 font-medium"><span data-offline-owner="produccion" data-offline-field="codigo">{{ $r->codigo }}</span></td>
+                            <td class="px-4 py-3 font-semibold text-gray-700"><span data-offline-owner="produccion" data-offline-field="fecha">{{ $r->fecha->format('d/m/Y') }}</span></td>
+                            <td class="px-4 py-3 text-gray-600"><span data-offline-owner="produccion" data-offline-field="sesion_formateada">{{ $r->sesion_formateada }}</span></td>
                             <td class="px-4 py-3 text-right">
-                                <span class="font-extrabold text-purple-700">{{ number_format($r->litros, 1) }}</span>
+                                <span class="font-extrabold text-purple-700"><span data-offline-owner="produccion" data-offline-field="litros">{{ number_format($r->litros, 1) }}</span></span>
                                 <span class="text-xs text-gray-500 ml-0.5">L</span>
                             </td>
-                            <td class="px-4 py-3 text-gray-600 text-xs">{{ $r->calidad_formateada }}</td>
-                            <td class="px-4 py-3 text-gray-500 text-xs max-w-xs truncate">{{ $r->observaciones ?? '—' }}</td>
+                            <td class="px-4 py-3 text-gray-600 text-xs"><span data-offline-owner="produccion" data-offline-field="calidad_formateada">{{ $r->calidad_formateada }}</span></td>
+                            <td class="px-4 py-3 text-gray-500 text-xs max-w-xs truncate"><span data-offline-owner="produccion" data-offline-field="observaciones">{{ $r->observaciones ?? '—' }}</span></td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-center gap-1">
                                     <a href="{{ route('produccion.show', $r) }}"

@@ -1,5 +1,7 @@
 # Consolidación de sincronización — Fase 4
 
+Este documento registra el cierre de Fase 4. La [ampliación de Fase 5.1](offline-phase-5-1.md) reutiliza este núcleo y habilita Potreros, Producción, Salud y las estadísticas locales del Dashboard.
+
 Se conservan el CRUD y las vistas habituales de Fincas/Animales, IndexedDB cifrado, Service Worker, UUID, versiones, borrados lógicos y resolución explícita de conflictos. No se amplía la cobertura funcional de otros módulos ni se cambia el diseño responsive de Fase 3.1.
 
 ## Responsabilidades compartidas
@@ -47,3 +49,6 @@ El ejecutor PHP crea y elimina únicamente una base local desechable y admite un
 Resultado local: cuatro pruebas agrupadas del contrato JavaScript, seis pruebas PostgreSQL 17.11 (74 aserciones), dos recorridos Chromium y compilación Vite correctos. PostgreSQL cubrió recibos y reenvíos, concurrencia real entre procesos, conflicto de versiones, aislamiento y rollback después de escribir el dominio pero antes de confirmar el recibo, incluidos diario, contador de códigos y potrero. Chromium cubrió dos pestañas sin Web Locks, espera compartida tras 429, confirmación inválida, pérdida de la reserva con respuesta tardía, finca→animal, expiración de sesión, cuentas A/B y recuperación del pendiente al reiniciar el navegador. No se repitió la suite de 101 pruebas ni las verificaciones responsive de Fase 3.1, cuyas vistas/estilos permanecen sin cambios en esta fase. MySQL/MariaDB conserva evidencia previa; no se ejecutó de nuevo en esta fase.
 
 Estado: Fase 4 completada en el alcance local verificado de Fincas y Animales. Quedan para validación posterior los dispositivos físicos/otros motores de navegador y una revisión de publicación; no se realizó despliegue, conexión a producción, commit ni push. Para pausar el transporte se conserva `OFFLINE_WORKSPACE_ENABLED`; nunca se borran IndexedDB ni recibos para deshabilitarlo.
+## Ampliación posterior
+
+Las fases 5.2/5.3 mantienen este contrato y añaden Finanzas, perfil y proyecciones de Alertas/Reportes sobre el registro común. La cobertura, las verificaciones y las limitaciones actuales están en [offline-phase-5-2-5-3.md](offline-phase-5-2-5-3.md); los resultados de Fase 4 anteriores describen su alcance histórico.

@@ -18,7 +18,7 @@ use Illuminate\Validation\ValidationException;
 class WorkspaceSync
 {
     // Phase 5 registers a module here only after its domain adapter/serialization exists.
-    private const MODULES = ['fincas' => Finca::class, 'animales' => Animal::class];
+    private const MODULES = WorkspaceModules::MODELS;
 
     public function __construct(private readonly WorkspaceJournal $journal, private readonly WorkspaceRecords $records) {}
 
@@ -47,7 +47,9 @@ class WorkspaceSync
                 }
                 $class = self::MODULES[$op['module']];
                 $record = $class::withTrashed()->where('user_id', $user->id)->where('client_uuid', $op['record_uuid'])->first();
-                if (! $record || ($record instanceof Animal && ! Finca::withTrashed()->where('user_id', $user->id)->whereKey($record->finca_id)->exists())) {
+                if (! $record || ($op['module'] !== 'perfil' && ! $record instanceof Finca && ! Finca::withTrashed()->where('user_id', $user->id)->whereKey($record->finca_id)->exists())
+                    || (in_array($op['module'], ['produccion', 'salud'], true) && ! Animal::withTrashed()->where('user_id', $user->id)->whereKey($record->animal_id)->exists())
+                    || (in_array($op['module'], ['ingresos','egresos'], true) && $record->animal_id && ! Animal::withTrashed()->where('user_id', $user->id)->whereKey($record->animal_id)->exists())) {
                     return ['status' => 404, 'error' => 'record_unavailable'];
                 }
 
@@ -70,17 +72,37 @@ class WorkspaceSync
                     }
                     $data = $op['data'];
                     unset($data['user_id'], $data['codigo'], $data['finca_id'], $data['version'], $data['client_uuid']);
-                    if ($op['module'] === 'animales' && $op['type'] !== 'delete') {
+                    if (! in_array($op['module'], ['fincas','perfil'], true) && $op['type'] !== 'delete') {
                         $ref = Validator::make($data, ['finca_uuid' => 'required|uuid'])->validate();
                         $finca = Finca::delUsuario($user->id)->where('client_uuid', strtolower($ref['finca_uuid']))->lockForUpdate()->first();
                         if (! $finca) {
                             throw ValidationException::withMessages(['finca_uuid' => 'La finca no está disponible. Sincroniza o resuelve primero su operación.']);
                         }
                         $data['finca_id'] = $finca->id;
+                        if (in_array($op['module'], ['ingresos','egresos'], true)) {
+                            Validator::make($data, ['animal_uuid' => 'nullable|uuid', 'salud_uuid' => 'nullable|uuid'])->validate();
+                            $data['animal_id'] = empty($data['animal_uuid']) ? null : Animal::where('user_id', $user->id)->where('client_uuid', $data['animal_uuid'])->lockForUpdate()->firstOrFail()->id;
+                            if ($op['module'] === 'egresos') $data['salud_id'] = empty($data['salud_uuid']) ? null : \App\Models\Salud::where('user_id', $user->id)->where('client_uuid', $data['salud_uuid'])->lockForUpdate()->firstOrFail()->id;
+                        }
+                        if (in_array($op['module'], ['produccion', 'salud'], true)) {
+                            Validator::make($data, ['animal_uuid' => 'required|uuid'])->validate();
+                            $data['animal_id'] = Animal::where('user_id', $user->id)->where('client_uuid', strtolower($data['animal_uuid']))->lockForUpdate()->firstOrFail()->id;
+                        }
+                        if ($op['module'] === 'animales' && array_key_exists('potrero_uuid', $data)) {
+                            Validator::make($data, ['potrero_uuid' => 'nullable|uuid'])->validate();
+                            $data['potrero_id'] = $data['potrero_uuid'] ? Potrero::where('user_id', $user->id)->where('finca_id', $finca->id)
+                                ->where('client_uuid', strtolower($data['potrero_uuid']))->lockForUpdate()->firstOrFail()->id : null;
+                        }
                     }
+                    $animalId=in_array($op['module'],['ingresos','egresos'],true)?($data['animal_id']??$record?->animal_id):null;
+                    $oldPotrero=$animalId?Animal::where('user_id',$user->id)->whereKey($animalId)->value('potrero_id'):null;
                     $saved = $this->records->write($user, $op['module'], $op['type'], $data + (isset($op['base_version']) ? ['base_version' => $op['base_version']] : []), $record, $op['record_uuid']);
+                    $related=[];
+                    if($animalId){$a=Animal::where('user_id',$user->id)->findOrFail($animalId);$related[]=['module'=>'animales','record'=>WorkspaceJournal::serialize($a)];
+                        foreach(array_unique(array_filter([$oldPotrero,$a->potrero_id])) as $id){$p=Potrero::where('user_id',$user->id)->find($id);if($p)$related[]=['module'=>'potreros','record'=>WorkspaceJournal::serialize($p)];}}
+                    if($saved instanceof \App\Models\Egreso && $saved->salud_id){$s=\App\Models\Salud::where('user_id',$user->id)->find($saved->salud_id);if($s)$related[]=['module'=>'salud','record'=>WorkspaceJournal::serialize($s)];}
 
-                    return ['status' => $op['type'] === 'create' ? 201 : 200, 'record' => WorkspaceJournal::serialize($saved)];
+                    return ['status' => $op['type'] === 'create' ? 201 : 200, 'record' => WorkspaceJournal::serialize($saved),'related'=>$related];
                 });
             } catch (WorkspaceVersionConflict $error) {
                 $result = ['status' => 409, 'error' => 'version_conflict', 'current' => WorkspaceJournal::serialize($error->current)];
@@ -122,10 +144,11 @@ class WorkspaceSync
             // Old materialized pages cannot retain records whose access was revoked.
             foreach (self::MODULES as $module => $class) {
                 $ids = array_column(array_filter($data['records'], fn ($row) => $row['module'] === $module), 'record_uuid');
-                $query = $class::where('user_id', $user->id)->whereIn('client_uuid', $ids);
-                if ($module === 'animales') {
+                $query = (in_array($module, ['ingresos','egresos'], true) ? FinancialService::authorized($class, $user->id) : $class::where('user_id', $user->id))->whereIn('client_uuid', $ids);
+                if (! in_array($module, ['fincas','perfil'], true)) {
                     $query->whereHas('finca', fn ($q) => $q->delUsuario($user->id));
                 }
+                if (in_array($module, ['produccion', 'salud'], true)) $query->whereHas('animal', fn ($q) => $q->where('user_id', $user->id));
                 abort_unless($query->count() === count($ids), 409, 'Los permisos o las referencias cambiaron. Repite la descarga.');
             }
             $potreros = array_column($data['references']['potreros'], 'id');
@@ -175,19 +198,20 @@ class WorkspaceSync
 
     private function catalog(User $user): array
     {
-        $farms = Finca::delUsuario($user->id)->orderBy('id')->limit(10001)->get();
-        $animals = Animal::where('user_id', $user->id)->whereHas('finca', fn ($q) => $q->delUsuario($user->id))->orderBy('id')->limit(10001)->get();
+        \App\Models\WorkspaceProfile::firstOrCreate(['user_id'=>$user->id],['name'=>$user->name]);
         $records = [];
-        foreach (['fincas' => $farms, 'animales' => $animals] as $module => $rows) {
-            abort_if($rows->count() > 10000, 422, 'El piloto admite hasta diez mil registros por módulo.');
-            foreach ($rows as $row) {
-                $records[] = ['module' => $module] + WorkspaceJournal::serialize($row);
-            }
+        foreach (self::MODULES as $module => $class) {
+            $query = in_array($module, ['ingresos','egresos'], true) ? FinancialService::authorized($class, $user->id) : $class::where('user_id', $user->id);
+            if (! in_array($module, ['fincas','perfil'], true)) $query->whereHas('finca', fn ($q) => $q->delUsuario($user->id));
+            if (in_array($module, ['produccion', 'salud'], true)) $query->whereHas('animal', fn ($q) => $q->where('user_id', $user->id));
+            $rows = $query->orderBy('id')->limit(10001)->get();
+            abort_if($rows->count() > 10000, 422, 'La copia local admite hasta diez mil registros por módulo; la copia anterior se conserva.');
+            foreach ($rows as $row) $records[] = ['module' => $module] + WorkspaceJournal::serialize($row);
         }
-        $potreros = Potrero::where('user_id', $user->id)->whereIn('finca_id', $farms->modelKeys())->get()
-            ->map(fn ($p) => ['id' => $p->id, 'nombre' => $p->nombre, 'finca_uuid' => $farms->firstWhere('id', $p->finca_id)->client_uuid, 'animales_actuales' => $p->animales_actuales])->all();
-
-        return ['records' => $records, 'references' => ['potreros' => $potreros, 'tipos' => Animal::getTipos(), 'razas' => Animal::getRazas()]];
+        $potreros = array_values(array_filter($records, fn ($r) => $r['module'] === 'potreros'));
+        return ['records' => $records, 'references' => ['potreros' => $potreros, 'tipos' => Animal::getTipos(), 'razas' => Animal::getRazas(),
+            'workspace_schema' => 4, 'complete_modules' => array_keys(self::MODULES), 'alert_rules' => AlertRules::catalog(),
+            'financial_types'=>\App\Models\Ingreso::getTipos(),'financial_categories'=>\App\Models\Egreso::getCategorias()]];
     }
 
     private function cursor(User $user, int $sequence): string

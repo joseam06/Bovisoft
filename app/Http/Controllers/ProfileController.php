@@ -14,6 +14,7 @@ class ProfileController extends Controller
     {
         return view('profile.edit', [
             'user' => Auth::user(),
+            'offlineProfile' => \App\Models\WorkspaceProfile::firstOrCreate(['user_id'=>Auth::id()], ['name'=>Auth::user()->name]),
         ]);
     }
 
@@ -32,9 +33,16 @@ class ProfileController extends Controller
             'email.unique'   => 'Este correo ya está registrado por otro usuario.',
         ]);
 
-        $user->name  = $validated['name'];
-        $user->email = $validated['email'];
-        $user->save();
+        app(\App\Services\WorkspaceJournal::class)->transaction($user->id, function () use ($user,$validated,$request) {
+            $profile=\App\Models\WorkspaceProfile::where('user_id',$user->id)->lockForUpdate()->firstOrFail();
+            if ($validated['name'] !== $user->name) {
+                $request->validate(['base_version'=>'required|integer|min:1']);
+                if ((int)$request->base_version !== (int)$profile->version) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['name'=>'El nombre cambió desde que abriste el formulario. Reabre Mi perfil antes de guardar.']);
+                }
+            }
+            $user->name=$validated['name'];$user->email=$validated['email'];$user->save();
+        });
 
         return back()->with('success', 'Información actualizada correctamente.');
     }

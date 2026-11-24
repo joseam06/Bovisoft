@@ -9,25 +9,25 @@
             <td width="25%">
                 <div class="kpi-card blue">
                     <div class="kpi-label">Total Vacunaciones</div>
-                    <div class="kpi-value">{{ $totalVacunaciones }}</div>
+                    <div class="kpi-value"><span data-report-stat="totalVacunaciones">{{ $totalVacunaciones }}</span></div>
                 </div>
             </td>
             <td width="25%">
                 <div class="kpi-card teal">
                     <div class="kpi-label">Desparasitaciones</div>
-                    <div class="kpi-value">{{ $totalDesparasitaciones }}</div>
+                    <div class="kpi-value"><span data-report-stat="totalDesparasitaciones">{{ $totalDesparasitaciones }}</span></div>
                 </div>
             </td>
             <td width="25%">
                 <div class="kpi-card orange">
                     <div class="kpi-label">Proximas 7 dias</div>
-                    <div class="kpi-value">{{ $proximasSiete }}</div>
+                    <div class="kpi-value"><span data-report-stat="proximasSiete">{{ $proximasSiete }}</span></div>
                 </div>
             </td>
             <td width="25%">
                 <div class="kpi-card purple">
                     <div class="kpi-label">Costo Total</div>
-                    <div class="kpi-value" style="font-size:12px;">${{ number_format($costoTotal, 0, ',', '.') }}</div>
+                    <div class="kpi-value" style="font-size:12px;">$<span data-report-stat="costoTotal">{{ \App\Services\Money::format($costoTotal) }}</span></div>
                 </div>
             </td>
         </tr>
@@ -49,27 +49,27 @@
             <th>Dias Restantes</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="proximasDosis">
         @foreach($proximasDosis as $d)
         @php $dias = now()->diffInDays($d->proxima_aplicacion, false); @endphp
         <tr @if($dias <= 7) class="highlight-row" @endif>
-            <td>{{ $d->animal->nombre ?? $d->animal->codigo ?? '—' }}</td>
-            <td>{{ $d->finca->nombre ?? '—' }}</td>
-            <td>{{ $d->nombre_producto }}</td>
+            <td><span data-offline-owner="salud" data-offline-field="animal_nombre">{{ $d->animal->nombre ?? $d->animal->codigo ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="finca_nombre">{{ $d->finca->nombre ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="nombre_producto">{{ $d->nombre_producto }}</span></td>
             <td>
                 <span class="badge {{ $d->tipo === 'vacunacion' ? 'badge-blue' : 'badge-teal' }}">
-                    {{ $d->tipo === 'vacunacion' ? 'Vacuna' : 'Desparasitacion' }}
+                    <span data-offline-owner="salud" data-offline-field="tipo">{{ $d->tipo === 'vacunacion' ? 'Vacuna' : 'Desparasitacion' }}</span>
                 </span>
             </td>
-            <td>{{ $d->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</td>
-            <td>{{ $d->proxima_aplicacion?->format('d/m/Y') ?? '—' }}</td>
+            <td><span data-offline-owner="salud" data-offline-field="fecha_aplicacion">{{ $d->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="proxima_aplicacion">{{ $d->proxima_aplicacion?->format('d/m/Y') ?? '—' }}</span></td>
             <td>
                 @if($dias <= 0)
                     <span class="badge badge-red">Vencida</span>
                 @elseif($dias <= 7)
-                    <span class="badge badge-yellow">{{ $dias }} dias</span>
+                    <span class="badge badge-yellow"><span data-offline-owner="salud" data-offline-field="dias_proxima">{{ $dias }}</span> dias</span>
                 @else
-                    <span class="badge badge-green">{{ $dias }} dias</span>
+                    <span class="badge badge-green"><span data-offline-owner="salud" data-offline-field="dias_proxima">{{ $dias }}</span> dias</span>
                 @endif
             </td>
         </tr>
@@ -97,28 +97,28 @@
             <th>Costo</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="registros">
         @foreach($registros as $r)
         <tr>
-            <td style="font-family: monospace; font-size:9px;">{{ $r->codigo }}</td>
-            <td>{{ $r->animal->nombre ?? $r->animal->codigo ?? '—' }}</td>
+            <td style="font-family: monospace; font-size:9px;"><span data-offline-owner="salud" data-offline-field="codigo">{{ $r->codigo }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="animal_nombre">{{ $r->animal->nombre ?? $r->animal->codigo ?? '—' }}</span></td>
             <td>
                 <span class="badge {{ $r->tipo === 'vacunacion' ? 'badge-blue' : 'badge-teal' }}">
-                    {{ $tiposLabel[$r->tipo] ?? ucfirst($r->tipo) }}
+                    <span data-offline-owner="salud" data-offline-field="tipo">{{ $tiposLabel[$r->tipo] ?? ucfirst($r->tipo) }}</span>
                 </span>
             </td>
-            <td>{{ $r->nombre_producto }}</td>
-            <td style="font-size:9px; color:#6b7280;">{{ $r->lote_medicamento ?? '—' }}</td>
-            <td>{{ $r->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</td>
-            <td>{{ $r->proxima_aplicacion?->format('d/m/Y') ?? '—' }}</td>
-            <td>{{ $r->costo ? '$' . number_format($r->costo, 0, ',', '.') : '—' }}</td>
+            <td><span data-offline-owner="salud" data-offline-field="nombre_producto">{{ $r->nombre_producto }}</span></td>
+            <td style="font-size:9px; color:#6b7280;"><span data-offline-owner="salud" data-offline-field="lote_medicamento">{{ $r->lote_medicamento ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="fecha_aplicacion">{{ $r->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="proxima_aplicacion">{{ $r->proxima_aplicacion?->format('d/m/Y') ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="costo">{{ $r->costo ? '$' . number_format($r->costo, 0, ',', '.') : '—' }}</span></td>
         </tr>
         @endforeach
     </tbody>
     <tfoot>
         <tr>
             <td colspan="7">COSTO TOTAL</td>
-            <td>${{ number_format($costoTotal, 0, ',', '.') }}</td>
+            <td>$<span data-report-stat="costoTotal">{{ \App\Services\Money::format($costoTotal) }}</span></td>
         </tr>
     </tfoot>
 </table>

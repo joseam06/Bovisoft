@@ -14,8 +14,8 @@
     @unless($offlineShell ?? false)
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @endunless
+    <script src="/vendor/chart/chart.js"></script>
     
     <style>
         
@@ -354,7 +354,14 @@
         @include('offline.feedback')
 
         <!-- PAGE CONTENT -->
-        <main class="app-main p-6" data-offline-module="{{ request()->routeIs('animales.show', 'animales.edit') ? 'animales' : (request()->routeIs('fincas.show', 'fincas.edit') ? 'fincas' : '') }}" data-offline-record="{{ request()->routeIs('animales.show', 'animales.edit') ? $animal->client_uuid : (request()->routeIs('fincas.show', 'fincas.edit') ? $finca->client_uuid : '') }}" data-offline-version="{{ request()->routeIs('animales.show', 'animales.edit') ? $animal->version : (request()->routeIs('fincas.show', 'fincas.edit') ? $finca->version : '') }}">
+        @php
+            $offlineModule = collect(['fincas','animales','potreros','produccion','salud'])->first(fn ($module) => request()->routeIs($module.'.*')) ?? '';
+            $offlineEntity = request()->routeIs('*.show','*.edit') ? match($offlineModule) {
+                'fincas' => $finca ?? null, 'animales' => $animal ?? null, 'potreros' => $potrero ?? null,
+                'produccion', 'salud' => $registro ?? null, default => null,
+            } : null;
+        @endphp
+        <main class="app-main p-6" data-offline-module="{{ $offlineModule }}" data-offline-record="{{ $offlineEntity?->client_uuid }}" data-offline-version="{{ $offlineEntity?->version }}">
             @unless($offlineShell ?? false)
                 @if($errors->any())
                 <div role="alert" class="mb-5 p-5 bg-white rounded-xl text-red-800 shadow-xl">
@@ -368,6 +375,9 @@
                 </div>
                 @endif
             @endunless
+@if($offlineEntity?->exists && in_array($offlineModule, ['potreros','produccion','salud']))
+                <script id="offline-record-data" type="application/json">{!! json_encode([['module' => $offlineModule, 'record' => \App\Services\WorkspaceJournal::serialize($offlineEntity)]], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+            @endif
             @yield('content')
             @unless($offlineShell ?? false)
                 @if(request()->routeIs('animales.show', 'animales.edit'))
@@ -415,6 +425,7 @@
 @unless($offlineShell ?? false)
 <script>
     // ---- CAMPANITA ----
+    function alertText(value) { var node=document.createElement('span');node.textContent=String(value ?? '');return node.innerHTML; }
     var alertasCargadas = false;
 
     function toggleCampanita() {
@@ -465,13 +476,13 @@
             var html = '';
             alertas.forEach(function(a) {
                 var c = iconos[a.color] || iconos['blue'];
-                html += '<a href="/salud/' + a.salud_id + '" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-100 transition-all">' +
+                html += '<a href="' + (a.url || '/salud/' + a.salud_id) + '" class="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-100 transition-all">' +
                     '<div class="w-9 h-9 ' + c.bg + ' rounded-xl flex items-center justify-center flex-shrink-0">' +
                         '<i class="fa-solid ' + a.icono + ' ' + c.icon + ' text-sm"></i>' +
                     '</div>' +
                     '<div class="flex-1 min-w-0">' +
-                        '<p class="text-xs font-bold text-gray-800 truncate">' + a.titulo + '</p>' +
-                        '<p class="text-xs text-gray-500 truncate">' + a.animal + ' · ' + a.finca + '</p>' +
+                        '<p class="text-xs font-bold text-gray-800 truncate">' + alertText(a.titulo) + '</p>' +
+                        '<p class="text-xs text-gray-500 truncate">' + alertText(a.animal) + ' · ' + alertText(a.finca) + '</p>' +
                     '</div>' +
                     '<span class="text-xs text-gray-400 flex-shrink-0">' + a.fecha + '</span>' +
                 '</a>';

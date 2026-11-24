@@ -86,9 +86,18 @@ self.addEventListener('fetch', event => {
             const state = await store.transition(null, null, true);
             await broadcast(state);
         }
+        // Authentication and session responses never come from Cache API or
+        // the anonymous offline shell, including failed POST navigations.
+        if (/^\/(login|logout|register|forgot-password|reset-password|two-factor-challenge|user\/confirm-password|auth|offline\/session)(\/|$)/.test(url.pathname)) {
+            try {const response=await fetch(request,{cache:'no-store'});await identity(response,before);return response;}
+            catch(error){
+                if(request.mode==='navigate'&&request.method==='GET')return new Response('<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>BoviSoft · Acceso</title><body style="font:18px system-ui;padding:10vw;background:#7f1d1d;color:white"><h1>Se necesita conexión para acceder a la cuenta</h1><p>Los cambios pendientes de cada cuenta permanecen guardados en este dispositivo.</p><a href="/login" style="color:white">Iniciar sesión con Internet</a></body></html>',{status:503,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store, private'}});
+                throw error;
+            }
+        }
         // Ordinary online navigation keeps using the real Laravel screens.
         // Only unsynchronized UUID routes need the local shell before reaching the server.
-        if (request.mode === 'navigate' && /^\/(fincas|animales)\/[a-f0-9-]{36}(\/|$)/i.test(url.pathname)) {
+        if (request.mode === 'navigate' && /^\/(fincas|animales|potreros|produccion|salud|finanzas\/ingresos|finanzas\/egresos)\/[a-f0-9-]{36}(\/|$)/i.test(url.pathname)) {
             const state = await store.security();
             const vault = state.accountId && !state.pendingLogout && await store.automaticWorkspace(state.accountId);
             const manifest = await index();

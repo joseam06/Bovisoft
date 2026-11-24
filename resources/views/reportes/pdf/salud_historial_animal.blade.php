@@ -8,27 +8,27 @@
     <tbody>
         <tr>
             <td style="width:20%; font-weight:bold; background:#f3f4f6;">Codigo</td>
-            <td style="font-family: monospace;">{{ $animal->codigo }}</td>
+            <td style="font-family: monospace;"><span data-offline-owner="animales" data-offline-field="codigo">{{ $animal->codigo }}</span></td>
             <td style="width:20%; font-weight:bold; background:#f3f4f6;">Nombre</td>
-            <td>{{ $animal->nombre ?? '—' }}</td>
+            <td><span data-offline-owner="animales" data-offline-field="nombre">{{ $animal->nombre ?? '—' }}</span></td>
         </tr>
         <tr>
             <td style="font-weight:bold; background:#f3f4f6;">Tipo</td>
-            <td>{{ ucfirst($animal->tipo) }}</td>
+            <td><span data-offline-owner="animales" data-offline-field="tipo">{{ ucfirst($animal->tipo) }}</span></td>
             <td style="font-weight:bold; background:#f3f4f6;">Raza</td>
-            <td>{{ $animal->raza ?? '—' }}</td>
+            <td><span data-offline-owner="animales" data-offline-field="raza">{{ $animal->raza ?? '—' }}</span></td>
         </tr>
         <tr>
             <td style="font-weight:bold; background:#f3f4f6;">Finca</td>
-            <td>{{ $animal->finca->nombre ?? '—' }}</td>
+            <td><span data-offline-owner="animales" data-offline-field="finca_nombre">{{ $animal->finca->nombre ?? '—' }}</span></td>
             <td style="font-weight:bold; background:#f3f4f6;">Estado</td>
-            <td>{{ ucfirst($animal->estado) }}</td>
+            <td><span data-offline-owner="animales" data-offline-field="estado">{{ ucfirst($animal->estado) }}</span></td>
         </tr>
         <tr>
             <td style="font-weight:bold; background:#f3f4f6;">Peso actual</td>
-            <td>{{ $animal->peso_actual ? number_format($animal->peso_actual, 1) . ' kg' : '—' }}</td>
+            <td><span data-offline-owner="animales" data-offline-field="peso_actual">{{ $animal->peso_actual ? number_format($animal->peso_actual, 1) . ' kg' : '—' }}</span></td>
             <td style="font-weight:bold; background:#f3f4f6;">Edad</td>
-            <td>{{ $animal->edad ?? '—' }}</td>
+            <td><span data-offline-owner="animales" data-offline-field="edad">{{ $animal->edad ?? '—' }}</span></td>
         </tr>
     </tbody>
 </table>
@@ -40,25 +40,25 @@
             <td width="25%">
                 <div class="kpi-card">
                     <div class="kpi-label">Total Eventos</div>
-                    <div class="kpi-value">{{ $totalRegistros }}</div>
+                    <div class="kpi-value"><span data-report-stat="totalRegistros">{{ $totalRegistros }}</span></div>
                 </div>
             </td>
             <td width="25%">
                 <div class="kpi-card blue">
                     <div class="kpi-label">Vacunaciones</div>
-                    <div class="kpi-value">{{ $vacunaciones }}</div>
+                    <div class="kpi-value"><span data-report-stat="vacunaciones">{{ $vacunaciones }}</span></div>
                 </div>
             </td>
             <td width="25%">
                 <div class="kpi-card purple">
                     <div class="kpi-label">Tratamientos</div>
-                    <div class="kpi-value">{{ $tratamientos }}</div>
+                    <div class="kpi-value"><span data-report-stat="tratamientos">{{ $tratamientos }}</span></div>
                 </div>
             </td>
             <td width="25%">
                 <div class="kpi-card purple">
                     <div class="kpi-label">Costo Total</div>
-                    <div class="kpi-value" style="font-size:12px;">${{ number_format($costoTotal, 0, ',', '.') }}</div>
+                    <div class="kpi-value" style="font-size:12px;">$<span data-report-stat="costoTotal">{{ \App\Services\Money::format($costoTotal) }}</span></div>
                 </div>
             </td>
         </tr>
@@ -86,7 +86,7 @@
             <th>Costo</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="registros">
         @foreach($registros as $r)
         @php
             $tipoBadge = match($r->tipo) {
@@ -106,20 +106,20 @@
             };
         @endphp
         <tr @if($r->en_carencia) class="highlight-row" @endif>
-            <td style="font-family: monospace; font-size:9px;">{{ $r->codigo }}</td>
-            <td><span class="badge {{ $tipoBadge }}">{{ $tiposLabel[$r->tipo] ?? ucfirst($r->tipo) }}</span></td>
+            <td style="font-family: monospace; font-size:9px;"><span data-offline-owner="salud" data-offline-field="codigo">{{ $r->codigo }}</span></td>
+            <td><span class="badge {{ $tipoBadge }}"><span data-offline-owner="salud" data-offline-field="tipo">{{ $tiposLabel[$r->tipo] ?? ucfirst($r->tipo) }}</span></span></td>
             <td>
-                <strong>{{ $r->nombre_producto }}</strong>
+                <strong><span data-offline-owner="salud" data-offline-field="nombre_producto">{{ $r->nombre_producto }}</span></strong>
                 @if($r->diagnostico)
-                    <br><span style="font-size:9px; color:#6b7280;">{{ $r->diagnostico }}</span>
+                    <br><span style="font-size:9px; color:#6b7280;"><span data-offline-owner="salud" data-offline-field="diagnostico">{{ $r->diagnostico }}</span></span>
                 @endif
             </td>
-            <td>{{ $r->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</td>
-            <td style="font-size:9px;">{{ $r->veterinario ?? '—' }}</td>
-            <td style="font-size:9px;">{{ $r->dosis ? $r->dosis . ' ' . $r->unidad_dosis : '—' }}</td>
+            <td><span data-offline-owner="salud" data-offline-field="fecha_aplicacion">{{ $r->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</span></td>
+            <td style="font-size:9px;"><span data-offline-owner="salud" data-offline-field="veterinario">{{ $r->veterinario ?? '—' }}</span></td>
+            <td style="font-size:9px;"><span data-offline-owner="salud" data-offline-field="dosis">{{ $r->dosis ? $r->dosis . ' ' . $r->unidad_dosis : '—' }}</span></td>
             <td>
                 @if($r->dias_carencia > 0)
-                    {{ $r->dias_carencia }}d
+                    <span data-offline-owner="salud" data-offline-field="dias_carencia">{{ $r->dias_carencia }}</span>d
                     @if($r->en_carencia)
                         <span class="badge badge-yellow">Activa</span>
                     @endif
@@ -127,15 +127,15 @@
                     —
                 @endif
             </td>
-            <td><span class="badge {{ $estadoBadge }}">{{ $estadosLabel[$r->estado] ?? $r->estado }}</span></td>
-            <td>{{ $r->costo ? '$' . number_format($r->costo, 0, ',', '.') : '—' }}</td>
+            <td><span class="badge {{ $estadoBadge }}"><span data-offline-owner="salud" data-offline-field="estado">{{ $estadosLabel[$r->estado] ?? $r->estado }}</span></span></td>
+            <td><span data-offline-owner="salud" data-offline-field="costo">{{ $r->costo ? '$' . number_format($r->costo, 0, ',', '.') : '—' }}</span></td>
         </tr>
         @endforeach
     </tbody>
     <tfoot>
         <tr>
             <td colspan="8">COSTO TOTAL HISTORICO</td>
-            <td>${{ number_format($costoTotal, 0, ',', '.') }}</td>
+            <td>$<span data-report-stat="costoTotal">{{ \App\Services\Money::format($costoTotal) }}</span></td>
         </tr>
     </tfoot>
 </table>
@@ -146,7 +146,7 @@
 {{-- ── Observaciones del animal ── --}}
 @if($animal->observaciones)
 <div class="section-title">Observaciones Generales del Animal</div>
-<div class="obs-box">{{ $animal->observaciones }}</div>
+<div class="obs-box"><span data-offline-owner="animales" data-offline-field="observaciones">{{ $animal->observaciones }}</span></div>
 @endif
 
 @endsection

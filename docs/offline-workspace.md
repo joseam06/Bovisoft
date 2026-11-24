@@ -1,10 +1,12 @@
 # BoviSoft: uso automático sin conexión
 
+La [Fase 5.1](offline-phase-5-1.md) amplía el núcleo a Potreros, Producción, Salud y estadísticas locales del Dashboard. Las [Fases 5.2/5.3](offline-phase-5-2-5-3.md) documentan la ampliación compatible a Finanzas, Alertas, Reportes y el nombre del perfil, sus verificaciones y límites actuales.
+
 ## Comportamiento actual
 
 Después de iniciar sesión con Internet, BoviSoft guarda en segundo plano la interfaz y los datos autorizados de la cuenta. No hay módulo separado, panel de preparación, selección de fincas para descargar, descarga manual ni clave adicional. No se aplica el límite anterior de siete días.
 
-La página abierta permanece al perder conexión. Fincas y Animales reutilizan sus vistas Blade habituales mediante fragmentos autenticados, guardados automáticamente en IndexedDB. No hay formularios ni fichas alternativos escritos en JavaScript: las mismas vistas cubren registros nuevos y fichas no visitadas. El dashboard conserva su copia guardada. Para registros nuevos se utiliza un UUID bajo la ruta habitual hasta recibir su ID numérico.
+La página abierta permanece al perder conexión. Fincas, Animales, Potreros, Producción y Salud reutilizan sus vistas Blade habituales mediante fragmentos autenticados, guardados automáticamente en IndexedDB. No hay formularios ni fichas alternativos escritos en JavaScript: las mismas vistas cubren registros nuevos y fichas no visitadas. El Dashboard calcula indicadores y gráficas con los datos completos de esos módulos y conserva identificada la última información de servicios no disponibles. Para registros nuevos se utiliza un UUID bajo la ruta habitual hasta recibir su ID numérico.
 
 Junto a la campana hay un mensaje no interactivo:
 
@@ -85,15 +87,15 @@ El respaldo en `feature/offline-first` no constituye un despliegue. Antes de una
 
 | Módulo | Cobertura actual / siguiente paso |
 | --- | --- |
-| Dashboard | Pantalla habitual guardada y totales de inventario calculados con datos locales. Las gráficas ya renderizadas son vistas guardadas; las gráficas completas se amplían con los datos de cada módulo. |
+| Dashboard | Indicadores locales de los cinco módulos, clasificación, barras/dona, rangos 7/30 días y año. Mapas externos y alertas agregadas conservan su última información identificada. |
 | Fincas | CRUD, ubicación por coordenadas, pendientes y conflictos. Las teselas OpenStreetMap y la búsqueda Nominatim necesitan Internet; no se anuncia un mapa base descargado. |
-| Animales | CRUD general, padres nuevos y potreros existentes. Historial sanitario/económico se incorpora con Salud/Finanzas. |
-| Producción | Consulta autorizada en el menú habitual, con actualización automática de hasta 90 días. Su creación/edición offline sigue pendiente; conserva las reglas históricas de `ProduccionService`. |
-| Potreros | Catálogos para asignar animales y actualización transaccional de contadores. Falta su CRUD/rotaciones offline. |
-| Salud | Falta operación idempotente que incluya el egreso asociado, además de sus descargas y conflictos. |
-| Finanzas | Falta sincronización de ingresos, egresos y ventas con sus efectos sobre animales, bajo una sola transacción y resolución explícita de conflictos monetarios. |
-| Alertas | Aún requiere conexión. Debe incorporar reglas y datos para distinguir resultados locales de confirmados. |
-| Reportes | Los PDF actuales los genera DomPDF en PHP y necesitan servidor. Los resúmenes locales requieren los datos completos de sus módulos. |
+| Animales | CRUD general, fincas/potreros nuevos, asignación y traslado; historial sanitario en Salud. Ventas continúan en Finanzas. |
+| Producción | CRUD e historial de leche completo dentro del límite técnico de registros, totales y gráficas. Conserva `ProduccionService` y sus reglas históricas. |
+| Potreros | CRUD, animales asociados, capacidad/ocupación, disponibilidad y fechas/avisos de rotación existentes. El repositorio no incluye geometrías. |
+| Salud | CRUD, categorías, seguimientos, costos/carencias y conflictos. Egresos siguen en su flujo separado de Finanzas; los vínculos financieros se protegen en servidor. |
+| Finanzas | Consulta, alta, detalle y eliminación/reversión de ingresos/egresos y ventas bajo una transacción, con recibos y versiones. No existen formularios/rutas de edición financiera. |
+| Alertas | Cálculo local mediante catálogo compartido de reglas sanitarias y rotación; mismas pantallas y campana. No existen estados persistidos de lectura. |
+| Reportes | Seis plantillas originales consultables con filtros y pendientes locales. Impresión/Guardar como PDF del navegador offline; descarga binaria DomPDF online. |
 | Cuenta/fotos | Login, recuperación de contraseña, OAuth y cargas requieren conexión. No se almacenan contraseñas para autenticar offline ni se descargan fotos privadas. |
 
 El objetivo final sigue siendo todo BoviSoft. Cada módulo debe aportar autorización, descarga inicial/incremental, reglas transaccionales, versiones, idempotencia, pantallas habituales y la misma matriz de desconexión y cuentas antes de habilitar sus escrituras offline.

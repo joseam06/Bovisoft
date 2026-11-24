@@ -53,7 +53,7 @@
                 <div class="text-right">
                     <p class="text-sm font-semibold text-gray-600 mb-1">Total Animales</p>
                     <h3 class="text-4xl font-extrabold bg-gradient-to-r from-red-700 to-red-900 bg-clip-text text-transparent">
-                        {{ \App\Models\Animal::where('user_id', Auth::id())->count() }}
+                        <span data-dashboard-stat="animales">{{ \App\Models\Animal::where('user_id', Auth::id())->count() }}</span>
                     </h3>
                 </div>
             </div>
@@ -108,7 +108,7 @@
             <div class="text-right">
                 <p class="text-sm font-semibold text-gray-600 mb-1">Alertas Activas</p>
                 <h3 class="text-4xl font-extrabold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-                    {{ $totalAlertas }}
+                    <span data-dashboard-alert-total>{{ $totalAlertas }}</span>
                 </h3>
             </div>
         </div>
@@ -141,7 +141,7 @@
                 <div class="text-right">
                     <p class="text-sm font-semibold text-gray-600 mb-1">Producción (L)</p>
                     <h3 class="text-4xl font-extrabold bg-gradient-to-r from-purple-600 to-red-700 bg-clip-text text-transparent">
-                        {{ number_format($produccionMes, 1) }}
+                        <span data-dashboard-stat="produccion">{{ number_format($produccionMes, 1) }}</span>
                     </h3>
                 </div>
             </div>
@@ -163,6 +163,18 @@
 <!-- Separador -->
 <div class="section-divider my-8"></div>
 
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    @foreach(['fincas' => ['Total Fincas','fa-map-location-dot'], 'potreros' => ['Potreros','fa-map'], 'salud' => ['Eventos de Salud','fa-heart-pulse']] as $metric => [$label,$icon])
+    <div class="stat-card rounded-2xl shadow-xl p-6 border-4 border-white/50">
+        <div class="flex items-center justify-between gap-4">
+            <div><p class="text-sm font-semibold text-gray-600">{{ $label }}</p><h3 class="text-3xl font-extrabold text-red-800" data-dashboard-stat="{{ $metric }}">{{ $inventorySummary[$metric] }}</h3></div>
+            <i class="fa-solid {{ $icon }} text-red-700 text-2xl"></i>
+        </div>
+        @if($metric === 'potreros')<p class="text-sm text-gray-600 mt-3">Animales activos asignados: <span data-dashboard-stat="ocupacion">{{ $inventorySummary['ocupacion'] }}</span></p>@endif
+        @if($metric === 'salud')<p class="text-sm text-gray-600 mt-3">En carencia: <span data-dashboard-stat="carencia">{{ $inventorySummary['carencia'] }}</span> · Próximas aplicaciones (7 días): <span data-dashboard-stat="proximas">{{ $inventorySummary['proximas'] }}</span></p>@endif
+    </div>
+    @endforeach
+</div>
 <!-- Charts and Map Row -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     
@@ -207,28 +219,28 @@
                 <div class="w-4 h-4 rounded-full bg-red-500 mr-3"></div>
                 <div>
                     <p class="text-xs text-gray-600">Vacas</p>
-                    <p class="font-bold text-gray-900">{{ $vacas }} ({{ $porcentajeVacas }}%)</p>
+                    <p class="font-bold text-gray-900"><span data-dashboard-type="vaca">{{ $vacas }}</span> (<span data-dashboard-type="vaca" data-percent>{{ $porcentajeVacas }}%</span>)</p>
                 </div>
             </div>
             <div class="flex items-center p-3 bg-blue-50 rounded-xl border-2 border-blue-100">
                 <div class="w-4 h-4 rounded-full bg-blue-500 mr-3"></div>
                 <div>
                     <p class="text-xs text-gray-600">Terneros</p>
-                    <p class="font-bold text-gray-900">{{ $terneros }} ({{ $porcentajeTerneros }}%)</p>
+                    <p class="font-bold text-gray-900"><span data-dashboard-type="ternero">{{ $terneros }}</span> (<span data-dashboard-type="ternero" data-percent>{{ $porcentajeTerneros }}%</span>)</p>
                 </div>
             </div>
             <div class="flex items-center p-3 bg-purple-50 rounded-xl border-2 border-purple-100">
                 <div class="w-4 h-4 rounded-full bg-purple-500 mr-3"></div>
                 <div>
                     <p class="text-xs text-gray-600">Toros</p>
-                    <p class="font-bold text-gray-900">{{ $toros }} ({{ $porcentajeToros }}%)</p>
+                    <p class="font-bold text-gray-900"><span data-dashboard-type="toro">{{ $toros }}</span> (<span data-dashboard-type="toro" data-percent>{{ $porcentajeToros }}%</span>)</p>
                 </div>
             </div>
             <div class="flex items-center p-3 bg-yellow-50 rounded-xl border-2 border-yellow-100">
                 <div class="w-4 h-4 rounded-full bg-yellow-500 mr-3"></div>
                 <div>
                     <p class="text-xs text-gray-600">Novillas</p>
-                    <p class="font-bold text-gray-900">{{ $novillas }} ({{ $porcentajeNovillas }}%)</p>
+                    <p class="font-bold text-gray-900"><span data-dashboard-type="novilla">{{ $novillas }}</span> (<span data-dashboard-type="novilla" data-percent>{{ $porcentajeNovillas }}%</span>)</p>
                 </div>
             </div>
         </div>
@@ -243,7 +255,7 @@
                 </span>
                 Ubicación de Fincas
             </h2>
-            <p class="text-sm text-gray-600 mt-1 ml-13">Visualización geográfica - <span id="contador-fincas" class="font-bold text-orange-600">0 fincas</span></p>
+            <p class="text-sm text-gray-600 mt-1 ml-13" data-offline-last-valid>Visualización geográfica - <span id="contador-fincas" class="font-bold text-orange-600">0 fincas</span></p>
         </div>
         
         <div id="map" class="shadow-xl border-4 border-white/50"></div>
@@ -276,7 +288,7 @@
                 </span>
                 Producción Lechera
             </h2>
-            <p class="text-sm text-gray-600 mt-1 ml-13">Últimos 7 días</p>
+            <p class="text-sm text-gray-600 mt-1 ml-13" data-chart-caption>Últimos 7 días</p>
         </div>
       <div class="flex gap-2">
     <button onclick="cargarProduccion('7dias')" id="btn-7dias"
@@ -312,11 +324,16 @@
         Alertas Recientes
         @if($totalAlertas > 0)
             <span class="ml-auto text-xs bg-yellow-100 text-yellow-700 border border-yellow-300 font-bold px-2 py-1 rounded-full">
-                {{ $totalAlertas }}
+                <span data-dashboard-alert-total>{{ $totalAlertas }}</span>
             </span>
         @endif
     </h2>
 
+    <template data-dashboard-alert-pattern>
+        @php $alerta = ['titulo'=>'Título','animal'=>'Animal','salud_id'=>0,'icono'=>'fa-bell']; $cc='bg-yellow-50 border-yellow-200 text-yellow-600'; @endphp
+        @include('alertas._dashboard-row')
+    </template>
+    <div data-dashboard-alerts>
     @if($alertasDashboard->isEmpty())
         <div class="text-center py-10">
             <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-green-200 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
@@ -339,26 +356,19 @@
                 ];
                 $cc = $coloresCard[$alerta['color']] ?? $coloresCard['blue'];
             @endphp
-            <div class="flex items-center gap-3 p-3 {{ $cc }} border-2 rounded-xl">
-                <i class="fa-solid {{ $alerta['icono'] }} text-lg flex-shrink-0"></i>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs font-bold truncate">{{ $alerta['titulo'] }}</p>
-                    <p class="text-xs opacity-80 truncate">{{ $alerta['animal'] }}</p>
-                </div>
-                <a href="{{ route('salud.show', $alerta['salud_id']) }}"
-                   class="text-xs font-bold underline flex-shrink-0">Ver</a>
-            </div>
+            @include('alertas._dashboard-row')
             @endforeach
         </div>
 
         @if($totalAlertas > 5)
         <a href="{{ route('alertas.index') }}"
            class="mt-4 flex items-center justify-center w-full py-2.5 bg-gradient-to-r from-yellow-500 to-orange-600 text-white text-xs font-bold rounded-xl hover:from-yellow-600 hover:to-orange-700 transition-all shadow-md">
-            Ver todas las alertas ({{ $totalAlertas }})
+            Ver todas las alertas (<span data-dashboard-alert-total>{{ $totalAlertas }}</span>)
             <i class="fa-solid fa-arrow-right ml-2"></i>
         </a>
         @endif
     @endif
+    </div>
 </div>
 
     <!-- Actividad Reciente -->
@@ -573,6 +583,11 @@ cargarProduccion('7dias');
     
 
     // Mapa
+    if (!window.L) {
+        const container=document.getElementById('map');
+        if(container){const note=document.createElement('p');note.className='p-4 text-sm text-gray-600';note.textContent='El mapa base necesita conexión. Puedes consultar y modificar los datos en las fichas.';container.replaceChildren(note);}
+        return;
+    }
     var map = L.map('map').setView([8.7479, -75.8814], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',

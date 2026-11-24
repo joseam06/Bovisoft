@@ -9,14 +9,14 @@
         <a href="{{ route('potreros.show', $potrero) }}" class="w-12 h-12 bg-white/20 hover:bg-white/30 text-white rounded-xl flex items-center justify-center mr-4 transition-all backdrop-blur-sm border-2 border-white/30">
             <i class="fa-solid fa-arrow-left text-xl"></i>
         </a>
-        <h1 class="text-3xl font-bold text-white">Editar Potrero: {{ $potrero->nombre }}</h1>
+        <h1 class="text-3xl font-bold text-white">Editar Potrero: <span data-offline-owner="potreros" data-offline-field="nombre">{{ $potrero->nombre }}</span></h1>
     </div>
 
     <!-- Formulario -->
     <div class="glass-effect rounded-2xl shadow-xl p-8 border-4 border-white/50">
         <form action="{{ route('potreros.update', $potrero) }}" method="POST">
             @csrf
-            @method('PUT')
+            @method('PUT') <input type="hidden" name="base_version" value="{{ old('base_version', $potrero->version) }}">
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Código (readonly) -->
@@ -51,7 +51,7 @@
                         class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
                         @foreach($fincas as $finca)
                             <option value="{{ $finca->id }}" 
-                                {{ old('finca_id', $potrero->finca_id) == $finca->id ? 'selected' : '' }}>
+                                <span data-offline-owner="potreros" data-offline-field="finca_id">{{ old('finca_id', $potrero->finca_id) == $finca->id ? 'selected' : '' }}</span>>
                                 {{ $finca->nombre }} ({{ $finca->codigo }})
                             </option>
                         @endforeach
@@ -102,7 +102,7 @@
                     <input type="number" name="capacidad_animales" value="{{ old('capacidad_animales', $potrero->capacidad_animales) }}" min="0"
                         placeholder="Ej: 50"
                         class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent">
-                    <p class="text-gray-500 text-xs mt-1">Actualmente: {{ $potrero->animales_actuales }} animales</p>
+                    <p class="text-gray-500 text-xs mt-1">Actualmente: <span data-offline-owner="potreros" data-offline-field="animales_actuales">{{ $potrero->animales_actuales }}</span> animales</p>
                     @error('capacidad_animales')
                         <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                     @enderror

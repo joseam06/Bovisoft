@@ -197,5 +197,6 @@ Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
+    if (request()->expectsJson()) return response()->noContent()->header('Cache-Control','no-store, private');
     return redirect('/');
 })->name('logout');

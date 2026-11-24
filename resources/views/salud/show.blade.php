@@ -13,7 +13,7 @@
                 <i class="fa-solid fa-arrow-left text-xl"></i>
             </a>
             <div>
-                <h1 class="text-3xl font-bold text-white">{{ $registro->codigo }}</h1>
+                <h1 class="text-3xl font-bold text-white"><span data-offline-owner="salud" data-offline-field="codigo">{{ $registro->codigo }}</span></h1>
                 <p class="text-red-100 mt-1">Detalle del registro de salud</p>
             </div>
         </div>
@@ -24,7 +24,7 @@
             </a>
             <form action="{{ route('salud.destroy', $registro) }}" method="POST"
                   onsubmit="return confirm('¿Eliminar este registro de salud?')">
-                @csrf @method('DELETE')
+                @csrf @method('DELETE') <input type="hidden" name="base_version" value="{{ $registro->version }}">
                 <button type="submit"
                     class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-white shadow-xl transition-all bg-red-600 hover:bg-red-700">
                     <i class="fa-solid fa-trash"></i> Eliminar
@@ -35,25 +35,25 @@
 
     {{-- ── Alertas activas ── --}}
     @if($registro->en_carencia)
-    <div class="flex items-center gap-3 p-4 rounded-xl bg-red-100 border-2 border-red-400 text-red-800 shadow-lg">
+    <div data-offline-if="en_carencia" class="flex items-center gap-3 p-4 rounded-xl bg-red-100 border-2 border-red-400 text-red-800 shadow-lg">
         <i class="fa-solid fa-triangle-exclamation text-2xl shrink-0"></i>
         <div>
             <p class="font-bold">Animal en periodo de carencia</p>
             <p class="text-sm">No comercializar leche ni carne hasta el
-                <strong>{{ $registro->fin_carencia->format('d/m/Y') }}</strong>
-                ({{ $registro->dias_carencia_restantes }} días restantes)
+                <strong><span data-offline-owner="salud" data-offline-field="fin_carencia">{{ $registro->fin_carencia->format('d/m/Y') }}</span></strong>
+                (<span data-offline-owner="salud" data-offline-field="dias_carencia_restantes">{{ $registro->dias_carencia_restantes }}</span> días restantes)
             </p>
         </div>
     </div>
     @endif
 
     @if($registro->alerta_proxima)
-    <div class="flex items-center gap-3 p-4 rounded-xl bg-yellow-100 border-2 border-yellow-400 text-yellow-800 shadow-lg">
+    <div data-offline-if="alerta_proxima" class="flex items-center gap-3 p-4 rounded-xl bg-yellow-100 border-2 border-yellow-400 text-yellow-800 shadow-lg">
         <i class="fa-solid fa-bell text-2xl shrink-0"></i>
         <div>
             <p class="font-bold">Próxima dosis pronto</p>
-            <p class="text-sm">Fecha: <strong>{{ $registro->proxima_aplicacion->format('d/m/Y') }}</strong>
-                — {{ $registro->dias_para_proxima }}</p>
+            <p class="text-sm">Fecha: <strong><span data-offline-owner="salud" data-offline-field="proxima_aplicacion">{{ $registro->proxima_aplicacion->format('d/m/Y') }}</span></strong>
+                — <span data-offline-owner="salud" data-offline-field="dias_para_proxima">{{ $registro->dias_para_proxima }}</span></p>
         </div>
     </div>
     @endif
@@ -75,14 +75,14 @@
                 <dl class="grid grid-cols-2 gap-4 text-sm">
                     <div>
                         <dt class="text-gray-500 font-medium">Código</dt>
-                        <dd class="font-mono font-bold text-gray-800">{{ $registro->codigo }}</dd>
+                        <dd class="font-mono font-bold text-gray-800"><span data-offline-owner="salud" data-offline-field="codigo">{{ $registro->codigo }}</span></dd>
                     </div>
                     <div>
                         <dt class="text-gray-500 font-medium">Tipo</dt>
                         <dd>
                             @php $tc=['vacunacion'=>'bg-blue-100 text-blue-800','desparasitacion'=>'bg-teal-100 text-teal-800','tratamiento'=>'bg-purple-100 text-purple-800','cirugia'=>'bg-red-100 text-red-800','revision'=>'bg-yellow-100 text-yellow-800','otro'=>'bg-gray-100 text-gray-800']; @endphp
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $tc[$registro->tipo] ?? 'bg-gray-100 text-gray-800' }}">
-                                {{ \App\Models\Salud::getTipos()[$registro->tipo] ?? $registro->tipo }}
+                                <span data-offline-owner="salud" data-offline-field="tipo">{{ \App\Models\Salud::getTipos()[$registro->tipo] ?? $registro->tipo }}</span>
                             </span>
                         </dd>
                     </div>
@@ -90,26 +90,26 @@
                         <dt class="text-gray-500 font-medium">Animal</dt>
                         <dd class="font-bold text-gray-800">
                             <a href="{{ route('animales.show', $registro->animal) }}" class="text-red-600 hover:underline">
-                                {{ $registro->animal->nombre ?? $registro->animal->codigo ?? '—' }}
+                                <span data-offline-owner="salud" data-offline-field="animal_nombre">{{ $registro->animal->nombre ?? $registro->animal->codigo ?? '—' }}</span>
                             </a>
                         </dd>
                     </div>
                     <div>
                         <dt class="text-gray-500 font-medium">Finca</dt>
-                        <dd class="text-gray-800">{{ $registro->finca->nombre ?? '—' }}</dd>
+                        <dd class="text-gray-800"><span data-offline-owner="salud" data-offline-field="finca_nombre">{{ $registro->finca->nombre ?? '—' }}</span></dd>
                     </div>
                     <div>
                         <dt class="text-gray-500 font-medium">Estado</dt>
                         <dd>
                             @php $ec=['completado'=>'bg-green-100 text-green-800','en_tratamiento'=>'bg-orange-100 text-orange-800','pendiente'=>'bg-yellow-100 text-yellow-800','cancelado'=>'bg-gray-100 text-gray-800']; @endphp
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $ec[$registro->estado] ?? 'bg-gray-100 text-gray-800' }}">
-                                {{ \App\Models\Salud::getEstados()[$registro->estado] ?? $registro->estado }}
+                                <span data-offline-owner="salud" data-offline-field="estado">{{ \App\Models\Salud::getEstados()[$registro->estado] ?? $registro->estado }}</span>
                             </span>
                         </dd>
                     </div>
                     <div>
                         <dt class="text-gray-500 font-medium">Registrado</dt>
-                        <dd class="text-gray-800">{{ $registro->created_at->format('d/m/Y H:i') }}</dd>
+                        <dd class="text-gray-800"><span data-offline-owner="salud" data-offline-field="created_at">{{ $registro->created_at->format('d/m/Y H:i') }}</span></dd>
                     </div>
                 </dl>
             </div>
@@ -125,42 +125,42 @@
                 <dl class="grid grid-cols-2 gap-4 text-sm">
                     <div>
                         <dt class="text-gray-500 font-medium">Producto / Medicamento</dt>
-                        <dd class="font-bold text-gray-800">{{ $registro->nombre_producto }}</dd>
+                        <dd class="font-bold text-gray-800"><span data-offline-owner="salud" data-offline-field="nombre_producto">{{ $registro->nombre_producto }}</span></dd>
                     </div>
                     <div>
                         <dt class="text-gray-500 font-medium">Enfermedad prevenida</dt>
-                        <dd class="text-gray-800">{{ $registro->enfermedad_prevenida ?? '—' }}</dd>
+                        <dd class="text-gray-800"><span data-offline-owner="salud" data-offline-field="enfermedad_prevenida">{{ $registro->enfermedad_prevenida ?? '—' }}</span></dd>
                     </div>
                     <div>
                         <dt class="text-gray-500 font-medium">Dosis</dt>
                         <dd class="text-gray-800">
-                            {{ $registro->dosis ? number_format($registro->dosis, 2) . ' ' . ($registro->unidad_dosis ?? '') : '—' }}
+                            <span data-offline-owner="salud" data-offline-field="dosis">{{ $registro->dosis ? number_format($registro->dosis, 2) . ' ' . ($registro->unidad_dosis ?? '') : '—' }}</span>
                         </dd>
                     </div>
                     <div>
                         <dt class="text-gray-500 font-medium">Vía de aplicación</dt>
                         <dd class="text-gray-800">
-                            {{ $registro->via_aplicacion
+                            <span data-offline-owner="salud" data-offline-field="via_aplicacion">{{ $registro->via_aplicacion
                                 ? (\App\Models\Salud::getViasAplicacion()[$registro->via_aplicacion] ?? $registro->via_aplicacion)
-                                : '—' }}
+                                : '—' }}</span>
                         </dd>
                     </div>
                     <div>
                         <dt class="text-gray-500 font-medium">Lote</dt>
-                        <dd class="font-mono text-gray-800">{{ $registro->lote_medicamento ?? '—' }}</dd>
+                        <dd class="font-mono text-gray-800"><span data-offline-owner="salud" data-offline-field="lote_medicamento">{{ $registro->lote_medicamento ?? '—' }}</span></dd>
                     </div>
                     <div>
                         <dt class="text-gray-500 font-medium">Laboratorio</dt>
-                        <dd class="text-gray-800">{{ $registro->laboratorio ?? '—' }}</dd>
+                        <dd class="text-gray-800"><span data-offline-owner="salud" data-offline-field="laboratorio">{{ $registro->laboratorio ?? '—' }}</span></dd>
                     </div>
                     <div>
                         <dt class="text-gray-500 font-medium">Veterinario</dt>
-                        <dd class="text-gray-800">{{ $registro->veterinario ?? '—' }}</dd>
+                        <dd class="text-gray-800"><span data-offline-owner="salud" data-offline-field="veterinario">{{ $registro->veterinario ?? '—' }}</span></dd>
                     </div>
                     <div>
                         <dt class="text-gray-500 font-medium">Costo</dt>
                         <dd class="font-semibold text-gray-800">
-                            {{ $registro->costo ? '$ ' . number_format($registro->costo, 2) : '—' }}
+                            <span data-offline-owner="salud" data-offline-field="costo">{{ $registro->costo ? '$ ' . number_format($registro->costo, 2) : '—' }}</span>
                         </dd>
                     </div>
                 </dl>
@@ -168,7 +168,7 @@
 
             {{-- Diagnóstico --}}
             @if($registro->diagnostico)
-            <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl p-6">
+            <div data-offline-if="diagnostico" class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl p-6">
                 <h2 class="text-xl font-bold text-gray-800 mb-3 flex items-center gap-3">
                     <span class="w-9 h-9 bg-gradient-to-br from-purple-600 to-purple-800 rounded-xl flex items-center justify-center shadow">
                         <i class="fa-solid fa-stethoscope text-white text-sm"></i>
@@ -176,14 +176,14 @@
                     Diagnóstico Veterinario
                 </h2>
                 <div class="p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
-                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $registro->diagnostico }}</p>
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap"><span data-offline-owner="salud" data-offline-field="diagnostico">{{ $registro->diagnostico }}</span></p>
                 </div>
             </div>
             @endif
 
             {{-- Observaciones --}}
             @if($registro->observaciones)
-            <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl p-6">
+            <div data-offline-if="observaciones" class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl p-6">
                 <h2 class="text-xl font-bold text-gray-800 mb-3 flex items-center gap-3">
                     <span class="w-9 h-9 bg-gradient-to-br from-orange-600 to-orange-800 rounded-xl flex items-center justify-center shadow">
                         <i class="fa-solid fa-clipboard text-white text-sm"></i>
@@ -191,7 +191,7 @@
                     Observaciones
                 </h2>
                 <div class="p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
-                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap">{{ $registro->observaciones }}</p>
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap"><span data-offline-owner="salud" data-offline-field="observaciones">{{ $registro->observaciones }}</span></p>
                 </div>
             </div>
             @endif
@@ -212,32 +212,32 @@
                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
                         <span class="text-gray-500">Aplicación</span>
                         <span class="font-bold text-gray-800">
-                            {{ $registro->fecha_aplicacion?->format('d/m/Y') ?? '—' }}
+                            <span data-offline-owner="salud" data-offline-field="fecha_aplicacion">{{ $registro->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</span>
                         </span>
                     </div>
                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
                         <span class="text-gray-500">Próxima dosis</span>
                         <span class="font-bold {{ $registro->alerta_proxima ? 'text-red-600' : 'text-gray-800' }}">
-                            {{ $registro->proxima_aplicacion?->format('d/m/Y') ?? '—' }}
+                            <span data-offline-owner="salud" data-offline-field="proxima_aplicacion">{{ $registro->proxima_aplicacion?->format('d/m/Y') ?? '—' }}</span>
                         </span>
                     </div>
                     @if($registro->proxima_aplicacion)
-                    <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                    <div data-offline-if="proxima_aplicacion" class="flex justify-between items-center py-2 border-b border-gray-100">
                         <span class="text-gray-500">Estado dosis</span>
                         <span class="font-semibold {{ $registro->alerta_proxima ? 'text-red-600' : 'text-green-700' }}">
-                            {{ $registro->dias_para_proxima }}
+                            <span data-offline-owner="salud" data-offline-field="dias_para_proxima">{{ $registro->dias_para_proxima }}</span>
                         </span>
                     </div>
                     @endif
                     <div class="flex justify-between items-center py-2 border-b border-gray-100">
                         <span class="text-gray-500">Días carencia</span>
-                        <span class="font-bold text-gray-800">{{ $registro->dias_carencia ?? 0 }} días</span>
+                        <span class="font-bold text-gray-800"><span data-offline-owner="salud" data-offline-field="dias_carencia">{{ $registro->dias_carencia ?? 0 }}</span> días</span>
                     </div>
                     @if($registro->fin_carencia)
-                    <div class="flex justify-between items-center py-2">
+                    <div data-offline-if="fin_carencia" class="flex justify-between items-center py-2">
                         <span class="text-gray-500">Fin de carencia</span>
                         <span class="font-bold {{ $registro->en_carencia ? 'text-red-600' : 'text-green-700' }}">
-                            {{ $registro->fin_carencia->format('d/m/Y') }}
+                            <span data-offline-owner="salud" data-offline-field="fin_carencia">{{ $registro->fin_carencia->format('d/m/Y') }}</span>
                         </span>
                     </div>
                     @endif
@@ -278,7 +278,7 @@
     <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
             <h2 class="text-lg font-bold text-gray-800">
-                📜 Otros registros de {{ $registro->animal->nombre ?? $registro->animal->codigo }}
+                📜 Otros registros de <span data-offline-owner="salud" data-offline-field="animal_nombre">{{ $registro->animal->nombre ?? $registro->animal->codigo }}</span>
             </h2>
         </div>
         <div class="overflow-x-auto">
@@ -293,17 +293,17 @@
                         <th class="px-4 py-2 text-center">Ver</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody data-offline-collection="salud" data-offline-history class="bg-white divide-y divide-gray-200">
                     @foreach($historialAnimal as $h)
                     @php $ec=['completado'=>'bg-green-100 text-green-800','en_tratamiento'=>'bg-orange-100 text-orange-800','pendiente'=>'bg-yellow-100 text-yellow-800','cancelado'=>'bg-gray-100 text-gray-800']; @endphp
                     <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2 font-mono text-gray-700 text-xs">{{ $h->codigo }}</td>
-                        <td class="px-4 py-2 text-gray-700">{{ \App\Models\Salud::getTipos()[$h->tipo] ?? $h->tipo }}</td>
-                        <td class="px-4 py-2 text-gray-800">{{ $h->nombre_producto }}</td>
-                        <td class="px-4 py-2 text-gray-700">{{ $h->fecha_aplicacion?->format('d/m/Y') }}</td>
+                        <td class="px-4 py-2 font-mono text-gray-700 text-xs"><span data-offline-owner="salud" data-offline-field="codigo">{{ $h->codigo }}</span></td>
+                        <td class="px-4 py-2 text-gray-700"><span data-offline-owner="salud" data-offline-field="tipo">{{ \App\Models\Salud::getTipos()[$h->tipo] ?? $h->tipo }}</span></td>
+                        <td class="px-4 py-2 text-gray-800"><span data-offline-owner="salud" data-offline-field="nombre_producto">{{ $h->nombre_producto }}</span></td>
+                        <td class="px-4 py-2 text-gray-700"><span data-offline-owner="salud" data-offline-field="fecha_aplicacion">{{ $h->fecha_aplicacion?->format('d/m/Y') }}</span></td>
                         <td class="px-4 py-2">
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $ec[$h->estado] ?? 'bg-gray-100 text-gray-800' }}">
-                                {{ \App\Models\Salud::getEstados()[$h->estado] ?? $h->estado }}
+                                <span data-offline-owner="salud" data-offline-field="estado">{{ \App\Models\Salud::getEstados()[$h->estado] ?? $h->estado }}</span>
                             </span>
                         </td>
                         <td class="px-4 py-2 text-center">

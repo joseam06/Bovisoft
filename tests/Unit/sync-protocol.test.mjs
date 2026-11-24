@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {acknowledge, applyDelta, prepareOperation, nextOperation, missingParents, retryAfterMs, backoffMs, sameActor} from '../../resources/js/sync/protocol.js';
+import {acknowledge, applyDelta, prepareOperation, nextOperation, missingParents, retryAfterMs, backoffMs, sameActor, modules} from '../../resources/js/sync/protocol.js';
 
 const farm='11111111-1111-4111-8111-111111111111', animal='22222222-2222-4222-8222-222222222222', operation='33333333-3333-4333-8333-333333333333';
 const op=()=>({operation_uuid:operation,record_uuid:farm,module:'fincas',type:'create',data:{nombre:'Ficticia'},status:'pending',dependsOn:[]});
-const state=()=>({base:{fincas:{},animales:{}},queue:[op()]});
+const empty=()=>Object.fromEntries(Object.keys(modules).map(m=>[m,{}]));
+const state=()=>({base:empty(),queue:[op()]});
 const reply=()=>({protocol:1,account_id:1,operation_uuid:operation,record_uuid:farm,module:'fincas',status:201,record:{record_uuid:farm,id:1,version:1,deleted:false}});
-const delta=()=>({account_id:1,cursor:'cursor',has_more:false,changes:[],valid:{fincas:[],animales:[]},references:{potreros:[],tipos:{},razas:{}}});
+const delta=()=>({account_id:1,cursor:'cursor',has_more:false,changes:[],valid:Object.fromEntries(Object.keys(modules).map(m=>[m,[]])),references:{potreros:[],tipos:{},razas:{}}});
 
 test('only a matching account, operation and version can consume a pending write',()=>{
     for(const invalid of [{account_id:2},{operation_uuid:animal},{record_uuid:animal},{status:200},{record:{...reply().record,version:2}},{protocol:0}]){

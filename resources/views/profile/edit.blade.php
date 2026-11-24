@@ -166,6 +166,7 @@
         <form method="POST" action="{{ route('profile.update') }}" class="space-y-5">
             @csrf
             @method('PATCH')
+<input type="hidden" name="base_version" value="{{ old('base_version', $offlineProfile->version ?? 1) }}">
 
             <div>
                 <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">

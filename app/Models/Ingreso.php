@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ingreso extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Models\Concerns\SyncsWorkspace, \App\Models\Concerns\AuthorizesFinance;
 
     protected $table = 'ingresos';
 

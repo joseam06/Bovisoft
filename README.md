@@ -9,7 +9,7 @@
 
 ## BoviSoft sin conexión
 
-Después del login con Internet, BoviSoft guarda y actualiza automáticamente los datos autorizados en segundo plano. Fincas y Animales funcionan desde sus pantallas y rutas habituales, sin panel de preparación, descarga manual, clave adicional ni límite de siete días. Incluyen CRUD offline persistente, eliminaciones que pueden deshacerse antes del envío, sincronización automática y conflictos por versión.
+Después del login con Internet, BoviSoft guarda y actualiza automáticamente los datos autorizados en segundo plano. Fincas, Animales, Potreros, Producción de leche y Salud funcionan desde sus pantallas y rutas habituales, sin panel de preparación, descarga manual, clave adicional ni límite de siete días. Incluyen CRUD offline persistente, eliminaciones que pueden deshacerse antes del envío, sincronización automática y conflictos por versión. Las [fases 5.2/5.3](docs/offline-phase-5-2-5-3.md) integran las acciones financieras existentes (incluidas ventas/reversiones), Alertas, los seis Reportes y el nombre del perfil; el Dashboard refleja los cambios locales. Las operaciones sensibles de cuenta, mapas externos y la descarga PDF de DomPDF siguen online.
 
 Consulta [el alcance, la ampliación por módulos y las pruebas locales](docs/offline-workspace.md). La demostración utiliza datos ficticios y una base temporal separada; no se despliega ni conecta a producción.
 

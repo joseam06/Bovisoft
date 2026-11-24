@@ -49,7 +49,7 @@
                     {{ $i >= 3 && $s['val'] > 0 ? 'ring-2 ring-yellow-400' : '' }}
                     {{ $i === 4 && $s['val'] > 0 ? 'ring-red-400' : '' }}">
             <i class="fa-solid {{ $s['icon'] }} {{ $s['color'] }} text-2xl mb-2"></i>
-            <p class="text-3xl font-bold {{ $s['color'] }}">{{ $s['val'] }}</p>
+            <p class="text-3xl font-bold {{ $s['color'] }}"><span data-offline-health-stat="{{ ['total','vacunaciones','tratamientos','proximas_7dias','en_carencia'][$loop->index] }}">{{ $s['val'] }}</span></p>
             <p class="text-gray-600 text-xs font-medium mt-1">{{ $s['label'] }}</p>
         </div>
         @endforeach
@@ -76,7 +76,7 @@
                 </div>
                 @if(isset($cat['count']) && $cat['count'] > 0)
                 <span class="bg-white backdrop-blur-sm rounded-full px-4 py-2 text-lg font-bold text-gray-700 shadow-md border-2 border-gray-200 group-hover:scale-110 transition-transform">
-                    {{ $cat['count'] }}
+                    <span data-offline-health-category="{{ $cat['codigo'] }}">{{ $cat['count'] }}</span>
                 </span>
                 @endif
             </div>

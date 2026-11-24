@@ -11,15 +11,15 @@ class ProductionJournal
     {
         $nested = DB::transactionLevel() > 0;
 
-        return DB::transaction(function () use ($userId, $callback, $consistentRead, $nested) {
-            if ($consistentRead && ! $nested && DB::getDriverName() === 'pgsql') {
+        return app(WorkspaceJournal::class)->transaction($userId, fn () => DB::transaction(function () use ($userId, $callback, $consistentRead, $nested) {
+            if ($consistentRead && ! $nested && DB::transactionLevel() === 1 && DB::getDriverName() === 'pgsql') {
                 DB::statement('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
             }
             DB::table('production_sync_heads')->insertOrIgnore(['user_id' => $userId, 'sequence' => 0]);
             $head = DB::table('production_sync_heads')->where('user_id', $userId)->lockForUpdate()->first();
 
             return $callback((int) $head->sequence);
-        }, 5);
+        }, 5));
     }
 
     public function record(Produccion $record, string $action = 'upsert'): void
@@ -31,6 +31,7 @@ class ProductionJournal
             'record_uuid' => $record->client_uuid, 'action' => $action,
             'payload' => json_encode(self::serialize($record), JSON_THROW_ON_ERROR), 'created_at' => now(),
         ]);
+        app(WorkspaceJournal::class)->record($record);
     }
 
     public function nextCode(): string

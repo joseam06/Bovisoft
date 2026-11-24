@@ -12,6 +12,18 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
+    public function save(array $options = [])
+    {
+        if (! $this->exists || ! $this->isDirty('name')) return parent::save($options);
+        return app(\App\Services\WorkspaceJournal::class)->transaction((int) $this->id, function () use ($options) {
+            $saved = parent::save($options);
+            if ($saved) {
+                $profile = WorkspaceProfile::firstOrNew(['user_id'=>$this->id]);
+                $profile->name = $this->name;$profile->save();
+            }
+            return $saved;
+        });
+    }
     use HasApiTokens;
 
     /** @use HasFactory<\Database\Factories\UserFactory> */

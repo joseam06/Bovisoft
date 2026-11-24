@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class Salud extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Models\Concerns\SyncsWorkspace;
 
     protected $table = 'salud';
 

@@ -2,6 +2,17 @@ const storeUrl = '/offline-store.js';
 export const storeReady = import(/* @vite-ignore */ storeUrl).then(() => window.BoviOfflineStore);
 const channel = 'BroadcastChannel' in window ? new BroadcastChannel('bovisoft-offline-security-v1') : null;
 let workerReady;
+const authPaths = new Set(['/login','/register','/forgot-password','/reset-password','/two-factor-challenge','/user/confirm-password']);
+const preparingForms = new WeakSet(), preparedForms = new WeakSet();
+function isAuthForm(form) {
+    const url=new URL(form.action,location.href);
+    return form.method.toUpperCase()==='POST' && url.origin===location.origin && authPaths.has(url.pathname);
+}
+function setAuthCsrf(form,token) {
+    let input=form.querySelector('input[name="_token"]');
+    if(!input){input=document.createElement('input');input.type='hidden';input.name='_token';form.append(input);}
+    input.value=token;
+}
 
 function notify(state) {
     window.dispatchEvent(new CustomEvent('bovi:security', { detail: state }));
@@ -129,6 +140,7 @@ async function fetchIdentity(signal) {
     }
     const state = await store.transition(session.account_id, response.headers.get('X-Bovisoft-Binding'), confirmedLogout ? 'confirmed' : false);
     if (state.changed) { channel?.postMessage({ type: 'SECURITY', state }); notify(state); }
+    for(const form of document.forms)if(isAuthForm(form))setAuthCsrf(form,session.csrf_token);
     return session;
 }
 
@@ -136,13 +148,14 @@ export function identity(signal) {
     return navigator.locks ? navigator.locks.request('bovisoft-offline-session', signal ? { signal } : {}, () => fetchIdentity(signal)) : fetchIdentity(signal);
 }
 
-export async function logout(csrf) {
+export async function logout() {
     const lockedUrl = '/dashboard';
     await broadcastTransition(true);
-    if (navigator.onLine && csrf) {
+    if (navigator.onLine) {
         try {
-            const response = await fetch('/logout', { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-TOKEN': csrf, Accept: 'application/json' } });
-            if (response.ok) { await identity(); location.assign('/'); return; }
+            // Reconcile using the current server session and the same cross-tab
+            // coordinator as deferred offline logout, not the page's old token.
+            await identity(); location.assign('/'); return;
         } catch { /* The persistent local lock remains in force. */ }
     }
     location.assign(lockedUrl);
@@ -150,10 +163,33 @@ export async function logout(csrf) {
 
 document.addEventListener('submit', event => {
     const form = event.target;
+    if(isAuthForm(form)){
+        if(preparedForms.delete(form))return;
+        event.preventDefault();event.stopImmediatePropagation();
+        if(preparingForms.has(form))return;
+        preparingForms.add(form);
+        const submitter=event.submitter,disabled=submitter?.disabled;
+        if(submitter)submitter.disabled=true;
+        (async()=>{
+            // A login GET may race with logout in another tab. Reconcile first,
+            // then renew only CSRF in memory before the single native POST.
+            // Passwords are never read, copied, fetched or persisted here.
+            const session=await identity();
+            if(typeof session.csrf_token!=='string'||!session.csrf_token)throw new Error('No se pudo verificar la sesión de acceso.');
+            setAuthCsrf(form,session.csrf_token);
+            form.querySelector('[data-auth-session-error]')?.remove();
+            if(submitter)submitter.disabled=disabled;
+            preparedForms.add(form);form.requestSubmit(submitter||undefined);
+        })().catch(failure=>{
+            let message=form.querySelector('[data-auth-session-error]');
+            if(!message){message=document.createElement('p');message.dataset.authSessionError='';message.setAttribute('role','alert');message.className='text-sm font-semibold text-red-200';form.prepend(message);}
+            message.textContent=failure.message;
+        }).finally(()=>{preparedForms.delete(form);preparingForms.delete(form);if(submitter)submitter.disabled=disabled;});
+        return;
+    }
     if (new URL(form.action, location.href).pathname !== '/logout') return;
     event.preventDefault();
-    const csrf = new FormData(form).get('_token');
-    logout(csrf).catch(() => location.assign('/dashboard'));
+    logout().catch(() => location.assign('/dashboard'));
 }, true);
 
 window.addEventListener('pagehide', () => {

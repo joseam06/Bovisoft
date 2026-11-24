@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>{{ $titulo }}</title>
+    <title><span data-report-stat="titulo">{{ $titulo }}</span></title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -191,7 +191,7 @@
     {{-- Footer fijo en todas las paginas --}}
     <div class="footer">
         <span class="footer-left">
-            BoviSoft &mdash; Sistema de Gestion Ganadera &mdash; Generado el {{ $generadoEl }}
+            BoviSoft &mdash; Sistema de Gestion Ganadera &mdash; Generado el <span data-report-stat="generadoEl">{{ $generadoEl }}</span>
         </span>
         <span class="footer-right">
             Pagina <span class="page">{PAGE_NUM}</span> de <span class="page">{PAGE_COUNT}</span>
@@ -206,7 +206,7 @@
                 
                 {{-- Logo --}}
 <td class="header-logo-cell">
-    <img src="{{ str_replace('\\', '/', public_path('images/logowhite.png')) }}" alt="BoviSoft" class="header-logo" />
+    <img src="{{ 'data:image/png;base64,'.base64_encode(file_get_contents(public_path('images/logowhite.png'))) }}" alt="BoviSoft" class="header-logo" />
 </td>
 
 
@@ -218,12 +218,12 @@
 
                 {{-- Info del reporte --}}
                 <td class="header-info-cell">
-                    <div class="header-titulo">{{ $titulo }}</div>
+                    <div class="header-titulo"><span data-report-stat="titulo">{{ $titulo }}</span></div>
                     <div class="header-meta">
-                        <strong>Finca:</strong> {{ $fincaNombre }}<br>
-                        <strong>Propietario:</strong> {{ $propietario }}<br>
-                        <strong>Periodo:</strong> {{ $periodo }}<br>
-                        <strong>Generado por:</strong> {{ $usuarioNombre }}
+                        <strong>Finca:</strong> <span data-report-stat="fincaNombre">{{ $fincaNombre }}</span><br>
+                        <strong>Propietario:</strong> <span data-report-stat="propietario">{{ $propietario }}</span><br>
+                        <strong>Periodo:</strong> <span data-report-stat="periodo">{{ $periodo }}</span><br>
+                        <strong>Generado por:</strong> <span data-report-stat="usuarioNombre">{{ $usuarioNombre }}</span>
                     </div>
                 </td>
             </tr>

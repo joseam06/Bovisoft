@@ -11,6 +11,10 @@ class OfflineBrowserIdentity
     public function handle(Request $request, Closure $next)
     {
         $response = $next($request);
+        if($request->is('login','logout','register','forgot-password','reset-password*','two-factor-challenge','user/confirm-password','auth/*','offline/session')){
+            $response->headers->set('Cache-Control','no-store, private');
+            $response->headers->set('Pragma','no-cache');
+        }
         if ($request->hasSession()) {
             $account = $request->user()?->getAuthIdentifier();
             if (! $request->session()->has('offline_binding') || $request->session()->get('offline_account') !== $account) {

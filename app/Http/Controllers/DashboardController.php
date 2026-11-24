@@ -12,6 +12,14 @@ class DashboardController extends Controller
     public function index()
     {
         $userId = Auth::id();
+        $inventorySummary = [
+            'fincas' => \App\Models\Finca::delUsuario($userId)->count(),
+            'potreros' => \App\Models\Potrero::where('user_id', $userId)->whereHas('finca', fn ($q) => $q->delUsuario($userId))->count(),
+            'ocupacion' => Animal::where('user_id', $userId)->where('estado', 'activo')->whereHas('potrero', fn ($q) => $q->where('user_id', $userId))->count(),
+            'salud' => \App\Models\Salud::where('user_id', $userId)->whereHas('finca', fn ($q) => $q->delUsuario($userId))->count(),
+            'carencia' => \App\Models\Salud::where('user_id', $userId)->whereHas('finca', fn ($q) => $q->delUsuario($userId))->where('fin_carencia', '>=', Carbon::today())->count(),
+            'proximas' => \App\Models\Salud::where('user_id', $userId)->whereHas('finca', fn ($q) => $q->delUsuario($userId))->whereBetween('proxima_aplicacion', [Carbon::today(), Carbon::today()->addDays(7)])->count(),
+        ];
         $hoy    = Carbon::today();
 
         // Alertas
@@ -37,7 +45,7 @@ class DashboardController extends Controller
 
         return view('dashboard', compact(
             'alertasDashboard', 'totalAlertas',
-            'produccionMes', 'chartProduccion', 'chartDiasLabel'
+            'produccionMes', 'chartProduccion', 'chartDiasLabel', 'inventorySummary'
         ));
     }
 }
