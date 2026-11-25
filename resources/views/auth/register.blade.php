@@ -108,7 +108,6 @@
                         </button>
                     </div>
                 </form>
-                </form>
 
                 {{-- Separador Google --}}
                 <div class="flex items-center gap-3 my-5">
@@ -117,7 +116,7 @@
                     <div class="flex-1 h-px bg-white/20"></div>
                 </div>
 
-                <a href="{{ route('auth.google') }}"
+                <a href="{{ route('auth.google.register') }}"
                    class="flex items-center justify-center gap-3 w-full py-3 px-4
                           bg-white hover:bg-gray-50 text-gray-800 font-semibold
                           rounded-xl shadow-md hover:shadow-lg
@@ -132,11 +131,6 @@
                     Continúa con Google
                 </a>
 
-            </div>
-        </div>
-    </div>
-</body>
-</html>
             </div>
         </div>
     </div>

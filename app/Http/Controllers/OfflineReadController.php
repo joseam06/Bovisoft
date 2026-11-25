@@ -23,14 +23,15 @@ class OfflineReadController extends Controller
 
     public function session(Request $request)
     {
+        $recordsAllowed=$request->user()?->canAccessRecords()??false;
         return response()->json([
             'account_id' => $request->user()?->id,
-            'profile' => $request->user() ? ['name' => $request->user()->name, 'email' => $request->user()->email, 'photo_url' => $request->user()->foto_url] : null,
+            'profile' => $request->user() ? ['name' => $request->user()->name, 'photo_url' => $request->user()->foto_url]+$request->user()->accountStatus() : null,
             'csrf_token' => csrf_token(),
             'server_time' => now()->getTimestampMs(),
-            'workspace_enabled' => (bool) config('offline.workspace.enabled'),
-            'production_enabled' => (bool) config('offline.production.enabled'),
-            'fincas' => $request->user() ? Finca::delUsuario($request->user()->id)->orderBy('nombre')->get(['id', 'nombre', 'activa']) : [],
+            'workspace_enabled' => (bool) config('offline.workspace.enabled') && $recordsAllowed,
+            'production_enabled' => (bool) config('offline.production.enabled') && $recordsAllowed,
+            'fincas' => $recordsAllowed ? Finca::delUsuario($request->user()->id)->orderBy('nombre')->get(['id', 'nombre', 'activa']) : [],
         ])->header('Cache-Control', 'no-store, private');
     }
 

@@ -58,14 +58,6 @@ Route::get('/api/fincas/{finca}/potreros', [PotreroController::class, 'disponibl
     ->name('api.fincas.potreros');
 
 
-// Perfil de usuario
-Route::get('/perfil', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-Route::patch('/perfil', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-Route::patch('/perfil/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
-Route::post('/perfil/foto', [App\Http\Controllers\ProfileController::class, 'updatePhoto'])->name('profile.photo');
-Route::delete('/perfil/foto', [App\Http\Controllers\ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
-
-
 // Rutas de Animales
 Route::resource('animales', AnimalController::class);
    
@@ -189,6 +181,7 @@ Route::prefix('reportes')->name('reportes.')->group(function () {
 // Autenticación con Google (Socialite)
 use App\Http\Controllers\SocialiteController;
 
+Route::get('/auth/google/register', [SocialiteController::class,'registerWithGoogle'])->middleware('throttle:account-security')->name('auth.google.register');
 Route::get('/auth/google',          [SocialiteController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
@@ -200,3 +193,23 @@ Route::post('/logout', function () {
     if (request()->expectsJson()) return response()->noContent()->header('Cache-Control','no-store, private');
     return redirect('/');
 })->name('logout');
+
+// Unverified new users can correct their address without accessing records.
+Route::middleware(['auth:sanctum',config('jetstream.auth_session')])->group(function(){
+// Perfil de usuario
+Route::get('/perfil', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+Route::patch('/perfil', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+Route::patch('/perfil/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->middleware('throttle:account-security')->name('profile.password');
+Route::post('/perfil/foto', [App\Http\Controllers\ProfileController::class, 'updatePhoto'])->name('profile.photo');
+Route::delete('/perfil/foto', [App\Http\Controllers\ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
+
+
+
+Route::post('/perfil/seguridad/correo', [App\Http\Controllers\AccountSecurityController::class,'email'])->middleware('throttle:account-security')->name('account.email.request');
+Route::get('/perfil/seguridad/correo/{user}/{nonce}', [App\Http\Controllers\AccountSecurityController::class,'confirmEmail'])->middleware(['signed','throttle:account-security'])->name('account.email.confirm');
+Route::post('/perfil/seguridad/google/vincular', [SocialiteController::class,'link'])->middleware('throttle:account-security')->name('account.google.link');
+Route::post('/perfil/seguridad/google/confirmar', [App\Http\Controllers\AccountSecurityController::class,'confirmGoogle'])->middleware('throttle:account-security')->name('account.google.confirm');
+Route::post('/perfil/seguridad/google/reauth', [SocialiteController::class,'reauthenticate'])->middleware('throttle:account-security')->name('account.google.reauth');
+Route::delete('/perfil/seguridad/google', [App\Http\Controllers\AccountSecurityController::class,'unlinkGoogle'])->middleware('throttle:account-security')->name('account.google.unlink');
+
+});

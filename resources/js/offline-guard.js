@@ -6,7 +6,7 @@ const authPaths = new Set(['/login','/register','/forgot-password','/reset-passw
 const preparingForms = new WeakSet(), preparedForms = new WeakSet();
 function isAuthForm(form) {
     const url=new URL(form.action,location.href);
-    return form.method.toUpperCase()==='POST' && url.origin===location.origin && authPaths.has(url.pathname);
+    return form.method.toUpperCase()==='POST' && url.origin===location.origin && (authPaths.has(url.pathname)||url.pathname.startsWith('/perfil/seguridad/')||url.pathname==='/perfil/password'||url.pathname==='/email/verification-notification');
 }
 function setAuthCsrf(form,token) {
     let input=form.querySelector('input[name="_token"]');

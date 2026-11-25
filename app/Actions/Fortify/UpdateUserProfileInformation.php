@@ -23,18 +23,11 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
         ])->validateWithBag('updateProfileInformation');
 
-        if (isset($input['photo'])) {
-            $user->updateProfilePhoto($input['photo']);
-        }
-
-        if ($input['email'] !== $user->email &&
-            $user instanceof MustVerifyEmail) {
-            $this->updateVerifiedUser($user, $input);
-        } else {
-            $user->forceFill([
-                'name' => $input['name'],
-                'email' => $input['email'],
-            ])->save();
+        if(User::normalizeEmail($input['email'])!==$user->email_identity)throw \Illuminate\Validation\ValidationException::withMessages(['email'=>'Utiliza Cambiar correo electrónico en Seguridad y acceso a la cuenta. El correo anterior se conserva hasta confirmar el nuevo.']);
+        if (isset($input['photo'])) $user->updateProfilePhoto($input['photo']);
+        if($input['name']!==$user->name){
+            $profile=\App\Models\WorkspaceProfile::firstOrCreate(['user_id'=>$user->id],['name'=>$user->name]);
+            app(\App\Services\WorkspaceRecords::class)->write($user,'perfil','update',['name'=>$input['name'],'base_version'=>$input['base_version']??null],$profile);
         }
     }
 
@@ -43,14 +36,4 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
      *
      * @param  array<string, string>  $input
      */
-    protected function updateVerifiedUser(User $user, array $input): void
-    {
-        $user->forceFill([
-            'name' => $input['name'],
-            'email' => $input['email'],
-            'email_verified_at' => null,
-        ])->save();
-
-        $user->sendEmailVerificationNotification();
-    }
 }

@@ -10,6 +10,7 @@ function chart(canvas,labels,values,type){
     new Chart(canvas,{type,data:{labels,datasets:[{label:type==='doughnut'?'Animales':'Litros',data:values,backgroundColor:background,borderColor:type==='doughnut'?colors:'#b91c1c',borderWidth:2,borderRadius:type==='bar'?8:0}]},options:{responsive:true,maintainAspectRatio:false,animation:false}});
 }
 export function updateDashboard(main,model,data){
+    main.querySelectorAll('[data-unverified-account-warning]').forEach(n=>n.hidden=!!data.profile?.email_verified);
     const complete=data.schema>=3&&['fincas','animales','potreros','produccion','salud'].every(m=>data.references.complete_modules?.includes(m));
     if(!complete)return;
     const rows=module=>Object.values(model[module]).filter(r=>!r.deleted),animals=rows('animales'),farms=rows('fincas'),paddocks=rows('potreros'),production=rows('produccion'),health=rows('salud'),today=localDate();

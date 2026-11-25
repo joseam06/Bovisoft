@@ -230,7 +230,7 @@ function startWorkspace() {
                 try{const img=document.createElement('img');img.src=originals[i].toDataURL();img.alt='Gráfica guardada';img.className=canvas.className;canvas.replaceWith(img);}catch{canvas.remove();}
             });
         }
-        clone.querySelectorAll('script,meta,input[name="_token"],input[type="password"],input[name="photo"],input[type="file"]').forEach(node=>node.remove());
+        clone.querySelectorAll('script,meta,input[name="_token"],input[type="password"],input[name="photo"],input[type="file"],[data-online-sensitive]').forEach(node=>node.remove());
         clone.querySelectorAll('*').forEach(node=>{
             for(const attribute of [...node.attributes])if(attribute.name.startsWith('on'))node.removeAttribute(attribute.name);
             if(node.tagName==='IMG'&&node.src&&!node.src.startsWith('data:')&&new URL(node.src,location.href).origin!==location.origin)node.remove();
@@ -238,6 +238,7 @@ function startWorkspace() {
         return {html:clone.innerHTML,title:doc.title,path,module:element.dataset.offlineModule||'',uuid:element.dataset.offlineRecord||'',version:Number(element.dataset.offlineVersion||0)};
     }
     async function cacheCurrentPage() {
+        if(location.pathname.startsWith('/perfil/seguridad/')||location.pathname==='/perfil/password')return;
         if(!data||!key||localView||shell||!/^\/(dashboard|fincas|animales|potreros|produccion|salud|finanzas|perfil|alertas|reportes)(\/|$)/.test(location.pathname))return;
         const page=extractPage(document,location.pathname+location.search,true);
         if(!page)return;
@@ -453,6 +454,7 @@ function startWorkspace() {
     }
     function enableOfflineForm() {
         if(connected()||!data)return;
+        if(location.pathname==='/perfil')hydrateProfile();
         const email=main.querySelector('[name=email]');if(email)email.readOnly=true;
         main.querySelectorAll('form').forEach(form=>{
             if(form.querySelector('[name="finca_id"]'))populatePotreros(form);
@@ -467,7 +469,12 @@ function startWorkspace() {
         const row=Object.values(projected().perfil)[0];if(!row)return;
         const name=main.querySelector('[name=name]');if(name&&!dirtyForms.has(name.form))name.value=row.name;
         const version=name?.form.querySelector('[name=base_version]');if(version)version.value=row.version;
-        const email=main.querySelector('[name=email]');if(email){email.value=data.profile.email;email.readOnly=!connected();email.title='El correo solo se cambia con conexión.';}
+        const email=main.querySelector('[name=email]');if(email){email.value=data.profile.email;email.readOnly=true;email.title='Cambia el correo desde Seguridad y acceso a la cuenta.';}
+        const known=(key,yes,no)=>typeof data.profile[key]==='boolean'?(data.profile[key]?yes:no):'No disponible en esta copia';
+        for(const [selector,value]of [['[data-account-security-email]',data.profile.email],['[data-account-security-verified]',known('email_verified','Verificado','Sin verificar')],['[data-account-security-google]',known('google_linked','Vinculado','Sin vincular')],['[data-account-security-password]',known('has_user_password','Establecida','Pendiente de establecer o confirmar')]])main.querySelectorAll(selector).forEach(n=>n.textContent=value);
+        main.querySelectorAll('[data-offline-security-note]').forEach(n=>n.hidden=connected()&&!!main.querySelector('[data-online-sensitive]'));
+        main.querySelectorAll('[data-online-security-link]').forEach(n=>n.hidden=!connected()||!!main.querySelector('[data-online-sensitive]'));
+        main.querySelectorAll('[data-online-sensitive]').forEach(n=>n.hidden=!connected());
         main.querySelectorAll('button').forEach(button=>{if(button.querySelector('.fa-camera,.fa-folder-open'))button.dataset.onlineOnly='true';});
     }
     async function queueValues(module,row,values) {
@@ -818,6 +825,7 @@ function startWorkspace() {
                 await assertActor(run);
                 if(String(verified.account_id)!==run.accountId)throw syncError('BOVI_RUN_SUPERSEDED','La cuenta cambió.');
                 session=verified;
+                await change(working=>{working.profile={...working.profile,...verified.profile};});
                 const device=data.deviceUuid;
                 renderControls();
                 const waitingForParents=new Set();
@@ -847,6 +855,7 @@ function startWorkspace() {
                     const applied=await change(working=>{applyDelta(working,delta,run.accountId);return true;},revision);
                     if(!applied){delta={has_more:true};continue;}
                     if(delta.changes.length && /^\/(dashboard|fincas|animales|potreros|produccion|salud|finanzas|perfil|alertas|reportes)(\/|$)/.test(location.pathname)){
+                        if(location.pathname==='/perfil'&&!localView&&!shell){hydrateProfile();continue;}
                         if(location.pathname==='/dashboard'&&!localView&&!shell){hydrateCollection('/dashboard');continue;}
                         const form=main.querySelector('form'), nativeEdit=!localView&&!shell&&/\/edit$/.test(location.pathname);
                         if(nativeEdit){
@@ -911,6 +920,7 @@ function startWorkspace() {
     },true);
     document.addEventListener('click',event=>{
         const target = event.target.closest('a,button'); if(!target) return;
+        if(target.closest('[data-online-sensitive]')&&!connected()){event.preventDefault();event.stopImmediatePropagation();notice('Esta acción de seguridad requiere Internet. Puedes seguir consultando tu perfil y editar el nombre.');return;}
         if(target.dataset.reportKind&&key&&(!connected()||localView)){event.preventDefault();event.stopImmediatePropagation();hydrateReports(main,projected(),navigate);target.onclick?.(event);return;}
         if(target.dataset.undo) undo(target.dataset.undo).catch(f=>error(f.message));
         if(target.dataset.resolve) resolve(target.dataset.id,target.dataset.resolve).catch(f=>error(f.message));
@@ -956,7 +966,7 @@ function startWorkspace() {
                 else if(JSON.stringify(profile)!==JSON.stringify(data.profile))await mutate(working=>{working.profile=profile;});
                 applyProfile(data.profile);
             }
-            if(restored){await seedCurrentRecord();await cacheCurrentPage();if(shell||data.queue.length){localView=true;renderRoute(false);}renderControls();schedule(0);}
+            if(restored){await seedCurrentRecord();await cacheCurrentPage();if(shell||data.queue.length&&!(connected()&&location.pathname==='/perfil')){localView=true;renderRoute(false);}renderControls();if(location.pathname==='/perfil')hydrateProfile();schedule(0);}
             if(connected()&&session?.account_id&&session.workspace_enabled){
                 if(!restored)await automaticDownload();
                 else refreshShell().catch(f=>error(f.message));

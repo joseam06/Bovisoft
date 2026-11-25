@@ -3,6 +3,13 @@
 @section('title', 'Dashboard')
 
 @section('content')
+@if(!auth()->user()->hasVerifiedEmail())
+<aside data-unverified-account-warning role="status" class="mb-5 p-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-950 text-sm">
+    Tu correo aún no está verificado. Podrías perder acceso si olvidas tu contraseña. Tus registros siguen disponibles durante la transición.
+    <a href="{{ route('profile.edit') }}#seguridad" class="font-semibold underline inline-block py-2">Proteger mi cuenta en Mi perfil</a>
+</aside>
+@endif
+
 
 <!-- Mensajes de éxito -->
 @if(session('success'))

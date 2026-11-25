@@ -12,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->web(append: [\App\Http\Middleware\OfflineBrowserIdentity::class]);
+        $middleware->alias(['verified'=>\App\Http\Middleware\VerifiedOrLegacyAccount::class]);
+        $middleware->web(append: [\App\Http\Middleware\AuthenticationNavigation::class,\App\Http\Middleware\AccountSessionVersion::class,\App\Http\Middleware\OfflineBrowserIdentity::class]);
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {

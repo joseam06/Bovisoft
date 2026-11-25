@@ -11,7 +11,7 @@ class OfflineBrowserIdentity
     public function handle(Request $request, Closure $next)
     {
         $response = $next($request);
-        if($request->is('login','logout','register','forgot-password','reset-password*','two-factor-challenge','user/confirm-password','auth/*','offline/session')){
+        if($request->is('login','logout','register','forgot-password','reset-password*','two-factor-challenge','user/confirm-password','auth/*','offline/session','email/*','perfil','perfil/password','perfil/seguridad/*','user/profile*','user/password*')){
             $response->headers->set('Cache-Control','no-store, private');
             $response->headers->set('Pragma','no-cache');
         }

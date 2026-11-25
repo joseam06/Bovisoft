@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,10 +10,35 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
+    protected $attributes=['legacy_email_access'=>false,'password_login_enabled'=>true,'credentials_version'=>1];
+    private bool $confirmedEmailChange = false;
+
+    public static function normalizeEmail(string $email): string { return mb_strtolower(trim($email)); }
+    public function hasOwnPassword(): bool { return $this->password_login_enabled && $this->password_set_at !== null; }
+    public function canAccessRecords(): bool { return $this->hasVerifiedEmail() || $this->legacy_email_access; }
+    public function accountStatus(): array
+    {
+        return ['email'=>$this->email,'email_verified'=>$this->hasVerifiedEmail(),'google_linked'=>$this->google_id!==null,
+            'has_user_password'=>$this->hasOwnPassword(),'legacy_email_access'=>(bool)$this->legacy_email_access];
+    }
+    public function applyConfirmedEmail(string $email): void
+    {
+        $this->confirmedEmailChange=true;
+        try{$this->forceFill(['email'=>self::normalizeEmail($email),'email_verified_at'=>now()])->save();}
+        finally{$this->confirmedEmailChange=false;}
+    }
+    public function sendEmailVerificationNotification(): void { $this->notify(new \App\Notifications\AccountVerification); }
+    public function sendPasswordResetNotification($token): void { $this->notify(new \App\Notifications\AccountPasswordReset($token)); }
+
     public function save(array $options = [])
     {
+        if($this->exists && $this->isDirty('email') && !$this->confirmedEmailChange){
+            throw \Illuminate\Validation\ValidationException::withMessages(['email'=>'Cambia tu correo desde Seguridad y acceso a la cuenta; se confirmará antes de sustituir el actual.']);
+        }
+        if(!$this->exists || $this->isDirty('email'))$this->email_identity=self::normalizeEmail($this->email);
+        if(!$this->exists && !$this->google_id && !$this->password_set_at)$this->password_set_at=now();
         if (! $this->exists || ! $this->isDirty('name')) return parent::save($options);
         return app(\App\Services\WorkspaceJournal::class)->transaction((int) $this->id, function () use ($options) {
             $saved = parent::save($options);
@@ -57,6 +82,9 @@ class User extends Authenticatable
         'remember_token',
         'two_factor_recovery_codes',
         'two_factor_secret',
+        'pending_email_token_hash',
+        'pending_email',
+        'pending_email_expires_at',
     ];
 
     /**
@@ -79,6 +107,11 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'legacy_email_access'=>'boolean',
+            'password_login_enabled'=>'boolean',
+            'password_set_at'=>'datetime',
+            'pending_email_expires_at'=>'datetime',
+            'credentials_version'=>'integer',
         ];
     }
 

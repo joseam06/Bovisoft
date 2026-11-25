@@ -81,6 +81,10 @@ self.addEventListener('fetch', event => {
     const url = new URL(request.url);
     if (url.origin !== self.location.origin) return;
     event.respondWith((async () => {
+        // about:client would otherwise become the worker script URL when fetch
+        // creates its outgoing request. Preserve the originating document.
+        const sourceClient = request.referrer === 'about:client' && event.clientId ? await self.clients.get(event.clientId) : null;
+        const network = options => fetch(request, { ...options, referrer: sourceClient?.url || request.referrer });
         const before = await store.security();
         if (url.pathname === '/logout' && request.method === 'POST') {
             const state = await store.transition(null, null, true);
@@ -88,8 +92,11 @@ self.addEventListener('fetch', event => {
         }
         // Authentication and session responses never come from Cache API or
         // the anonymous offline shell, including failed POST navigations.
-        if (/^\/(login|logout|register|forgot-password|reset-password|two-factor-challenge|user\/confirm-password|auth|offline\/session)(\/|$)/.test(url.pathname)) {
-            try {const response=await fetch(request,{cache:'no-store'});await identity(response,before);return response;}
+        if (/^\/(login|logout|register|forgot-password|reset-password|two-factor-challenge|user\/(confirm-password|profile-information|password|two-factor-authentication|two-factor-secret-key|two-factor-qr-code|two-factor-recovery-codes)|email|perfil\/(seguridad|password)|auth|offline\/session)(\/|$)/.test(url.pathname)) {
+            // Let the browser navigate redirects (including external OAuth).
+            // Following them inside the worker hides the original response and
+            // can reuse the worker's URL as the destination of a back redirect.
+            try {const response=await network({cache:'no-store',...(request.mode==='navigate'?{redirect:'manual'}:{})});await identity(response,before);return response;}
             catch(error){
                 if(request.mode==='navigate'&&request.method==='GET')return new Response('<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>BoviSoft · Acceso</title><body style="font:18px system-ui;padding:10vw;background:#7f1d1d;color:white"><h1>Se necesita conexión para acceder a la cuenta</h1><p>Los cambios pendientes de cada cuenta permanecen guardados en este dispositivo.</p><a href="/login" style="color:white">Iniciar sesión con Internet</a></body></html>',{status:503,headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store, private'}});
                 throw error;
@@ -121,7 +128,7 @@ self.addEventListener('fetch', event => {
             }
         }
         try {
-            const response = await fetch(request);
+            const response = await network();
             await identity(response, before);
             return response;
         } catch (error) {
