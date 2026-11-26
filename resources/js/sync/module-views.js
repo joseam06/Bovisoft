@@ -2,12 +2,14 @@
 // stay in workspace.js; these adapters only project downloaded/local records.
 const names={manana:'Mañana',tarde:'Tarde',noche:'Noche',en_descanso:'En descanso',en_mantenimiento:'En mantenimiento',en_tratamiento:'En tratamiento',vacunacion:'Vacunación',desparasitacion:'Desparasitación',vitaminizacion:'Vitaminización',revision:'Revisión',diagnostico:'Diagnóstico',cirugia:'Cirugía'};
 const title=v=>names[v]||String(v??'').replaceAll('_',' ').replace(/^./,c=>c.toUpperCase());
-export const localDate=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const dateFormatter=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'});
+export const localDate=()=>dateFormatter.format(new Date());
 export const addDays=(date,count)=>{const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+Number(count));return d.toISOString().slice(0,10);};
 export function category(type){return ['vacunacion','vitaminizacion','desparasitacion','bioseguridad'].includes(type)?'preventivo':['enfermedad','tratamiento','diagnostico','cirugia','revision'].includes(type)?'clinico':['sincronizacion','hormonas','protocolo','preparacion_iatf'].includes(type)?'reproductivo':['alerta','control','carencia'].includes(type)?'seguimiento':null;}
 export function enrich(model){
+    const today=localDate(),todayMs=Date.parse(today),nextWeek=addDays(today,7);
     for(const animal of Object.values(model.animales)){
-        const born=animal.fecha_nacimiento,today=localDate();
+        const born=animal.fecha_nacimiento;
         const months=born?Math.max(0,(Number(today.slice(0,4))-Number(born.slice(0,4)))*12+Number(today.slice(5,7))-Number(born.slice(5,7))):null;
         animal.edad=months===null?'N/A':months>=12?Math.floor(months/12)+' años':months+' meses';
     }
@@ -17,17 +19,17 @@ export function enrich(model){
         p.porcentaje_ocupacion=p.capacidad_animales?Math.round(p.animales_actuales/Number(p.capacidad_animales)*1000)/10:0;
         p.disponibilidad=p.capacidad_animales?Math.max(0,p.capacidad_animales-p.animales_actuales):'Sin límite';
         const next=p.fecha_ultima_rotacion&&p.dias_descanso?addDays(p.fecha_ultima_rotacion,p.dias_descanso):null;
-        const days=next?Math.round((Date.parse(next)-Date.parse(localDate()))/86400000):null;
+        const days=next?Math.round((Date.parse(next)-todayMs)/86400000):null;
         p.requiere_rotacion=days!==null&&days<=0;
-        p.dias_desde_ultima_rotacion=p.fecha_ultima_rotacion?Math.round((Date.parse(localDate())-Date.parse(p.fecha_ultima_rotacion))/86400000):null;
+        p.dias_desde_ultima_rotacion=p.fecha_ultima_rotacion?Math.round((todayMs-Date.parse(p.fecha_ultima_rotacion))/86400000):null;
         p.proxima_rotacion=days===null?'No programada':days<0?'Requiere rotación':days===0?'Hoy':days===1?'Mañana':'En '+days+' días';
     }
     for(const r of Object.values(model.salud||{})){
         r.categoria=category(r.tipo);r.fin_carencia=r.dias_carencia?addDays(r.fecha_aplicacion,r.dias_carencia):null;
-        r.en_carencia=!!r.fin_carencia&&r.fin_carencia>=localDate();
-        r.dias_carencia_restantes=r.en_carencia?Math.round((Date.parse(r.fin_carencia)-Date.parse(localDate()))/86400000):0;
-        r.alerta_proxima=!!r.proxima_aplicacion&&r.proxima_aplicacion<=addDays(localDate(),7);
-        const days=r.proxima_aplicacion?Math.round((Date.parse(r.proxima_aplicacion)-Date.parse(localDate()))/86400000):null;
+        r.en_carencia=!!r.fin_carencia&&r.fin_carencia>=today;
+        r.dias_carencia_restantes=r.en_carencia?Math.round((Date.parse(r.fin_carencia)-todayMs)/86400000):0;
+        r.alerta_proxima=!!r.proxima_aplicacion&&r.proxima_aplicacion<=nextWeek;
+        const days=r.proxima_aplicacion?Math.round((Date.parse(r.proxima_aplicacion)-todayMs)/86400000):null;
         r.dias_proxima=days===null?null:Math.abs(days);
         r.dias_para_proxima=days===null?null:days<0?'Vencida':days===0?'Hoy':'En '+days+' días';
     }

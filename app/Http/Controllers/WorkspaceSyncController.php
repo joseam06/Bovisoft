@@ -16,7 +16,7 @@ class WorkspaceSyncController extends Controller
     {
         $this->enabled();
 
-        return response()->json($sync->snapshot($request->user()))->header('Cache-Control', 'no-store');
+        return response()->json($sync->snapshot($request->user(), $request->input('format') === 'catalog-chunks-v1'))->header('Cache-Control', 'no-store');
     }
 
     public function page(Request $request, string $snapshot, WorkspaceSync $sync)

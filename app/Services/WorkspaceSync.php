@@ -42,6 +42,9 @@ class WorkspaceSync
                 }
                 // Recheck ownership before replaying any previously authorized payload.
                 $savedResult = json_decode($receipt->result, true, flags: JSON_THROW_ON_ERROR);
+                if (! $this->receiptAuthorized($user, $op['module'], $savedResult)) {
+                    return ['status' => 404, 'error' => 'record_unavailable'];
+                }
                 if (! isset($savedResult['record']) && ! isset($savedResult['current'])) {
                     return $savedResult;
                 }
@@ -120,15 +123,21 @@ class WorkspaceSync
         });
     }
 
-    public function snapshot(User $user): array
+    public function snapshot(User $user, bool $chunkTransport = false): array
     {
-        return $this->journal->transaction($user->id, function ($head) use ($user) {
+        return $this->journal->transaction($user->id, function ($head) use ($user, $chunkTransport) {
             $catalog = $this->catalog($user);
             $id = (string) Str::uuid();
+            $json = json_encode($catalog, JSON_THROW_ON_ERROR);
+            $chunkStorage = \Illuminate\Support\Facades\Schema::hasTable('workspace_snapshot_chunks');
+            abort_if(!$chunkStorage && strlen($json)>512*1024,503,'Falta aplicar la migración de bloques offline. La copia anterior se conserva.');
+            $chunks = str_split($json, 128 * 1024);
+            $metadata = ['chunk_storage'=>1,'parts'=>count($chunks),'bytes'=>strlen($json),'sha256'=>hash('sha256',$json),'chunk_transport'=>$chunkTransport];
             DB::table('workspace_sync_snapshots')->insert([
                 'id' => $id, 'user_id' => $user->id, 'sequence' => $head,
-                'payload' => json_encode($catalog, JSON_THROW_ON_ERROR), 'expires_at' => now()->addDay(),
+                'payload' => $chunkStorage ? json_encode($metadata, JSON_THROW_ON_ERROR) : $json, 'expires_at' => now()->addDay(),
             ]);
+            if($chunkStorage)foreach($chunks as $index=>$chunk)DB::table('workspace_snapshot_chunks')->insert(['snapshot_id'=>$id,'part'=>$index+1,'payload'=>base64_encode($chunk)]);
 
             return $this->page($user, $id, 1);
         });
@@ -141,6 +150,14 @@ class WorkspaceSync
             abort_unless($snapshot, 404);
             abort_if(now()->greaterThan($snapshot->expires_at), 410);
             $data = json_decode($snapshot->payload, true, flags: JSON_THROW_ON_ERROR);
+            $metadata = isset($data['chunk_storage']) ? $data : null;
+            if($metadata){
+                $parts=DB::table('workspace_snapshot_chunks')->where('snapshot_id',$id)->orderBy('part')->get();
+                abort_unless($parts->count()===$metadata['parts'],409,'La copia está incompleta.');
+                $json='';foreach($parts as $index=>$part){abort_unless($part->part===$index+1 || (int)$part->part===$index+1,409);$decoded=base64_decode($part->payload,true);abort_if($decoded===false,409);$json.=$decoded;}
+                abort_unless(strlen($json)===$metadata['bytes'] && hash_equals($metadata['sha256'],hash('sha256',$json)),409);
+                $data=json_decode($json,true,flags:JSON_THROW_ON_ERROR);
+            }
             // Old materialized pages cannot retain records whose access was revoked.
             foreach (self::MODULES as $module => $class) {
                 $ids = array_column(array_filter($data['records'], fn ($row) => $row['module'] === $module), 'record_uuid');
@@ -154,9 +171,12 @@ class WorkspaceSync
             $potreros = array_column($data['references']['potreros'], 'id');
             abort_unless(Potrero::where('user_id', $user->id)->whereIn('id', $potreros)
                 ->whereHas('finca', fn ($q) => $q->delUsuario($user->id))->count() === count($potreros), 409);
-            $pages = max(1, (int) ceil(count($data['records']) / 100));
+            $pages = $metadata && $metadata['chunk_transport'] ? $metadata['parts'] : max(1, (int) ceil(count($data['records']) / 100));
             abort_if($page < 1 || $page > $pages, 404);
             $complete = $page === $pages;
+            if($metadata && $metadata['chunk_transport'])return ['account_id'=>$user->id,'snapshot_uuid'=>$id,'format'=>'catalog-chunks-v1',
+                'total_records'=>count($data['records']),'total_bytes'=>$metadata['bytes'],'sha256'=>$metadata['sha256'],'part'=>$page,'parts'=>$pages,
+                'chunk'=>$parts[$page-1]->payload,'complete'=>$complete,'next_page'=>$complete?null:$page+1,'cursor'=>$complete?$this->cursor($user,(int)$snapshot->sequence):null];
 
             return ['account_id' => $user->id, 'snapshot_uuid' => $id, 'total_records' => count($data['records']),
                 'records' => array_slice($data['records'], ($page - 1) * 100, 100), 'references' => $data['references'],
@@ -206,7 +226,7 @@ class WorkspaceSync
             if (in_array($module, ['produccion', 'salud'], true)) $query->whereHas('animal', fn ($q) => $q->where('user_id', $user->id));
             $rows = $query->orderBy('id')->limit(10001)->get();
             abort_if($rows->count() > 10000, 422, 'La copia local admite hasta diez mil registros por módulo; la copia anterior se conserva.');
-            foreach ($rows as $row) $records[] = ['module' => $module] + WorkspaceJournal::serialize($row);
+            foreach (WorkspaceJournal::serializeMany($rows) as $row) $records[] = ['module' => $module] + $row;
         }
         $potreros = array_values(array_filter($records, fn ($r) => $r['module'] === 'potreros'));
         return ['records' => $records, 'references' => ['potreros' => $potreros, 'tipos' => Animal::getTipos(), 'razas' => Animal::getRazas(),
@@ -229,5 +249,34 @@ class WorkspaceSync
         }
 
         return $value;
+    }
+
+    private function receiptAuthorized(User $user, string $module, array $result): bool
+    {
+        $values = $result['related'] ?? [];
+        foreach (['record', 'current'] as $field) {
+            if (isset($result[$field])) $values[] = ['module' => $module, 'record' => $result[$field]];
+        }
+        $references = ['finca_uuid' => Finca::class, 'animal_uuid' => Animal::class,
+            'potrero_uuid' => Potrero::class, 'salud_uuid' => \App\Models\Salud::class,
+            'ingreso_venta_uuid' => \App\Models\Ingreso::class];
+        foreach ($values as $value) {
+            $class = self::MODULES[$value['module'] ?? ''] ?? null;
+            if (! $class) return false;
+            $record = $class::withTrashed()->where('user_id', $user->id)
+                ->where('client_uuid', $value['record']['record_uuid'] ?? '')->first();
+            if (! $record) return false;
+            // Validate current references as well as the frozen response. A
+            // receipt is not a permission grant for historical related data.
+            foreach (['finca_id' => Finca::class, 'animal_id' => Animal::class,
+                'potrero_id' => Potrero::class, 'salud_id' => \App\Models\Salud::class,
+                'ingreso_venta_id' => \App\Models\Ingreso::class] as $field => $parent) {
+                if ($record->$field && ! $parent::withTrashed()->where('user_id', $user->id)->whereKey($record->$field)->exists()) return false;
+            }
+            foreach ($references as $field => $parent) {
+                if (! empty($value['record'][$field]) && ! $parent::withTrashed()->where('user_id', $user->id)->where('client_uuid', $value['record'][$field])->exists()) return false;
+            }
+        }
+        return true;
     }
 }

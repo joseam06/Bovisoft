@@ -9,6 +9,8 @@ import {hydrateFinance,financialForm,validateFinancial} from './sync/finance';
 import {alerts,hydrateAlerts,hydrateBell} from './sync/alerts';
 import {renderReport,hydrateReports} from './sync/reports';
 import {cents,format as formatMoney} from './sync/money';
+import {assembleSnapshot} from './sync/snapshot';
+import {collectionPages} from './sync/collection-pages';
 
 if (document.getElementById('offline-indicator')) startWorkspace();
 
@@ -33,9 +35,11 @@ function startWorkspace() {
     let syncing = false, syncFailed = false, preparing = false, active = false, retry = 1000;
     let localView = shell, connectionLost = !navigator.onLine, uploading = false;
     let bootPromise, warmPromise, muted = false, productionRefreshing=false;
+    let pendingDownload;
     const dirtyForms = new WeakSet();
     const senderId=crypto.randomUUID();
     let queueSignature = '', archiveSignature = '';
+    const unchanged = Symbol('unchanged workspace');
     const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
     const button = (label, attrs = '', secondary = false) => `<button type="button" ${attrs} class="px-4 py-2 rounded-xl font-semibold ${secondary ? 'border border-red-700 text-red-800' : 'bg-red-700 text-white'}">${label}</button>`;
     const link = (path, label) => `<a href="${esc(path)}" class="text-red-800 font-semibold underline underline-offset-4">${esc(label)}</a>`;
@@ -203,9 +207,9 @@ function startWorkspace() {
     }
     const recordPath=(module,id)=>module==='perfil'?'/perfil':['ingresos','egresos'].includes(module)?'/finanzas/'+module+'/'+(id==='create'?'nuevo':id):'/'+module+'/'+id;
     function routeInfo(path){const financial=path.match(/^\/finanzas\/(ingresos|egresos)(?:\/([^/]+))?$/);return financial?[financial[0],financial[1],financial[2]==='nuevo'?'create':financial[2],null]:path==='/perfil'?[path,'perfil','self','edit']:null;}
-    function canonicalPath(path) {
+    function canonicalPath(path, model=null) {
         const url=new URL(path,location.href), match=routeInfo(url.pathname)||url.pathname.match(/^\/(fincas|animales|potreros|produccion|salud)\/([^/]+)(\/edit)?$/);
-        if(match){const row=findRecord(match[1],match[2]);if(row?.id)url.pathname=recordPath(match[1],row.id)+(match[3]&&match[1]!=='perfil'?'/edit':'');}
+        if(match){const rows=model?.[match[1]],row=rows?(rows[match[2]]||Object.values(rows).find(row=>String(row.id)===String(match[2]))):findRecord(match[1],match[2]);if(row?.id)url.pathname=recordPath(match[1],row.id)+(match[3]&&match[1]!=='perfil'?'/edit':'');}
         return url.pathname+url.search;
     }
     async function seedCurrentRecord() {
@@ -231,6 +235,9 @@ function startWorkspace() {
             });
         }
         clone.querySelectorAll('script,meta,input[name="_token"],input[type="password"],input[name="photo"],input[type="file"],[data-online-sensitive]').forEach(node=>node.remove());
+        // Collection data comes from the complete catalog. Keep only the native
+        // row pattern, avoiding thousands of duplicated rows in encrypted HTML.
+        if(new URL(path,location.origin).pathname==='/animales')clone.querySelectorAll('#tabla-animales tbody tr').forEach((row,index)=>{if(index)row.remove();});
         clone.querySelectorAll('*').forEach(node=>{
             for(const attribute of [...node.attributes])if(attribute.name.startsWith('on'))node.removeAttribute(attribute.name);
             if(node.tagName==='IMG'&&node.src&&!node.src.startsWith('data:')&&new URL(node.src,location.href).origin!==location.origin)node.remove();
@@ -248,6 +255,7 @@ function startWorkspace() {
         if(warmPromise||!connected()||!key)return warmPromise;
         warmPromise=(async()=>{
             const paths=new Set(['/dashboard','/fincas','/fincas/create','/animales','/animales/create']);
+            if(data.views?.animales?.index)paths.delete('/animales');
             if(/^\/(fincas|animales|potreros|produccion|salud)\/\d+(\/edit)?$/.test(location.pathname)){
                 paths.add(location.pathname.replace(/\/edit$/,''));paths.add(location.pathname.replace(/\/edit$/,'')+'/edit');
             }
@@ -334,7 +342,8 @@ function startWorkspace() {
         if(!cached.uuid&&!hydrateCollection(location.pathname))return false;
         if(cached.module==='perfil')hydrateProfile();
         if(['ingresos','egresos'].includes(cached.module)&&row){main.querySelectorAll('[data-offline-field=monto]').forEach(n=>n.textContent=formatMoney(row.monto));}
-        main.querySelectorAll('a[href]').forEach(anchor=>{const url=new URL(anchor.href,location.href);if(url.origin===location.origin)anchor.href=canonicalPath(url.pathname+url.search);});
+        const linkModel=projected();
+        main.querySelectorAll('a[href]').forEach(anchor=>{const url=new URL(anchor.href,location.href);if(url.origin===location.origin)anchor.href=canonicalPath(url.pathname+url.search,linkModel);});
         hydrateNormalForm(row,cached.module);
         // The normal scripts remain outside the cached main. Delegate these actions
         // to the same queue after replacing the main, avoiding stale inline handlers.
@@ -367,7 +376,8 @@ function startWorkspace() {
             const body=main.querySelector('#tabla-animales tbody'),template=body?.querySelector('tr');
             if(!template)return animals.length===0;
             const pattern=template.cloneNode(true);body.replaceChildren();
-            for(const row of [...animals].sort((a,b)=>(b.id||Number.MAX_SAFE_INTEGER)-(a.id||Number.MAX_SAFE_INTEGER))){
+            const ordered=[...animals].sort((a,b)=>(b.id||Number.MAX_SAFE_INTEGER)-(a.id||Number.MAX_SAFE_INTEGER));
+            const buildRow=row=>{
                 const node=pattern.cloneNode(true),cells=node.querySelectorAll('td');node.hidden=false;node.style.display='';
                 node.dataset.offlineRow=row.record_uuid;node.dataset.nombre=(row.nombre||'').toLocaleLowerCase('es');node.dataset.codigo=(row.codigo||'').toLocaleLowerCase('es');node.dataset.tipo=row.tipo;node.dataset.finca=String(model.fincas[row.finca_uuid]?.id||row.finca_uuid);
                 text(cells[0],'span',row.codigo||'Pendiente');text(cells[1],'span',row.nombre||'Sin nombre');text(cells[2],'span',upper(row.tipo));text(cells[3],'span',upper(row.sexo));
@@ -376,13 +386,15 @@ function startWorkspace() {
                 type.className=type.className.replace(/from-\w+-600|to-\w+-800/g,'').trim()+` from-${color}-600 to-${color}-800`;
                 const typeIcon=type.querySelector('i');if(typeIcon)typeIcon.className='fas fa-'+(row.tipo==='vaca'?'venus':row.tipo==='toro'?'mars':'baby')+' mr-1';
                 const sexIcon=cells[3].querySelector('i');if(sexIcon)sexIcon.className=row.sexo==='macho'?'fas fa-mars text-blue-600 mr-1':'fas fa-venus text-pink-600 mr-1';
-                patchLinks(node,'animales',row);body.append(node);
-            }
+                patchLinks(node,'animales',row);return node;
+            };
+            const show=collectionPages(body,ordered,buildRow);
             const filter=()=>{
                 const query=(main.querySelector('#busqueda,#buscar-animal,#buscar')?.value||'').toLocaleLowerCase('es');
                 const type=main.querySelector('#filtro-tipo')?.value, farm=main.querySelector('#filtro-finca')?.value;
-                body.querySelectorAll('tr').forEach(row=>row.hidden=!!(query&&!`${row.dataset.nombre} ${row.dataset.codigo}`.includes(query)||type&&type!=='todos'&&row.dataset.tipo!==type||farm&&farm!=='todas'&&row.dataset.finca!==farm));
-                const noResults=main.querySelector('#sin-resultados');if(noResults)noResults.classList.toggle('hidden',[...body.children].some(row=>!row.hidden));
+                const matches=ordered.filter(row=>!(query&&!`${row.nombre||''} ${row.codigo||''}`.toLocaleLowerCase('es').includes(query)||type&&type!=='todos'&&row.tipo!==type||farm&&farm!=='todas'&&String(model.fincas[row.finca_uuid]?.id||row.finca_uuid)!==farm));
+                show(matches);
+                const noResults=main.querySelector('#sin-resultados');if(noResults)noResults.classList.toggle('hidden',matches.length>0);
             };
             main.querySelectorAll('input[type="text"],input[type="search"],select').forEach(input=>{input.addEventListener('input',filter);input.addEventListener('change',filter);});
         }
@@ -530,6 +542,7 @@ function startWorkspace() {
             await assertActor(expected);
             if(expectedRevision && current.revision!==expectedRevision){data=working;vault=current;key=encryptionKey;return false;}
             const result = await callback(working);
+            if(result===unchanged){await assertActor(expected);data=working;vault=current;key=encryptionKey;return false;}
             const saved = await seal(working, encryptionKey, {...current,...metadata});
             try { await (await workspaceStore()).commitWorkspace(saved, expected.epoch, current.revision, guard?.lease); }
             catch(failure){if(failure.code==='BOVI_REVISION_CHANGED')continue;throw failure;}
@@ -617,7 +630,8 @@ function startWorkspace() {
             const manifest = await response.json();
             await workerCall({type:'PREPARE_SHELL',manifest:{...manifest,automaticMode:true}});
             const expected={accountId,epoch:security.epoch};
-            let snapshot = await downloadApi('/snapshots',{},expected);
+            if(!pendingDownload||!sameActor(pendingDownload.actor,expected))pendingDownload={actor:expected,first:await downloadApi('/snapshots',{format:'catalog-chunks-v1'},expected),parts:[]};
+            let snapshot = await assembleSnapshot(pendingDownload.first,path=>downloadApi(path,null,expected),accountId,pendingDownload);
             const id = snapshot.snapshot_uuid, total = snapshot.total_records;
             const base = Object.fromEntries(Object.keys(modules).map(m=>[m,{}])); let seen = 0;
             while (true) {
@@ -650,23 +664,27 @@ function startWorkspace() {
             const meta = {accountId,generation:initial?.generation || crypto.randomUUID(),preparedAt:Date.now(),serverOffset:0,shellVersion:manifest.version};
             const saved = initial ? await seal(working,initial.automaticKey,{...initial,...meta}) : (await createAutomaticVault(working,meta)).envelope;
             await (await workspaceStore()).commitWorkspace(saved,security.epoch,initial?.revision || null);
+            pendingDownload=null;
             await restore();
             await cacheCurrentPage();
             if (shell) renderRoute(true);
             navigator.storage?.persist?.().catch(()=>{});
         } catch (failure) {
+            if(failure.code==='BOVI_SNAPSHOT_INVALID'||failure instanceof SyntaxError||[400,401,403,404,409,410,422].includes(failure.status))pendingDownload=null;
             if (!navigator.onLine || failure instanceof TypeError) connectionLost = true;
+            if(connected())error('No se pudo completar la actualización offline. La copia anterior y los pendientes se conservan. '+(failure.message||''));
             if (!data && !connected()) error('La conexión se interrumpió antes de completar la copia local. Los datos guardados anteriormente se conservan.');
         } finally {
             preparing = false; indicator();
-            if(data)schedule(500);
+            if(data)schedule(pendingDownload?5000:500);
             else if(navigator.onLine){clearTimeout(syncTimer);syncTimer=setTimeout(()=>{connectionLost=false;boot().catch(f=>error(f.message));},5000);}
         }
     }
     function renderControls() {
         indicator();
-        if(data?.base?.perfil){const profile=Object.values(projected().perfil)[0];if(profile)applyProfile({...data.profile,name:profile.name});}
-        if(data?.references.alert_rules){const urgent=alerts(projected(),data.references.alert_rules).filter(r=>['critico','urgente'].includes(r.nivel)).length,badge=$('badge-campanita');if(badge){badge.textContent=urgent>9?'9+':String(urgent);badge.classList.toggle('hidden',!urgent);}}
+        const model=data&&(data.base?.perfil||data.references.alert_rules)?projected():null;
+        if(data?.base?.perfil){const profile=Object.values(model.perfil)[0];if(profile)applyProfile({...data.profile,name:profile.name});}
+        if(data?.references.alert_rules){const urgent=alerts(model,data.references.alert_rules).filter(r=>['critico','urgente'].includes(r.nivel)).length,badge=$('badge-campanita');if(badge){badge.textContent=urgent>9?'9+':String(urgent);badge.classList.toggle('hidden',!urgent);}}
         if (!data || !key || !$('offline-changes')) return;
         const signature = JSON.stringify(data.queue);
         if (queueSignature !== signature) {
@@ -801,6 +819,7 @@ function startWorkspace() {
                     connectionLost = false;
                     indicator();
                 }
+                if(pendingDownload){await automaticDownload();if(pendingDownload)return;}
                 await sync();
             } catch (failure) {
                 if(!sameActor(actor(),scheduledActor)||failure.code==='BOVI_RUN_SUPERSEDED')return;
@@ -825,7 +844,7 @@ function startWorkspace() {
                 await assertActor(run);
                 if(String(verified.account_id)!==run.accountId)throw syncError('BOVI_RUN_SUPERSEDED','La cuenta cambió.');
                 session=verified;
-                await change(working=>{working.profile={...working.profile,...verified.profile};});
+                await change(working=>{const profile={...working.profile,...verified.profile};if(JSON.stringify(profile)===JSON.stringify(working.profile))return unchanged;working.profile=profile;});
                 const device=data.deviceUuid;
                 renderControls();
                 const waitingForParents=new Set();
@@ -943,6 +962,7 @@ function startWorkspace() {
     window.addEventListener('online',()=>{connectionLost=false;indicator();boot().then(()=>schedule(0)).catch(retryBoot);});
     window.addEventListener('bovi:pagehide',()=>{key=null;data=null;clearTimeout(syncTimer);});
     window.addEventListener('bovi:security',event=>{
+        if(pendingDownload&&!sameActor(pendingDownload.actor,event.detail))pendingDownload=null;
         if(key&&(event.detail.accountId!==vault.accountId||event.detail.epoch!==epoch))lock();
         if(event.detail.accountId!==String(session?.account_id))session=null;
         if(event.detail.accountId&&!event.detail.pendingLogout&&!key)setTimeout(()=>boot().catch(f=>error(f.message)),0);
@@ -959,7 +979,7 @@ function startWorkspace() {
             await ensureWorker();
             if(navigator.onLine){try{session=await identity();connectionLost=false;}catch{connectionLost=true;}}
             const restored=await restore();
-            if(restored&&connected()&&session?.workspace_enabled&&data.schema<4)await automaticDownload();
+            if(restored&&connected()&&session?.workspace_enabled&&(data.schema<4||pendingDownload))await automaticDownload();
             if(restored&&connected()&&session?.workspace_enabled){
                 const profile=await accountProfile();
                 if(!data.views){const views=await nativeViews();await mutate(working=>{working.views=views;working.profile=profile;});}

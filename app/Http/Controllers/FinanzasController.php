@@ -210,58 +210,62 @@ class FinanzasController extends Controller
     }
 
     private function calcularFlujoCaja(int $userId, ?int $fincaId): array
-{
-    $mesesNombres = [
-        1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr',
-        5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago',
-        9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic',
-    ];
+    {
+        $mesesNombres = [
+            1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr',
+            5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago',
+            9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic',
+        ];
 
-    $meses = [];
-    for ($i = 5; $i >= 0; $i--) {
-        $fecha  = Carbon::now()->subMonths($i);
-        $inicio = $fecha->copy()->startOfMonth();
-        $fin    = $fecha->copy()->endOfMonth();
+        $meses = [];
+        $ranges = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $fecha = Carbon::now()->subMonths($i);
+            $inicio = $fecha->copy()->startOfMonth();
+            $fin = $fecha->copy()->endOfMonth();
 
-        $qIng = Ingreso::autorizadasPara($userId)->whereBetween('fecha', [$inicio, $fin]);
-        $qEgr = Egreso::autorizadasPara( $userId)->whereBetween('fecha', [$inicio, $fin]);
-
-        if ($fincaId) {
-            $qIng->where('finca_id', $fincaId);
-            $qEgr->where('finca_id', $fincaId);
+            $ranges[] = [$inicio, $fin];
+            $meses[] = [
+                'mes' => $mesesNombres[$fecha->month].' '.$fecha->year,
+                'ingresos' => 0.0,
+                'egresos' => 0.0,
+            ];
         }
 
-        $meses[] = [
-            'mes'      => $mesesNombres[$fecha->month] . ' ' . $fecha->year,
-            'ingresos' => (float) $qIng->sum('monto'),
-            'egresos'  => (float) $qEgr->sum('monto'),
-        ];
-    }
+        foreach (['ingresos' => Ingreso::class, 'egresos' => Egreso::class] as $field => $model) {
+            $query = $model::autorizadasPara($userId);
+            if ($fincaId) {
+                $query->where('finca_id', $fincaId);
+            }
+            foreach ($ranges as $index => [$start, $end]) {
+                $query->selectRaw('COALESCE(SUM(CASE WHEN fecha BETWEEN ? AND ? THEN monto ELSE 0 END), 0) AS m'.$index, [$start, $end]);
+            }
+            $totals = $query->toBase()->first();
+            foreach ($meses as $index => &$month) {
+                $month[$field] = (float) $totals->{'m'.$index};
+            }
+            unset($month);
+        }
 
-    return $meses;
-}
+        return $meses;
+    }
 
     private function calcularBalancePorFinca(int $userId, Carbon $inicio, Carbon $fin): array
     {
         $fincas = Finca::where('user_id', $userId)->get();
+        $ingresos = Ingreso::autorizadasPara($userId)->whereBetween('fecha', [$inicio, $fin])->selectRaw('finca_id, SUM(monto) AS total')->groupBy('finca_id')->toBase()->pluck('total', 'finca_id');
+        $egresos = Egreso::autorizadasPara($userId)->whereBetween('fecha', [$inicio, $fin])->selectRaw('finca_id, SUM(monto) AS total')->groupBy('finca_id')->toBase()->pluck('total', 'finca_id');
         $resultado = [];
 
         foreach ($fincas as $finca) {
-            $ing = Ingreso::autorizadasPara($userId)
-                ->where('finca_id', $finca->id)
-                ->whereBetween('fecha', [$inicio, $fin])
-                ->sum('monto');
-
-            $egr = Egreso::autorizadasPara($userId)
-                ->where('finca_id', $finca->id)
-                ->whereBetween('fecha', [$inicio, $fin])
-                ->sum('monto');
+            $ing = $ingresos[$finca->id] ?? 0;
+            $egr = $egresos[$finca->id] ?? 0;
 
             $resultado[] = [
-                'finca'     => $finca->nombre,
-                'ingresos'  => $ing,
-                'egresos'   => $egr,
-                'balance'   => \App\Services\Money::decimal(\App\Services\Money::cents($ing)-\App\Services\Money::cents($egr)),
+                'finca' => $finca->nombre,
+                'ingresos' => $ing,
+                'egresos' => $egr,
+                'balance' => \App\Services\Money::decimal(\App\Services\Money::cents($ing) - \App\Services\Money::cents($egr)),
             ];
         }
 
