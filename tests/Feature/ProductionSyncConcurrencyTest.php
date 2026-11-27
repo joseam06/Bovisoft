@@ -96,6 +96,62 @@ class ProductionSyncConcurrencyTest extends FincasTestCase
         $this->assertSame('PROD-009001', $code);
     }
 
+    public function test_concurrent_workspace_replays_have_one_effect_in_postgresql(): void
+    {
+        if (DB::getDriverName() !== 'pgsql') {
+            $this->markTestSkipped('La prueba multiproceso se ejecuta en PostgreSQL.');
+        }
+        [$user] = $this->fixture();
+        $op = ['module' => 'fincas', 'type' => 'create', 'operation_uuid' => (string) Str::uuid(), 'record_uuid' => (string) Str::uuid(),
+            'data' => ['nombre' => 'Finca concurrente', 'area' => 10, 'latitud' => 4.5, 'longitud' => -74.1]];
+        $results = $this->concurrently($user, [$op, $op], workspace: true);
+        $this->assertSame([201, 201], array_column($results, 'status'));
+        $this->assertSame($results[0], $results[1]);
+        $this->assertSame(1, Finca::where('client_uuid', $op['record_uuid'])->count());
+        $this->assertSame(1, DB::table('workspace_sync_changes')->where('record_uuid', $op['record_uuid'])->count());
+        $this->assertDatabaseCount('workspace_sync_receipts', 1);
+    }
+
+    public function test_concurrent_workspace_edits_return_one_conflict_in_postgresql(): void
+    {
+        if (DB::getDriverName() !== 'pgsql') {
+            $this->markTestSkipped('La prueba multiproceso se ejecuta en PostgreSQL.');
+        }
+        [$user] = $this->fixture();
+        $farm = Finca::where('user_id', $user->id)->sole();
+        $operations = [];
+        foreach (['Cambio A', 'Cambio B'] as $name) {
+            $operations[] = ['module' => 'fincas', 'type' => 'update', 'operation_uuid' => (string) Str::uuid(), 'record_uuid' => $farm->client_uuid,
+                'base_version' => 1, 'data' => ['nombre' => $name, 'latitud' => 4.5, 'longitud' => -74.1]];
+        }
+        $results = $this->concurrently($user, $operations, workspace: true);
+        $statuses = array_column($results, 'status');
+        sort($statuses);
+        $this->assertSame([200, 409], $statuses);
+        $winner = collect($results)->firstWhere('status', 200)['record'];
+        $loser = collect($results)->firstWhere('status', 409)['current'];
+        $this->assertSame($winner, $loser);
+        $this->assertSame(2, $farm->fresh()->version);
+        $this->assertSame(2, DB::table('workspace_sync_changes')->where('record_uuid', $farm->client_uuid)->count());
+    }
+
+    public function test_workspace_migration_preserves_existing_ids_codes_and_soft_deleted_rows(): void
+    {
+        [$user] = $this->fixture();
+        $migration = require database_path('migrations/2026_11_18_000002_create_workspace_sync_tables.php');
+        $migration->down();
+        $id = DB::table('fincas')->insertGetId(['user_id' => $user->id, 'nombre' => 'Histórica', 'codigo' => 'FIN-009000', 'area' => 10, 'deleted_at' => now()]);
+        $migration->up();
+        $farm = Finca::withTrashed()->findOrFail($id);
+        $this->assertSame($id, $farm->id);
+        $this->assertSame('FIN-009000', $farm->codigo);
+        $this->assertTrue($farm->trashed());
+        $this->assertTrue(Str::isUuid($farm->client_uuid));
+        $code = app(\App\Services\WorkspaceJournal::class)->transaction($user->id, fn () => app(\App\Services\WorkspaceJournal::class)->nextCode('fincas'));
+        $this->assertSame('FIN-009001', $code);
+        $this->assertSame(0, DB::table('animales')->whereNull('client_uuid')->count());
+    }
+
     private function fixture(): array
     {
         $user = User::factory()->create(['email' => 'concurrente@example.test']);
@@ -107,7 +163,7 @@ class ProductionSyncConcurrencyTest extends FincasTestCase
             'litros' => '12.35', 'sesion' => 'manana', 'calidad' => 'buena', 'observaciones' => null]];
     }
 
-    private function concurrently(User $user, array $operations): array
+    private function concurrently(User $user, array $operations, bool $workspace = false): array
     {
         $directory = sys_get_temp_dir().'/bovisoft-sync-'.Str::uuid();
         mkdir($directory);
@@ -117,7 +173,7 @@ class ProductionSyncConcurrencyTest extends FincasTestCase
             foreach ($operations as $index => $operation) {
                 $path = $directory.'/job-'.$index;
                 file_put_contents($path, json_encode(['user_id' => $user->id, 'device_uuid' => (string) Str::uuid(),
-                    'operation' => $operation, 'barrier' => $barrier], JSON_THROW_ON_ERROR));
+                    'operation' => $operation, 'barrier' => $barrier, 'workspace' => $workspace], JSON_THROW_ON_ERROR));
                 $processes[] = proc_open([PHP_BINARY, '-d', 'extension=pdo_pgsql', base_path('tests/Support/production-sync-worker.php'), $path],
                     [0 => ['pipe', 'r'], 1 => ['file', $path.'.out', 'w'], 2 => ['file', $path.'.err', 'w']], $pipes, base_path());
                 fclose($pipes[0]);

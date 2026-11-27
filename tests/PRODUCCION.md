@@ -1,6 +1,6 @@
 # Piloto: reglas de Producción y pruebas locales (1C y 1D)
 
-Las altas y correcciones utilizan `App\Services\ProduccionService`, con las mismas validaciones para formularios y la API de sincronización de Fase 2. UUID, versiones, recibos y descarga incremental se documentan en `docs/production-sync.md`. Aún no se incluye almacenamiento offline del navegador.
+Las altas y correcciones utilizan `App\Services\ProduccionService`, con las mismas validaciones para formularios y la API de sincronización de Fase 2. UUID, versiones, recibos y descarga incremental se documentan en `docs/production-sync.md`. La consulta offline del navegador y sus pruebas de Fase 3 se documentan en `docs/production-offline-read.md`.
 
 - Alta: animal activo de tipo vaca o novilla, finca activa, ambos de la cuenta autenticada y con relación animal–finca coincidente al guardar. El formulario solo ofrece referencias elegibles; el servidor vuelve a comprobarlas dentro de una transacción.
 - Corrección: animal y finca originales inmutables. Se permiten litros, turno, calidad y observaciones aunque el animal se haya trasladado o esté inactivo, o la finca se haya desactivado. Las referencias originales deben seguir existiendo y estar autorizadas.

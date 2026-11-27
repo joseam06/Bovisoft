@@ -12,7 +12,7 @@
                 <span class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
                     <i class="fa-solid fa-pen text-red-700 text-xl"></i>
                 </span>
-                Editar {{ $registro->codigo }}
+                Editar <span data-offline-owner="salud" data-offline-field="codigo">{{ $registro->codigo }}</span>
             </h1>
             <p class="text-red-100 mt-1 ml-16">Modificar registro de salud</p>
         </div>
@@ -23,7 +23,7 @@
     </div>
 
     <form action="{{ route('salud.update', $registro) }}" method="POST">
-        @csrf @method('PUT')
+        @csrf @method('PUT') <input type="hidden" name="base_version" value="{{ old('base_version', $registro->version) }}">
         <div class="glass-effect rounded-2xl shadow-2xl p-8 border-4 border-white/50 space-y-8">
 
             {{-- ══ SECCIÓN 1: Identificación ══ --}}
@@ -62,7 +62,7 @@
                                        @error('animal_id') border-red-500 @enderror">
                                 @foreach($animales as $a)
                                     <option value="{{ $a->id }}" data-finca="{{ $a->finca_id }}"
-                                        {{ old('animal_id', $registro->animal_id) == $a->id ? 'selected' : '' }}>
+                                        <span data-offline-owner="salud" data-offline-field="animal_id">{{ old('animal_id', $registro->animal_id) == $a->id ? 'selected' : '' }}</span>>
                                         {{ $a->nombre ?? $a->codigo }} — {{ $a->finca->nombre ?? '' }}
                                     </option>
                                 @endforeach
@@ -86,7 +86,7 @@
                                        appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all
                                        @error('finca_id') border-red-500 @enderror">
                                 @foreach($fincas as $f)
-                                    <option value="{{ $f->id }}" {{ old('finca_id', $registro->finca_id) == $f->id ? 'selected' : '' }}>
+                                    <option value="{{ $f->id }}" <span data-offline-owner="salud" data-offline-field="finca_id">{{ old('finca_id', $registro->finca_id) == $f->id ? 'selected' : '' }}</span>>
                                         {{ $f->nombre }}
                                     </option>
                                 @endforeach
@@ -278,7 +278,7 @@
                         <input type="number" name="dias_carencia" value="{{ old('dias_carencia', $registro->dias_carencia) }}" min="0"
                             class="{{ $inputClass }}"></div>
                         @if($registro->fin_carencia)
-                        <p class="text-gray-500 text-xs mt-1">Fin de carencia actual: {{ $registro->fin_carencia->format('d/m/Y') }}</p>
+                        <p class="text-gray-500 text-xs mt-1">Fin de carencia actual: <span data-offline-owner="salud" data-offline-field="fin_carencia">{{ $registro->fin_carencia->format('d/m/Y') }}</span></p>
                         @endif
                     </div>
                     <div>
@@ -324,7 +324,7 @@
         <form action="{{ route('salud.destroy', $registro) }}" method="POST"
               onsubmit="return confirm('¿Eliminar este registro de salud?')">
             @csrf
-            @method('DELETE')
+            @method('DELETE') <input type="hidden" name="base_version" value="{{ $registro->version }}">
             <button type="submit"
                 class="px-6 py-4 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-xl transition-all border-2 border-red-300 flex items-center gap-2">
                 <i class="fa-solid fa-trash"></i> Eliminar Registro

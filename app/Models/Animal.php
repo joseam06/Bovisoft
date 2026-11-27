@@ -10,7 +10,7 @@ use App\Models\Potrero;
  
 class Animal extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Models\Concerns\SyncsWorkspace;
  
     protected $table = 'animales';
  

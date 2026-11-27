@@ -14,53 +14,22 @@ class ProfileController extends Controller
     {
         return view('profile.edit', [
             'user' => Auth::user(),
+            'offlineProfile' => \App\Models\WorkspaceProfile::firstOrCreate(['user_id'=>Auth::id()], ['name'=>Auth::user()->name]),
         ]);
     }
 
     public function update(Request $request)
     {
-        $user = Auth::user();
-
-        $validated = $request->validate([
-            'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-        ], [
-            'name.required'  => 'El nombre es obligatorio.',
-            'name.max'       => 'El nombre no puede superar 255 caracteres.',
-            'email.required' => 'El correo electrónico es obligatorio.',
-            'email.email'    => 'Ingresa un correo electrónico válido.',
-            'email.unique'   => 'Este correo ya está registrado por otro usuario.',
-        ]);
-
-        $user->name  = $validated['name'];
-        $user->email = $validated['email'];
-        $user->save();
+        app(\App\Actions\Fortify\UpdateUserProfileInformation::class)->update($request->user(),$request->all());
 
         return back()->with('success', 'Información actualizada correctamente.');
     }
 
     public function updatePassword(Request $request)
     {
-        $request->validate([
-            'current_password' => ['required'],
-            'password'         => ['required', 'string', 'min:8', 'confirmed'],
-        ], [
-            'current_password.required' => 'Debes ingresar tu contraseña actual.',
-            'password.required'         => 'La nueva contraseña es obligatoria.',
-            'password.min'              => 'La contraseña debe tener al menos 8 caracteres.',
-            'password.confirmed'        => 'Las contraseñas no coinciden.',
-        ]);
+        app(\App\Actions\Fortify\UpdateUserPassword::class)->update($request->user(),$request->all());
 
-        $user = Auth::user();
-
-        if (!Hash::check($request->current_password, $user->password)) {
-            return back()->withErrors(['current_password' => 'La contraseña actual no es correcta.']);
-        }
-
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        return back()->with('success_password', 'Contraseña actualizada correctamente.');
+        return redirect()->route('profile.edit')->with('success_password', 'Contraseña actualizada correctamente.');
     }
 
     public function updatePhoto(Request $request)

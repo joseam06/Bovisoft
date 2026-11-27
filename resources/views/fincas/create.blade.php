@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends(($offlineTemplate ?? false) ? 'offline.fragment' : 'layouts.dashboard')
 
 @section('title', 'Registrar Finca')
 
@@ -254,11 +254,11 @@
                     <div class="mt-3 grid grid-cols-2 gap-4">
                         <div class="p-3 bg-blue-50 border-2 border-blue-200 rounded-xl">
                             <p class="text-xs text-gray-600 mb-1">Latitud:</p>
-                            <p class="font-mono font-bold text-gray-800" id="latitud-display">Sin seleccionar</p>
+                            <input type="number" step="0.00000001" min="-90" max="90" required aria-label="Latitud" name="latitud" id="latitud" value="{{ old('latitud') }}" class="w-full font-mono font-bold text-gray-800 rounded-lg border-gray-300">
                         </div>
                         <div class="p-3 bg-blue-50 border-2 border-blue-200 rounded-xl">
                             <p class="text-xs text-gray-600 mb-1">Longitud:</p>
-                            <p class="font-mono font-bold text-gray-800" id="longitud-display">Sin seleccionar</p>
+                            <input type="number" step="0.00000001" min="-180" max="180" required aria-label="Longitud" name="longitud" id="longitud" value="{{ old('longitud') }}" class="w-full font-mono font-bold text-gray-800 rounded-lg border-gray-300">
                         </div>
                     </div>
 
@@ -275,8 +275,6 @@
                 </div>
 
                 <!-- Coordenadas (Ocultos) -->
-                <input type="hidden" name="latitud" id="latitud" value="{{ old('latitud') }}">
-                <input type="hidden" name="longitud" id="longitud" value="{{ old('longitud') }}">
             </div>
 
             <!-- Botones -->
@@ -316,8 +314,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateCoordinates(lat, lng) {
         document.getElementById('latitud').value = lat.toFixed(8);
         document.getElementById('longitud').value = lng.toFixed(8);
-        document.getElementById('latitud-display').textContent = lat.toFixed(8);
-        document.getElementById('longitud-display').textContent = lng.toFixed(8);
     }
     
     // Función para crear/actualizar marcador

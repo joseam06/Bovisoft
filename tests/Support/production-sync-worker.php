@@ -18,5 +18,7 @@ while (! file_exists($job['barrier'])) {
     }
     usleep(10000);
 }
-$result = app(ProductionSyncService::class)->applyOperation($user, $job['device_uuid'], $job['operation']);
+$result = ($job['workspace'] ?? false)
+    ? app(\App\Services\WorkspaceSync::class)->apply($user, $job['device_uuid'], $job['operation'])
+    : app(ProductionSyncService::class)->applyOperation($user, $job['device_uuid'], $job['operation']);
 echo json_encode($result, JSON_THROW_ON_ERROR);

@@ -23,7 +23,7 @@
                 @if($alertas->count() > 0)
                     <span class="px-4 py-2 bg-yellow-100 text-yellow-800 font-bold rounded-full text-sm border-2 border-yellow-300">
                         <i class="fa-solid fa-bell mr-1"></i>
-                        {{ $alertas->count() }} alerta{{ $alertas->count() !== 1 ? 's' : '' }} activa{{ $alertas->count() !== 1 ? 's' : '' }}
+                        <span data-alert-stat="total">{{ $alertas->count() }}</span> alerta{{ $alertas->count() !== 1 ? 's' : '' }} activa{{ $alertas->count() !== 1 ? 's' : '' }}
                     </span>
                 @endif
                 <a href="{{ route('salud.index') }}"
@@ -43,7 +43,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Críticas</p>
-                    <p class="text-4xl font-extrabold text-red-600">{{ $criticas->count() }}</p>
+                    <p class="text-4xl font-extrabold text-red-600"><span data-alert-stat="critico">{{ $criticas->count() }}</span></p>
                 </div>
                 <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
                     <i class="fa-solid fa-circle-exclamation text-red-600 text-xl"></i>
@@ -57,7 +57,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Urgentes</p>
-                    <p class="text-4xl font-extrabold text-orange-600">{{ $urgentes->count() }}</p>
+                    <p class="text-4xl font-extrabold text-orange-600"><span data-alert-stat="urgente">{{ $urgentes->count() }}</span></p>
                 </div>
                 <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
                     <i class="fa-solid fa-bell text-orange-600 text-xl"></i>
@@ -71,7 +71,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Próximas</p>
-                    <p class="text-4xl font-extrabold text-yellow-600">{{ $advertencias->count() }}</p>
+                    <p class="text-4xl font-extrabold text-yellow-600"><span data-alert-stat="advertencia">{{ $advertencias->count() }}</span></p>
                 </div>
                 <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center">
                     <i class="fa-solid fa-clock text-yellow-600 text-xl"></i>
@@ -85,7 +85,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Informativas</p>
-                    <p class="text-4xl font-extrabold text-blue-600">{{ $informativas->count() }}</p>
+                    <p class="text-4xl font-extrabold text-blue-600"><span data-alert-stat="info">{{ $informativas->count() }}</span></p>
                 </div>
                 <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                     <i class="fa-solid fa-info-circle text-blue-600 text-xl"></i>
@@ -109,13 +109,13 @@
 
         {{-- Sección: Críticas --}}
         @if($criticas->count() > 0)
-        <div class="glass-effect border-4 border-red-300/60 rounded-2xl shadow-xl overflow-hidden">
+        <div data-alert-section="critico" class="glass-effect border-4 border-red-300/60 rounded-2xl shadow-xl overflow-hidden">
             <div class="bg-gradient-to-r from-red-600 to-red-800 px-6 py-4 flex items-center space-x-3">
                 <i class="fa-solid fa-circle-exclamation text-white text-xl"></i>
                 <h2 class="text-white font-bold text-lg">Alertas Críticas — Aplicaciones Vencidas</h2>
-                <span class="ml-auto bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">{{ $criticas->count() }}</span>
+                <span class="ml-auto bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full"><span data-alert-stat="critico">{{ $criticas->count() }}</span></span>
             </div>
-            <div class="divide-y divide-red-100">
+            <div data-alert-list="critico" class="divide-y divide-red-100">
                 @foreach($criticas as $alerta)
                     @include('alertas._fila', ['alerta' => $alerta, 'bgHover' => 'hover:bg-red-50'])
                 @endforeach
@@ -125,13 +125,13 @@
 
         {{-- Sección: Urgentes --}}
         @if($urgentes->count() > 0)
-        <div class="glass-effect border-4 border-orange-300/60 rounded-2xl shadow-xl overflow-hidden">
+        <div data-alert-section="urgente" class="glass-effect border-4 border-orange-300/60 rounded-2xl shadow-xl overflow-hidden">
             <div class="bg-gradient-to-r from-orange-500 to-orange-700 px-6 py-4 flex items-center space-x-3">
                 <i class="fa-solid fa-bell text-white text-xl"></i>
                 <h2 class="text-white font-bold text-lg">Urgentes — Pendientes Hoy</h2>
-                <span class="ml-auto bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">{{ $urgentes->count() }}</span>
+                <span class="ml-auto bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full"><span data-alert-stat="urgente">{{ $urgentes->count() }}</span></span>
             </div>
-            <div class="divide-y divide-orange-100">
+            <div data-alert-list="urgente" class="divide-y divide-orange-100">
                 @foreach($urgentes as $alerta)
                     @include('alertas._fila', ['alerta' => $alerta, 'bgHover' => 'hover:bg-orange-50'])
                 @endforeach
@@ -141,13 +141,13 @@
 
         {{-- Sección: Advertencias --}}
         @if($advertencias->count() > 0)
-        <div class="glass-effect border-4 border-yellow-300/60 rounded-2xl shadow-xl overflow-hidden">
+        <div data-alert-section="advertencia" class="glass-effect border-4 border-yellow-300/60 rounded-2xl shadow-xl overflow-hidden">
             <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 px-6 py-4 flex items-center space-x-3">
                 <i class="fa-solid fa-clock text-white text-xl"></i>
                 <h2 class="text-white font-bold text-lg">Próximas — Esta Semana</h2>
-                <span class="ml-auto bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">{{ $advertencias->count() }}</span>
+                <span class="ml-auto bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full"><span data-alert-stat="advertencia">{{ $advertencias->count() }}</span></span>
             </div>
-            <div class="divide-y divide-yellow-100">
+            <div data-alert-list="advertencia" class="divide-y divide-yellow-100">
                 @foreach($advertencias as $alerta)
                     @include('alertas._fila', ['alerta' => $alerta, 'bgHover' => 'hover:bg-yellow-50'])
                 @endforeach
@@ -157,13 +157,13 @@
 
         {{-- Sección: Informativas --}}
         @if($informativas->count() > 0)
-        <div class="glass-effect border-4 border-blue-200/60 rounded-2xl shadow-xl overflow-hidden">
+        <div data-alert-section="info" class="glass-effect border-4 border-blue-200/60 rounded-2xl shadow-xl overflow-hidden">
             <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4 flex items-center space-x-3">
                 <i class="fa-solid fa-info-circle text-white text-xl"></i>
                 <h2 class="text-white font-bold text-lg">Informativas — Tratamientos y Carencias</h2>
-                <span class="ml-auto bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">{{ $informativas->count() }}</span>
+                <span class="ml-auto bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full"><span data-alert-stat="info">{{ $informativas->count() }}</span></span>
             </div>
-            <div class="divide-y divide-blue-100">
+            <div data-alert-list="info" class="divide-y divide-blue-100">
                 @foreach($informativas as $alerta)
                     @include('alertas._fila', ['alerta' => $alerta, 'bgHover' => 'hover:bg-blue-50'])
                 @endforeach

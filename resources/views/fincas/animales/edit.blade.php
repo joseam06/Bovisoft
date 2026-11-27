@@ -1,4 +1,4 @@
-@extends('layouts.dashboard')
+@extends(($offlineTemplate ?? false) ? 'offline.fragment' : 'layouts.dashboard')
 
 @section('title', 'Editar Animal - ' . $animal->codigo)
 
@@ -14,7 +14,7 @@
                 Editar Animal
             </h1>
             <p class="text-red-100 mt-2 ml-16">
-                Modificando: <span class="font-bold">{{ $animal->nombre ?: $animal->codigo }}</span>
+                Modificando: <span data-offline-field="nombre" class="font-bold">{{ $animal->nombre ?: $animal->codigo }}</span>
             </p>
         </div>
         <a href="{{ route('animales.show', $animal) }}"
@@ -28,6 +28,7 @@
         <form action="{{ route('animales.update', $animal->id) }}" method="POST">
             @csrf
             @method('PUT')
+            <input type="hidden" name="base_version" value="{{ old('base_version', $animal->version) }}">
 
             <!-- ── SECCIÓN: Información Básica ── -->
             <div class="mb-8">
@@ -160,6 +161,7 @@
                             <select name="estado" id="estado" required
                                     class="w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('estado') border-red-500 @enderror">
                                 <option value="activo"  {{ old('estado', $animal->estado) == 'activo'  ? 'selected' : '' }}>✅ Activo</option>
+                                <option value="inactivo" {{ old('estado', $animal->estado) == 'inactivo' ? 'selected' : '' }}>Inactivo</option>
                                 <option value="vendido" {{ old('estado', $animal->estado) == 'vendido' ? 'selected' : '' }}>💰 Vendido</option>
                                 <option value="muerto"  {{ old('estado', $animal->estado) == 'muerto'  ? 'selected' : '' }}>💀 Muerto</option>
                             </select>
@@ -391,6 +393,7 @@
                   onsubmit="return confirm('¿Estás seguro de eliminar a {{ addslashes($animal->nombre ?: $animal->codigo) }}? Esta acción no se puede deshacer.')">
                 @csrf
                 @method('DELETE')
+                <input type="hidden" name="base_version" value="{{ $animal->version }}">
                 <button type="submit"
                         class="px-6 py-4 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-xl transition-all border-2 border-red-300 hover:border-red-400 flex items-center">
                     <i class="fa-solid fa-trash mr-2"></i>Eliminar Animal

@@ -33,7 +33,7 @@
         <div class="glass-effect border-4 border-white/50 rounded-xl p-4 shadow-xl flex items-center justify-between">
             <div>
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Animales</p>
-                <p class="text-2xl font-bold text-red-700">{{ $totalAnimales }}</p>
+                <p class="text-2xl font-bold text-red-700"><span data-finance-stat="totalAnimales">{{ $totalAnimales }}</span></p>
             </div>
             <span class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                 <i class="fa-solid fa-cow text-red-600"></i>
@@ -42,7 +42,7 @@
         <div class="glass-effect border-4 border-white/50 rounded-xl p-4 shadow-xl flex items-center justify-between">
             <div>
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Registros Salud</p>
-                <p class="text-2xl font-bold text-purple-700">{{ $totalSalud }}</p>
+                <p class="text-2xl font-bold text-purple-700"><span data-finance-stat="totalSalud">{{ $totalSalud }}</span></p>
             </div>
             <span class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                 <i class="fa-solid fa-heart-pulse text-purple-600"></i>
@@ -51,7 +51,7 @@
         <div class="glass-effect border-4 border-white/50 rounded-xl p-4 shadow-xl flex items-center justify-between">
             <div>
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Ingresos</p>
-                <p class="text-2xl font-bold text-green-700">${{ number_format($totalIngresos, 0, ',', '.') }}</p>
+                <p class="text-2xl font-bold text-green-700">$<span data-finance-stat="totalIngresos">{{ \App\Services\Money::format($totalIngresos) }}</span></p>
             </div>
             <span class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                 <i class="fa-solid fa-arrow-trend-up text-green-600"></i>
@@ -60,7 +60,7 @@
         <div class="glass-effect border-4 border-white/50 rounded-xl p-4 shadow-xl flex items-center justify-between">
             <div>
                 <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Total Egresos</p>
-                <p class="text-2xl font-bold text-red-700">${{ number_format($totalEgresos, 0, ',', '.') }}</p>
+                <p class="text-2xl font-bold text-red-700">$<span data-finance-stat="totalEgresos">{{ \App\Services\Money::format($totalEgresos) }}</span></p>
             </div>
             <span class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
                 <i class="fa-solid fa-arrow-trend-down text-red-600"></i>
@@ -150,11 +150,11 @@
                     <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Resumen estadistico por tipo</li>
                 </ul>
                 <div class="flex gap-2">
-                    <button onclick="generarReporte('inventario', true)"
+                    <button onclick="generarReporte('inventario', true)" data-report-kind="inventario" data-report-preview="true"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-xl text-sm transition-all shadow-lg">
                         <i class="fa-solid fa-eye"></i> Vista previa
                     </button>
-                    <button onclick="generarReporte('inventario', false)"
+                    <button onclick="generarReporte('inventario', false)" data-report-kind="inventario" data-report-preview="false"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-red-300 text-red-700 hover:bg-red-50 font-bold rounded-xl text-sm transition-all">
                         <i class="fa-solid fa-download"></i> Descargar
                     </button>
@@ -182,11 +182,11 @@
                     <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Animales en carencia destacados</li>
                 </ul>
                 <div class="flex gap-2">
-                    <button onclick="generarReporte('salud', true)"
+                    <button onclick="generarReporte('salud', true)" data-report-kind="salud" data-report-preview="true"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold rounded-xl text-sm transition-all shadow-lg">
                         <i class="fa-solid fa-eye"></i> Vista previa
                     </button>
-                    <button onclick="generarReporte('salud', false)"
+                    <button onclick="generarReporte('salud', false)" data-report-kind="salud" data-report-preview="false"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-purple-300 text-purple-700 hover:bg-purple-50 font-bold rounded-xl text-sm transition-all">
                         <i class="fa-solid fa-download"></i> Descargar
                     </button>
@@ -214,11 +214,11 @@
                     <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Costos de salud cruzados</li>
                 </ul>
                 <div class="flex gap-2">
-                    <button onclick="generarReporte('financiero', true)"
+                    <button onclick="generarReporte('financiero', true)" data-report-kind="financiero" data-report-preview="true"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-bold rounded-xl text-sm transition-all shadow-lg">
                         <i class="fa-solid fa-eye"></i> Vista previa
                     </button>
-                    <button onclick="generarReporte('financiero', false)"
+                    <button onclick="generarReporte('financiero', false)" data-report-kind="financiero" data-report-preview="false"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 font-bold rounded-xl text-sm transition-all">
                         <i class="fa-solid fa-download"></i> Descargar
                     </button>
@@ -251,11 +251,11 @@
                     <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Lote, laboratorio y costo por aplicacion</li>
                 </ul>
                 <div class="flex gap-2">
-                    <button onclick="generarReporte('vacunacion', true)"
+                    <button onclick="generarReporte('vacunacion', true)" data-report-kind="vacunacion" data-report-preview="true"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl text-sm transition-all shadow-lg">
                         <i class="fa-solid fa-eye"></i> Vista previa
                     </button>
-                    <button onclick="generarReporte('vacunacion', false)"
+                    <button onclick="generarReporte('vacunacion', false)" data-report-kind="vacunacion" data-report-preview="false"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-blue-300 text-blue-700 hover:bg-blue-50 font-bold rounded-xl text-sm transition-all">
                         <i class="fa-solid fa-download"></i> Descargar
                     </button>
@@ -283,11 +283,11 @@
                     <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Historial de cirugias y revisiones</li>
                 </ul>
                 <div class="flex gap-2">
-                    <button onclick="generarReporte('tratamientos', true)"
+                    <button onclick="generarReporte('tratamientos', true)" data-report-kind="tratamientos" data-report-preview="true"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-bold rounded-xl text-sm transition-all shadow-lg">
                         <i class="fa-solid fa-eye"></i> Vista previa
                     </button>
-                    <button onclick="generarReporte('tratamientos', false)"
+                    <button onclick="generarReporte('tratamientos', false)" data-report-kind="tratamientos" data-report-preview="false"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-orange-300 text-orange-700 hover:bg-orange-50 font-bold rounded-xl text-sm transition-all">
                         <i class="fa-solid fa-download"></i> Descargar
                     </button>
@@ -315,11 +315,11 @@
                     <li class="flex items-center gap-2"><i class="fa-solid fa-check-circle text-green-500 text-xs"></i> Selecciona el animal en los filtros</li>
                 </ul>
                 <div class="flex gap-2">
-                    <button onclick="generarReporte('historial', true)"
+                    <button onclick="generarReporte('historial', true)" data-report-kind="historial" data-report-preview="true"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white font-bold rounded-xl text-sm transition-all shadow-lg">
                         <i class="fa-solid fa-eye"></i> Vista previa
                     </button>
-                    <button onclick="generarReporte('historial', false)"
+                    <button onclick="generarReporte('historial', false)" data-report-kind="historial" data-report-preview="false"
                         class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white border-2 border-teal-300 text-teal-700 hover:bg-teal-50 font-bold rounded-xl text-sm transition-all">
                         <i class="fa-solid fa-download"></i> Descargar
                     </button>

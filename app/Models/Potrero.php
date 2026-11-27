@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class Potrero extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, \App\Models\Concerns\SyncsWorkspace;
 
     protected $fillable = [
         'codigo',

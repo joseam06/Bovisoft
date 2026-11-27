@@ -21,9 +21,9 @@
                     Historial de Salud
                 </h1>
                 <p class="text-red-100 mt-1 ml-16">
-                    {{ $animal->nombre ?? $animal->codigo }}
-                    @if($animal->numero) · N° {{ $animal->numero }} @endif
-                    · {{ $animal->finca->nombre ?? '' }}
+                    <span data-offline-owner="animales" data-offline-field="nombre">{{ $animal->nombre ?? $animal->codigo }}</span>
+                    @if($animal->numero) · N° <span data-offline-owner="animales" data-offline-field="numero">{{ $animal->numero }}</span> @endif
+                    · <span data-offline-owner="animales" data-offline-field="finca_nombre">{{ $animal->finca->nombre ?? '' }}</span>
                 </p>
             </div>
         </div>
@@ -57,7 +57,7 @@
                     <i class="fa-solid fa-cow text-white text-2xl"></i>
                 </div>
                 <p class="text-gray-500 text-xs">Tipo</p>
-                <p class="font-bold text-gray-800">{{ ucfirst($animal->tipo) }}</p>
+                <p class="font-bold text-gray-800"><span data-offline-owner="animales" data-offline-field="tipo">{{ ucfirst($animal->tipo) }}</span></p>
             </div>
 
             <div class="text-center">
@@ -65,7 +65,7 @@
                     <i class="fa-solid fa-barcode text-white text-xl"></i>
                 </div>
                 <p class="text-gray-500 text-xs">Código</p>
-                <p class="font-bold text-gray-800 font-mono text-xs">{{ $animal->codigo }}</p>
+                <p class="font-bold text-gray-800 font-mono text-xs"><span data-offline-owner="animales" data-offline-field="codigo">{{ $animal->codigo }}</span></p>
             </div>
 
             <div class="text-center">
@@ -74,7 +74,7 @@
                     <i class="fa-solid fa-{{ $animal->sexo === 'macho' ? 'mars' : 'venus' }} text-white text-xl"></i>
                 </div>
                 <p class="text-gray-500 text-xs">Sexo</p>
-                <p class="font-bold text-gray-800">{{ ucfirst($animal->sexo) }}</p>
+                <p class="font-bold text-gray-800"><span data-offline-owner="animales" data-offline-field="sexo">{{ ucfirst($animal->sexo) }}</span></p>
             </div>
 
             <div class="text-center">
@@ -82,7 +82,7 @@
                     <i class="fa-solid fa-dna text-white text-xl"></i>
                 </div>
                 <p class="text-gray-500 text-xs">Raza</p>
-                <p class="font-bold text-gray-800">{{ $animal->raza ?? 'N/A' }}</p>
+                <p class="font-bold text-gray-800"><span data-offline-owner="animales" data-offline-field="raza">{{ $animal->raza ?? 'N/A' }}</span></p>
             </div>
 
             <div class="text-center">
@@ -90,7 +90,7 @@
                     <i class="fa-solid fa-calendar text-white text-xl"></i>
                 </div>
                 <p class="text-gray-500 text-xs">Edad</p>
-                <p class="font-bold text-gray-800 text-xs">{{ $animal->edad ?? 'N/A' }}</p>
+                <p class="font-bold text-gray-800 text-xs"><span data-offline-owner="animales" data-offline-field="edad">{{ $animal->edad ?? 'N/A' }}</span></p>
             </div>
 
             <div class="text-center">
@@ -102,7 +102,7 @@
                     <i class="fa-solid fa-circle-check text-white text-xl"></i>
                 </div>
                 <p class="text-gray-500 text-xs">Estado</p>
-                <p class="font-bold text-gray-800">{{ ucfirst($animal->estado) }}</p>
+                <p class="font-bold text-gray-800"><span data-offline-owner="animales" data-offline-field="estado">{{ ucfirst($animal->estado) }}</span></p>
             </div>
         </div>
     </div>
@@ -117,24 +117,24 @@
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="glass-effect border-4 border-white/50 rounded-xl p-4 shadow-xl text-center">
             <i class="fa-solid fa-clipboard-list text-gray-600 text-2xl mb-1"></i>
-            <p class="text-3xl font-bold text-gray-800">{{ $totalRegistros }}</p>
+            <p class="text-3xl font-bold text-gray-800"><span data-offline-stat="totalRegistros">{{ $totalRegistros }}</span></p>
             <p class="text-gray-600 text-xs font-medium mt-1">Total registros</p>
         </div>
         <div class="glass-effect border-4 border-white/50 rounded-xl p-4 shadow-xl text-center">
             <i class="fa-solid fa-syringe text-blue-600 text-2xl mb-1"></i>
-            <p class="text-3xl font-bold text-blue-700">{{ $vacunaciones }}</p>
+            <p class="text-3xl font-bold text-blue-700"><span data-offline-stat="vacunaciones">{{ $vacunaciones }}</span></p>
             <p class="text-gray-600 text-xs font-medium mt-1">Vacunaciones (página)</p>
         </div>
         <div class="glass-effect border-4 border-white/50 rounded-xl p-4 shadow-xl text-center
                     {{ $proximasVencer > 0 ? 'ring-2 ring-yellow-400' : '' }}">
             <i class="fa-solid fa-calendar-check text-yellow-600 text-2xl mb-1"></i>
-            <p class="text-3xl font-bold text-yellow-600">{{ $proximasVencer }}</p>
+            <p class="text-3xl font-bold text-yellow-600"><span data-offline-stat="proximasVencer">{{ $proximasVencer }}</span></p>
             <p class="text-gray-600 text-xs font-medium mt-1">Próximas (7 días)</p>
         </div>
         <div class="glass-effect border-4 border-white/50 rounded-xl p-4 shadow-xl text-center
                     {{ $enCarencia > 0 ? 'ring-2 ring-red-400' : '' }}">
             <i class="fa-solid fa-triangle-exclamation text-red-600 text-2xl mb-1"></i>
-            <p class="text-3xl font-bold text-red-600">{{ $enCarencia }}</p>
+            <p class="text-3xl font-bold text-red-600"><span data-offline-stat="enCarencia">{{ $enCarencia }}</span></p>
             <p class="text-gray-600 text-xs font-medium mt-1">En carencia</p>
         </div>
     </div>
@@ -166,7 +166,7 @@
                         <th class="px-4 py-3 text-center">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody data-offline-collection="salud" class="bg-white divide-y divide-gray-200">
                     @foreach($registros as $r)
                     @php
                         $categoriaColor = [
@@ -205,45 +205,45 @@
                     @endphp
                     <tr class="hover:bg-gray-50 transition-colors
                                {{ $r->en_carencia ? 'border-l-4 border-red-400' : '' }}
-                               {{ $r->alerta_proxima && !$r->en_carencia ? 'border-l-4 border-yellow-400' : '' }}">
+                               <span data-offline-owner="salud" data-offline-field="alerta_proxima">{{ $r->alerta_proxima && !$r->en_carencia ? 'border-l-4 border-yellow-400' : '' }}</span>">
 
                         <td class="px-4 py-3 font-mono font-medium text-gray-700 text-xs whitespace-nowrap">
-                            {{ $r->codigo }}
+                            <span data-offline-owner="salud" data-offline-field="codigo">{{ $r->codigo }}</span>
                         </td>
 
                         <td class="px-4 py-3">
                             @if($r->categoria)
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $categoriaColor }} block mb-1">
-                                {{ ucfirst($r->categoria) }}
+                                <span data-offline-owner="salud" data-offline-field="categoria">{{ ucfirst($r->categoria) }}</span>
                             </span>
                             @endif
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $tipoColor }}">
-                                {{ \App\Models\Salud::getTipos()[$r->tipo] ?? $r->tipo }}
+                                <span data-offline-owner="salud" data-offline-field="tipo">{{ \App\Models\Salud::getTipos()[$r->tipo] ?? $r->tipo }}</span>
                             </span>
                         </td>
 
                         <td class="px-4 py-3">
-                            <div class="font-semibold text-gray-800">{{ $r->nombre_producto }}</div>
+                            <div class="font-semibold text-gray-800"><span data-offline-owner="salud" data-offline-field="nombre_producto">{{ $r->nombre_producto }}</span></div>
                             @if($r->enfermedad_prevenida)
-                            <div class="text-gray-500 text-xs">{{ $r->enfermedad_prevenida }}</div>
+                            <div class="text-gray-500 text-xs"><span data-offline-owner="salud" data-offline-field="enfermedad_prevenida">{{ $r->enfermedad_prevenida }}</span></div>
                             @endif
                         </td>
 
                         <td class="px-4 py-3 text-gray-700">
-                            {{ $r->veterinario ?? '—' }}
+                            <span data-offline-owner="salud" data-offline-field="veterinario">{{ $r->veterinario ?? '—' }}</span>
                         </td>
 
                         <td class="px-4 py-3 text-gray-700 whitespace-nowrap">
-                            {{ $r->fecha_aplicacion?->format('d/m/Y') ?? '—' }}
+                            <span data-offline-owner="salud" data-offline-field="fecha_aplicacion">{{ $r->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</span>
                         </td>
 
                         <td class="px-4 py-3">
                             @if($r->proxima_aplicacion)
                                 <div class="text-gray-700 whitespace-nowrap">
-                                    {{ $r->proxima_aplicacion->format('d/m/Y') }}
+                                    <span data-offline-owner="salud" data-offline-field="proxima_aplicacion">{{ $r->proxima_aplicacion->format('d/m/Y') }}</span>
                                 </div>
                                 <div class="text-xs {{ $r->alerta_proxima ? 'text-red-600 font-bold' : 'text-gray-500' }}">
-                                    {{ $r->dias_para_proxima }}
+                                    <span data-offline-owner="salud" data-offline-field="dias_para_proxima">{{ $r->dias_para_proxima }}</span>
                                 </div>
                             @else
                                 <span class="text-gray-400 text-xs">Sin programar</span>
@@ -252,13 +252,13 @@
 
                         <td class="px-4 py-3">
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $estadoColor }}">
-                                {{ \App\Models\Salud::getEstados()[$r->estado] ?? $r->estado }}
+                                <span data-offline-owner="salud" data-offline-field="estado">{{ \App\Models\Salud::getEstados()[$r->estado] ?? $r->estado }}</span>
                             </span>
                             @if($r->en_carencia)
                             <div class="mt-1">
                                 <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 whitespace-nowrap">
                                     <i class="fa-solid fa-triangle-exclamation mr-0.5"></i>
-                                    Carencia: {{ $r->dias_carencia_restantes }}d
+                                    Carencia: <span data-offline-owner="salud" data-offline-field="dias_carencia_restantes">{{ $r->dias_carencia_restantes }}</span>d
                                 </span>
                             </div>
                             @endif
@@ -278,7 +278,7 @@
                                 </a>
                                 <form action="{{ route('salud.destroy', $r) }}" method="POST"
                                       onsubmit="return confirm('¿Eliminar este registro de salud?')">
-                                    @csrf @method('DELETE')
+                                    @csrf @method('DELETE') <input type="hidden" name="base_version" value="{{ $r->version }}">
                                     <button type="submit"
                                         class="p-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
                                         title="Eliminar">
@@ -307,7 +307,7 @@
             </div>
             <h3 class="text-xl font-bold text-gray-700 mb-2">Sin registros de salud</h3>
             <p class="text-gray-500 mb-6">
-                {{ $animal->nombre ?? $animal->codigo }} no tiene eventos sanitarios registrados.
+                <span data-offline-owner="animales" data-offline-field="nombre">{{ $animal->nombre ?? $animal->codigo }}</span> no tiene eventos sanitarios registrados.
             </p>
             <a href="{{ route('salud.create', ['animal_id' => $animal->id]) }}"
                class="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all

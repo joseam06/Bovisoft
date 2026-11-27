@@ -2,6 +2,10 @@
 
 Esta fase implementa el servidor y su contrato HTTP. No incluye Service Worker, IndexedDB, cola del navegador, desbloqueo local ni sincronización automática del cliente.
 
+La consulta offline añadida posteriormente en Fase 3 se documenta en [production-offline-read.md](production-offline-read.md). La creación y edición offline continúan pendientes.
+
+La ampliación desde el dashboard y la cola de Fincas/Animales se documentan en [offline-workspace.md](offline-workspace.md). La escritura pendiente mencionada arriba corresponde a Producción.
+
 ## Entorno de pruebas reproducible
 
 Desde la raíz del repositorio:

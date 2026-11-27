@@ -38,6 +38,7 @@
 
     <form action="{{ route('finanzas.egresos.store') }}" method="POST">
         @csrf
+        @include('finanzas.operation')
         @if($saludPresel)
             <input type="hidden" name="salud_id" value="{{ $saludPresel->id }}">
         @endif
@@ -136,7 +137,7 @@
                         class="w-full pl-12 pr-10 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 appearance-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all">
                         <option value="">Sin animal asociado</option>
                         @foreach($animales as $a)
-                            <option value="{{ $a->id }}"
+                            <option value="{{ $a->id }}" data-version="{{ $a->version }}"
                                 {{ old('animal_id', $saludPresel?->animal_id) == $a->id ? 'selected' : '' }}>
                                 {{ $a->nombre ?? $a->codigo }} — {{ $a->finca->nombre ?? '' }}
                             </option>
@@ -168,7 +169,7 @@
                             </div>
                             <input type="number" name="monto"
                                 value="{{ old('monto', $saludPresel?->costo) }}"
-                                step="1" min="0" placeholder="0"
+                                step="0.01" min="0" max="999999999999.99" placeholder="0"
                                 class="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl bg-white text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all @error('monto') border-red-500 @enderror">
                         </div>
                         @error('monto') <p class="text-red-600 text-sm mt-1"><i class="fa-solid fa-circle-exclamation mr-1"></i>{{ $message }}</p> @enderror

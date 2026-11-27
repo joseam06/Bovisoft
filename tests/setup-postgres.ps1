@@ -34,6 +34,9 @@ if ($LASTEXITCODE -ne 0) {
     $log = Join-Path $installRoot 'postgres.log'
     $started = Start-Process -FilePath $control -ArgumentList "-D `"$cluster`" -l `"$log`" -o `"-h 127.0.0.1 -p 55432`" -w start" -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $installRoot 'startup.out') -RedirectStandardError (Join-Path $installRoot 'startup.err')
     $started.WaitForExit()
-    if ($started.ExitCode -ne 0) { throw 'No se pudo iniciar PostgreSQL local de pruebas' }
+    # Windows PowerShell can expose a null ExitCode after WaitForExit even
+    # when pg_ctl succeeded. Verify the actual isolated server instead.
+    & rtk proxy $control -D $cluster status
+    if ($LASTEXITCODE -ne 0) { throw 'No se pudo iniciar PostgreSQL local de pruebas' }
 }
 Write-Output "PostgreSQL de pruebas en 127.0.0.1:55432; archivos: $installRoot"

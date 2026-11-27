@@ -113,14 +113,14 @@
         </div>
 
         {{-- Modal de cámara --}}
-        <div id="modal-camara" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+        <div id="modal-camara" role="dialog" aria-modal="true" aria-label="Cámara de perfil" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
             <div class="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-lg">
                 <div class="bg-gradient-to-r from-red-600 to-red-800 p-4 flex items-center justify-between">
                     <h3 class="text-white font-bold text-lg flex items-center space-x-2">
                         <i class="fa-solid fa-camera"></i>
                         <span>Tomar foto</span>
                     </h3>
-                    <button onclick="cerrarCamara()" class="text-white/80 hover:text-white">
+                    <button onclick="cerrarCamara()" aria-label="Cerrar cámara" class="text-white/80 hover:text-white">
                         <i class="fa-solid fa-xmark text-xl"></i>
                     </button>
                 </div>
@@ -154,7 +154,7 @@
             <i class="fa-solid fa-user-pen text-red-600"></i>
             <span>Información Personal</span>
         </h2>
-        <p class="text-gray-500 text-sm mb-6">Actualiza tu nombre y correo electrónico.</p>
+        <p class="text-gray-500 text-sm mb-6">Actualiza tu nombre. Para cambiar el correo, utiliza la sección de seguridad.</p>
 
         @if($errors->has('name') || $errors->has('email'))
             <div class="mb-4 p-3 bg-red-100 border-2 border-red-300 rounded-xl text-red-700 text-sm font-medium space-y-1">
@@ -166,6 +166,7 @@
         <form method="POST" action="{{ route('profile.update') }}" class="space-y-5">
             @csrf
             @method('PATCH')
+<input type="hidden" name="base_version" value="{{ old('base_version', $offlineProfile->version ?? 1) }}">
 
             <div>
                 <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -180,7 +181,7 @@
                 <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
                     <i class="fa-solid fa-envelope text-red-500 mr-1"></i> Correo electrónico
                 </label>
-                <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}"
+                <input type="email" id="email" name="email" readonly value="{{ old('email', $user->email) }}"
                     class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
                     placeholder="tu@correo.com">
             </div>
@@ -195,11 +196,15 @@
         </form>
     </div>
 
+    @include('profile.security')
+
     {{-- SECCIÓN: Cambiar Contraseña --}}
+    @unless($offlineTemplate ?? false)
+    <div data-online-sensitive>
     <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl p-6">
         <h2 class="text-lg font-bold text-gray-800 mb-1 flex items-center space-x-2">
             <i class="fa-solid fa-lock text-red-600"></i>
-            <span>Cambiar Contraseña</span>
+            <span>{{ $user->hasOwnPassword()?'Cambiar contraseña':'Establecer contraseña propia' }}</span>
         </h2>
         <p class="text-gray-500 text-sm mb-6">Asegúrate de usar una contraseña segura de al menos 8 caracteres.</p>
 
@@ -214,6 +219,7 @@
             @csrf
             @method('PATCH')
 
+            @if($user->hasOwnPassword())
             <div>
                 <label for="current_password" class="block text-sm font-semibold text-gray-700 mb-2">
                     <i class="fa-solid fa-key text-red-500 mr-1"></i> Contraseña actual
@@ -222,6 +228,10 @@
                     class="w-full px-4 py-3 bg-white border-2 border-gray-300 rounded-xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
                     placeholder="Tu contraseña actual">
             </div>
+
+            @else
+            <p class="text-sm text-gray-700">Confirma antes tu identidad con Google en la sección de seguridad. No necesitas conocer la contraseña aleatoria original.</p>
+            @endif
 
             <div>
                 <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -251,6 +261,8 @@
         </form>
     </div>
 
+    </div>
+    @endunless
 </div>
 
 <script>

@@ -12,8 +12,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias(['verified'=>\App\Http\Middleware\VerifiedOrLegacyAccount::class]);
+        $middleware->web(append: [\App\Http\Middleware\AuthenticationNavigation::class,\App\Http\Middleware\AccountSessionVersion::class,\App\Http\Middleware\OfflineBrowserIdentity::class]);
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->render(function (\App\Exceptions\WorkspaceVersionConflict $error, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'version_conflict', 'message' => $error->getMessage(),
+                    'current' => \App\Services\WorkspaceJournal::serialize($error->current)], 409);
+            }
+
+            return back()->withErrors(['base_version' => $error->getMessage()])->withInput();
+        });
         //
     })->create();

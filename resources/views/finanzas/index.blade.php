@@ -84,7 +84,7 @@
                 </span>
             </div>
             <p class="text-3xl font-bold text-green-700">
-                ${{ number_format($totalIngresos, 0, ',', '.') }}
+                $<span data-finance-stat="totalIngresos">{{ \App\Services\Money::format($totalIngresos) }}</span>
             </p>
             <p class="text-xs text-gray-500 mt-1">COP en el período</p>
         </div>
@@ -98,7 +98,7 @@
                 </span>
             </div>
             <p class="text-3xl font-bold text-red-700">
-                ${{ number_format($totalEgresos, 0, ',', '.') }}
+                $<span data-finance-stat="totalEgresos">{{ \App\Services\Money::format($totalEgresos) }}</span>
             </p>
             <p class="text-xs text-gray-500 mt-1">COP en el período</p>
         </div>
@@ -113,7 +113,7 @@
                 </span>
             </div>
             <p class="text-3xl font-bold {{ $balance >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
-                {{ $balance >= 0 ? '+' : '' }}${{ number_format($balance, 0, ',', '.') }}
+                <span data-finance-sign>{{ $balance >= 0 ? '+' : '' }}</span>$<span data-finance-stat="balance">{{ \App\Services\Money::format($balance) }}</span>
             </p>
             <p class="text-xs text-gray-500 mt-1">Ingresos − Egresos</p>
         </div>
@@ -140,28 +140,28 @@
                 Ingresos por tipo
             </h2>
             @php $tiposLabel = \App\Models\Ingreso::getTipos(); @endphp
-            @forelse($ingresosPorTipo as $tipo => $monto)
+            <div data-finance-breakdown="ingresos">@forelse($ingresosPorTipo as $tipo => $monto)
             <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                 <span class="text-sm text-gray-700">{{ $tiposLabel[$tipo] ?? ucfirst($tipo) }}</span>
-                <span class="text-sm font-bold text-green-700">${{ number_format($monto, 0, ',', '.') }}</span>
+                <span class="text-sm font-bold text-green-700">${{ \App\Services\Money::format($monto) }}</span>
             </div>
             @empty
             <p class="text-sm text-gray-400 text-center py-4">Sin ingresos en este período</p>
-            @endforelse
+            @endforelse</div>
 
             <h2 class="text-lg font-bold text-gray-800 mt-5 mb-3 flex items-center gap-2">
                 <i class="fa-solid fa-list text-red-500"></i>
                 Egresos por categoría
             </h2>
             @php $catsLabel = \App\Models\Egreso::getCategorias(); @endphp
-            @forelse($egresosPorCategoria as $cat => $monto)
+            <div data-finance-breakdown="egresos">@forelse($egresosPorCategoria as $cat => $monto)
             <div class="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                 <span class="text-sm text-gray-700">{{ $catsLabel[$cat] ?? ucfirst($cat) }}</span>
-                <span class="text-sm font-bold text-red-700">${{ number_format($monto, 0, ',', '.') }}</span>
+                <span class="text-sm font-bold text-red-700">${{ \App\Services\Money::format($monto) }}</span>
             </div>
             @empty
             <p class="text-sm text-gray-400 text-center py-4">Sin egresos en este período</p>
-            @endforelse
+            @endforelse</div>
         </div>
     </div>
 
@@ -182,14 +182,14 @@
                         <th class="px-4 py-3 text-right">Balance</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
+                <tbody data-finance-balances class="bg-white divide-y divide-gray-100">
                     @foreach($balancePorFinca as $row)
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 font-medium text-gray-800">{{ $row['finca'] }}</td>
-                        <td class="px-4 py-3 text-right text-green-700 font-semibold">${{ number_format($row['ingresos'], 0, ',', '.') }}</td>
-                        <td class="px-4 py-3 text-right text-red-700 font-semibold">${{ number_format($row['egresos'], 0, ',', '.') }}</td>
+                        <td class="px-4 py-3 text-right text-green-700 font-semibold">${{ \App\Services\Money::format($row['ingresos']) }}</td>
+                        <td class="px-4 py-3 text-right text-red-700 font-semibold">${{ \App\Services\Money::format($row['egresos']) }}</td>
                         <td class="px-4 py-3 text-right font-bold {{ $row['balance'] >= 0 ? 'text-emerald-700' : 'text-red-700' }}">
-                            {{ $row['balance'] >= 0 ? '+' : '' }}${{ number_format($row['balance'], 0, ',', '.') }}
+                            {{ $row['balance'] >= 0 ? '+' : '' }}${{ \App\Services\Money::format($row['balance']) }}
                         </td>
                     </tr>
                     @endforeach
@@ -212,26 +212,26 @@
                 <a href="{{ route('finanzas.ingresos.create') }}"
                    class="text-xs font-bold text-emerald-600 hover:text-emerald-800">+ Nuevo</a>
             </div>
-            @forelse($ultimosIngresos as $ing)
+            <div data-finance-list="ingresos">@forelse($ultimosIngresos as $ing)
             <div class="flex items-center justify-between px-5 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors">
                 <div class="flex items-center gap-3">
                     <span class="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center shrink-0">
                         <i class="fa-solid fa-arrow-trend-up text-green-600 text-sm"></i>
                     </span>
                     <div>
-                        <p class="text-sm font-semibold text-gray-800">{{ \App\Models\Ingreso::getTipos()[$ing->tipo] ?? $ing->tipo }}</p>
-                        <p class="text-xs text-gray-500">{{ $ing->finca->nombre ?? '—' }} · {{ $ing->fecha->format('d/m/Y') }}</p>
+                        <p class="text-sm font-semibold text-gray-800"><span data-offline-owner="ingresos" data-offline-field="tipo">{{ \App\Models\Ingreso::getTipos()[$ing->tipo] ?? $ing->tipo }}</span></p>
+                        <p class="text-xs text-gray-500"><span data-offline-owner="ingresos" data-offline-field="finca_nombre">{{ $ing->finca->nombre ?? '—' }}</span> · <span data-offline-owner="ingresos" data-offline-field="fecha">{{ $ing->fecha->format('d/m/Y') }}</span></p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <p class="text-sm font-bold text-green-700">${{ number_format($ing->monto, 0, ',', '.') }}</p>
+                    <p class="text-sm font-bold text-green-700">$<span data-offline-owner="ingresos" data-offline-field="monto">{{ \App\Services\Money::format($ing->monto) }}</span></p>
                     <a href="{{ route('finanzas.ingresos.show', $ing) }}"
                        class="text-xs text-gray-400 hover:text-emerald-600">Ver →</a>
                 </div>
             </div>
             @empty
             <div class="px-5 py-8 text-center text-gray-400 text-sm">Sin ingresos registrados</div>
-            @endforelse
+            @endforelse</div>
         </div>
 
         {{-- Últimos egresos --}}
@@ -244,26 +244,26 @@
                 <a href="{{ route('finanzas.egresos.create') }}"
                    class="text-xs font-bold text-red-600 hover:text-red-800">+ Nuevo</a>
             </div>
-            @forelse($ultimosEgresos as $egr)
+            <div data-finance-list="egresos">@forelse($ultimosEgresos as $egr)
             <div class="flex items-center justify-between px-5 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors">
                 <div class="flex items-center gap-3">
                     <span class="w-9 h-9 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
                         <i class="fa-solid fa-arrow-trend-down text-red-500 text-sm"></i>
                     </span>
                     <div>
-                        <p class="text-sm font-semibold text-gray-800">{{ \App\Models\Egreso::getCategorias()[$egr->categoria] ?? $egr->categoria }}</p>
-                        <p class="text-xs text-gray-500">{{ $egr->finca->nombre ?? '—' }} · {{ $egr->fecha->format('d/m/Y') }}</p>
+                        <p class="text-sm font-semibold text-gray-800"><span data-offline-owner="egresos" data-offline-field="categoria">{{ \App\Models\Egreso::getCategorias()[$egr->categoria] ?? $egr->categoria }}</span></p>
+                        <p class="text-xs text-gray-500"><span data-offline-owner="egresos" data-offline-field="finca_nombre">{{ $egr->finca->nombre ?? '—' }}</span> · <span data-offline-owner="egresos" data-offline-field="fecha">{{ $egr->fecha->format('d/m/Y') }}</span></p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <p class="text-sm font-bold text-red-700">${{ number_format($egr->monto, 0, ',', '.') }}</p>
+                    <p class="text-sm font-bold text-red-700">$<span data-offline-owner="egresos" data-offline-field="monto">{{ \App\Services\Money::format($egr->monto) }}</span></p>
                     <a href="{{ route('finanzas.egresos.show', $egr) }}"
                        class="text-xs text-gray-400 hover:text-red-600">Ver →</a>
                 </div>
             </div>
             @empty
             <div class="px-5 py-8 text-center text-gray-400 text-sm">Sin egresos registrados</div>
-            @endforelse
+            @endforelse</div>
         </div>
     </div>
 
@@ -276,7 +276,7 @@
         <div>
             <p class="text-sm font-bold text-gray-800">
                 Costos de salud animal en el período:
-                <span class="text-purple-700">${{ number_format($costosSalud, 0, ',', '.') }} COP</span>
+                <span class="text-purple-700">$<span data-finance-stat="costosSalud">{{ \App\Services\Money::format($costosSalud) }}</span> COP</span>
             </p>
             <p class="text-xs text-gray-500">Registrados en el módulo Salud. Puedes importarlos como egreso usando el botón "Nuevo Egreso → Salud Animal".</p>
         </div>

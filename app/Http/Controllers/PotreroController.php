@@ -91,44 +91,10 @@ class PotreroController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request, \App\Services\WorkspaceRecords $records)
     {
-        $validated = $request->validate([
-            'codigo' => 'required|string|unique:potreros,codigo',
-            'nombre' => 'required|string|max:255',
-            'area' => 'nullable|numeric|min:0|max:99999.99',
-            'tipo_pasto' => 'nullable|string|max:100',
-            'capacidad_animales' => 'nullable|integer|min:0|max:9999',
-            'dias_descanso' => 'nullable|integer|min:0|max:365',
-            'fecha_ultima_rotacion' => 'nullable|date|before_or_equal:today',
-            'observaciones' => 'nullable|string',
-            'finca_id' => 'required|exists:fincas,id',
-            'estado' => 'required|in:activo,en_descanso,en_mantenimiento',
-        ], [
-            'codigo.required' => 'El código es obligatorio',
-            'codigo.unique' => 'Este código ya está en uso',
-            'nombre.required' => 'El nombre del potrero es obligatorio',
-            'finca_id.required' => 'Debes seleccionar una finca',
-            'finca_id.exists' => 'La finca seleccionada no existe',
-            'capacidad_animales.integer' => 'La capacidad debe ser un número entero',
-            'area.numeric' => 'El área debe ser un número',
-            'fecha_ultima_rotacion.before_or_equal' => 'La fecha de rotación no puede ser futura',
-        ]);
-
-        // Verificar que la finca pertenezca al usuario
-        $finca = Finca::findOrFail($validated['finca_id']);
-        if ($finca->user_id !== Auth::id()) {
-            abort(403, 'No tienes permiso para crear potreros en esta finca');
-        }
-
-        // Asignar user_id
-        $validated['user_id'] = Auth::id();
-        $validated['animales_actuales'] = 0; // Inicia sin animales
-
-        $potrero = Potrero::create($validated);
-
-        return redirect()->route('potreros.index')
-            ->with('success', 'Potrero registrado exitosamente');
+        $records->write($request->user(), 'potreros', 'create', $request->all());
+        return redirect()->route('potreros.index')->with('success', 'Potrero registrado exitosamente');
     }
 
     /**
@@ -137,12 +103,12 @@ class PotreroController extends Controller
     public function show(Potrero $potrero)
     {
         // Verificar permisos
-        if ($potrero->user_id !== Auth::id()) {
+        if ($potrero->user_id !== Auth::id() || ! Finca::delUsuario(Auth::id())->whereKey($potrero->finca_id)->exists()) {
             abort(403, 'No tienes permiso para ver este potrero');
         }
 
         // Cargar relaciones
-        $potrero->load('finca', 'animales');
+        $potrero->load('finca')->load(['animales' => fn ($q) => $q->where('user_id', Auth::id())]);
 
         return view('potreros.show', compact('potrero'));
     }
@@ -153,7 +119,7 @@ class PotreroController extends Controller
     public function edit(Potrero $potrero)
     {
         // Verificar permisos
-        if ($potrero->user_id !== Auth::id()) {
+        if ($potrero->user_id !== Auth::id() || ! Finca::delUsuario(Auth::id())->whereKey($potrero->finca_id)->exists()) {
             abort(403, 'No tienes permiso para editar este potrero');
         }
 
@@ -170,79 +136,31 @@ class PotreroController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Potrero $potrero)
+    public function update(Request $request, Potrero $potrero, \App\Services\WorkspaceRecords $records)
     {
-        // Verificar permisos
-        if ($potrero->user_id !== Auth::id()) {
-            abort(403, 'No tienes permiso para editar este potrero');
-        }
-
-        $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'area' => 'nullable|numeric|min:0|max:99999.99',
-            'tipo_pasto' => 'nullable|string|max:100',
-            'capacidad_animales' => 'nullable|integer|min:0|max:9999',
-            'dias_descanso' => 'nullable|integer|min:0|max:365',
-            'fecha_ultima_rotacion' => 'nullable|date|before_or_equal:today',
-            'observaciones' => 'nullable|string',
-            'finca_id' => 'required|exists:fincas,id',
-            'estado' => 'required|in:activo,en_descanso,en_mantenimiento',
-        ]);
-
-        // Verificar que la finca pertenezca al usuario
-        $finca = Finca::findOrFail($validated['finca_id']);
-        if ($finca->user_id !== Auth::id()) {
-            abort(403, 'No tienes permiso para asignar potreros a esta finca');
-        }
-
-        $potrero->update($validated);
-
-        return redirect()->route('potreros.show', $potrero)
-            ->with('success', 'Potrero actualizado exitosamente');
+        $records->write($request->user(), 'potreros', 'update', $request->all(), $potrero);
+        return redirect()->route('potreros.show', $potrero)->with('success', 'Potrero actualizado exitosamente');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Potrero $potrero)
+    public function destroy(Request $request, Potrero $potrero, \App\Services\WorkspaceRecords $records)
     {
-        // Verificar permisos
-        if ($potrero->user_id !== Auth::id()) {
-            abort(403, 'No tienes permiso para eliminar este potrero');
-        }
-
-        // Verificar si tiene animales
-        if ($potrero->animales_actuales > 0) {
-            return back()->with('error', 'No puedes eliminar un potrero que tiene animales asignados. Primero reasigna los animales.');
-        }
-
-        $potrero->delete();
-
-        return redirect()->route('potreros.index')
-            ->with('success', 'Potrero eliminado exitosamente');
+        $records->write($request->user(), 'potreros', 'delete', $request->all(), $potrero);
+        return redirect()->route('potreros.index')->with('success', 'Potrero eliminado exitosamente');
     }
 
     /**
      * Cambiar estado del potrero
      */
-    public function cambiarEstado(Potrero $potrero, Request $request)
+    public function cambiarEstado(Potrero $potrero, Request $request, \App\Services\WorkspaceRecords $records)
     {
-        // Verificar permisos
-        if ($potrero->user_id !== Auth::id()) {
-            return response()->json(['error' => 'No autorizado'], 403);
-        }
-
-        $validated = $request->validate([
-            'estado' => 'required|in:activo,en_descanso,en_mantenimiento',
-        ]);
-
-        $potrero->update(['estado' => $validated['estado']]);
-
-        return response()->json([
-            'success' => true,
-            'estado' => $potrero->estado,
-            'estado_formateado' => $potrero->estado_formateado,
-        ]);
+        $potrero = $records->find($request->user(), 'potreros', $potrero->id);
+        $values = $potrero->only(['nombre','area','tipo_pasto','capacidad_animales','dias_descanso','observaciones','finca_id']);
+        $values['fecha_ultima_rotacion'] = $potrero->fecha_ultima_rotacion?->format('Y-m-d');
+        $records->write($request->user(), 'potreros', 'update', $request->only('estado','base_version') + $values, $potrero);
+        return response()->json(['success' => true, 'estado' => $potrero->estado, 'estado_formateado' => $potrero->estado_formateado]);
     }
 
     /**

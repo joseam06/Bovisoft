@@ -38,7 +38,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-sm mb-1 font-medium">Total Potreros</p>
-                    <p class="text-4xl font-bold text-gray-800">{{ $total }}</p>
+                    <p class="text-4xl font-bold text-gray-800"><span data-offline-stat="total">{{ $total }}</span></p>
                 </div>
                 <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-xl flex items-center justify-center shadow-lg">
                     <i class="fa-solid fa-map text-white text-2xl"></i>
@@ -51,7 +51,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-sm mb-1 font-medium">Activos</p>
-                    <p class="text-4xl font-bold text-gray-800">{{ $activos }}</p>
+                    <p class="text-4xl font-bold text-gray-800"><span data-offline-stat="activos">{{ $activos }}</span></p>
                 </div>
                 <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
                     <i class="fa-solid fa-check-circle text-white text-2xl"></i>
@@ -64,7 +64,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-sm mb-1 font-medium">En Descanso</p>
-                    <p class="text-4xl font-bold text-gray-800">{{ $en_descanso }}</p>
+                    <p class="text-4xl font-bold text-gray-800"><span data-offline-stat="en_descanso">{{ $en_descanso }}</span></p>
                 </div>
                 <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-700 rounded-xl flex items-center justify-center shadow-lg">
                     <i class="fa-solid fa-pause-circle text-white text-2xl"></i>
@@ -77,7 +77,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-sm mb-1 font-medium">Área Total</p>
-                    <p class="text-4xl font-bold text-gray-800">{{ number_format($area_total, 1) }}</p>
+                    <p class="text-4xl font-bold text-gray-800"><span data-offline-stat="area_total">{{ number_format($area_total, 1) }}</span></p>
                     <p class="text-gray-500 text-xs mt-1">hectáreas</p>
                 </div>
                 <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
@@ -173,25 +173,25 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody data-offline-collection="potreros" class="bg-white divide-y divide-gray-200">
                         @foreach($potreros as $potrero)
                             <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 text-gray-800 font-mono text-sm">{{ $potrero->codigo }}</td>
-                                <td class="px-6 py-4 text-gray-800 font-medium">{{ $potrero->nombre }}</td>
+                                <td class="px-6 py-4 text-gray-800 font-mono text-sm"><span data-offline-owner="potreros" data-offline-field="codigo">{{ $potrero->codigo }}</span></td>
+                                <td class="px-6 py-4 text-gray-800 font-medium"><span data-offline-owner="potreros" data-offline-field="nombre">{{ $potrero->nombre }}</span></td>
                                 <td class="px-6 py-4 text-gray-700 text-sm">
                                     <a href="{{ route('fincas.show', $potrero->finca) }}" class="text-red-600 hover:text-red-800 transition-colors font-medium">
-                                        <i class="fa-solid fa-map-marker-alt mr-1"></i>{{ $potrero->finca->nombre }}
+                                        <i class="fa-solid fa-map-marker-alt mr-1"></i><span data-offline-owner="potreros" data-offline-field="finca_nombre">{{ $potrero->finca->nombre }}</span>
                                     </a>
                                 </td>
                                 <td class="px-6 py-4 text-gray-700 text-sm">
                                     @if($potrero->area)
-                                        {{ number_format($potrero->area, 2) }} ha
+                                        <span data-offline-owner="potreros" data-offline-field="area">{{ number_format($potrero->area, 2) }}</span> ha
                                     @else
                                         <span class="text-gray-400">N/A</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-gray-700 text-sm font-medium">
-                                    {{ $potrero->animales_actuales }} / {{ $potrero->capacidad_animales ?? 'N/A' }}
+                                    <span data-offline-owner="potreros" data-offline-field="animales_actuales">{{ $potrero->animales_actuales }}</span> / <span data-offline-owner="potreros" data-offline-field="capacidad_animales">{{ $potrero->capacidad_animales ?? 'N/A' }}</span>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-2">
@@ -201,10 +201,10 @@
                                              @elseif($potrero->porcentaje_ocupacion >= 70) bg-yellow-500
                                              @else bg-green-500
                                            @endif"
-                                         style="--w: {{ min($potrero->porcentaje_ocupacion, 100) }}%"
+                                         data-offline-occupancy-bar style="--w: <span data-offline-owner="potreros" data-offline-field="porcentaje_ocupacion">{{ min($potrero->porcentaje_ocupacion, 100) }}</span>%"
                                         ></div>
                                         </div>
-                                        <span class="text-gray-700 text-sm font-medium">{{ $potrero->porcentaje_ocupacion }}%</span>
+                                        <span class="text-gray-700 text-sm font-medium"><span data-offline-owner="potreros" data-offline-field="porcentaje_ocupacion">{{ $potrero->porcentaje_ocupacion }}</span>%</span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
@@ -213,7 +213,7 @@
                                              @elseif($potrero->porcentaje_ocupacion >= 70) bg-yellow-500
                                              @else bg-green-500
                                            @endif"
-                                         style="--w: {{ min($potrero->porcentaje_ocupacion, 100) }}%"
+                                         data-offline-occupancy-bar style="--w: <span data-offline-owner="potreros" data-offline-field="porcentaje_ocupacion">{{ min($potrero->porcentaje_ocupacion, 100) }}</span>%"
                                         ></div>
                                 </td>
                                 <td class="px-6 py-4">
@@ -231,7 +231,7 @@
                                         <form action="{{ route('potreros.destroy', $potrero) }}" method="POST" class="inline"
                                             onsubmit="return confirm('¿Estás seguro de eliminar este potrero?')">
                                             @csrf
-                                            @method('DELETE')
+                                            @method('DELETE') <input type="hidden" name="base_version" value="{{ $potrero->version }}">
                                             <button type="submit" 
                                                 class="w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition-all shadow-lg"
                                                 title="Eliminar">

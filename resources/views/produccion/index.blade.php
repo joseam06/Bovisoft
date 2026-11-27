@@ -43,7 +43,7 @@
                     <i class="fa-solid fa-sun text-blue-600"></i>
                 </div>
             </div>
-            <p class="text-3xl font-extrabold text-blue-700">{{ number_format($totalHoy, 1) }}</p>
+            <p class="text-3xl font-extrabold text-blue-700"><span data-offline-stat="totalHoy">{{ number_format($totalHoy, 1) }}</span></p>
             <p class="text-xs text-gray-500 mt-1">litros registrados hoy</p>
         </div>
 
@@ -54,7 +54,7 @@
                     <i class="fa-solid fa-calendar-week text-green-600"></i>
                 </div>
             </div>
-            <p class="text-3xl font-extrabold text-green-700">{{ number_format($totalSemana, 1) }}</p>
+            <p class="text-3xl font-extrabold text-green-700"><span data-offline-stat="totalSemana">{{ number_format($totalSemana, 1) }}</span></p>
             <p class="text-xs text-gray-500 mt-1">litros esta semana</p>
         </div>
 
@@ -65,7 +65,7 @@
                     <i class="fa-solid fa-droplet text-purple-600"></i>
                 </div>
             </div>
-            <p class="text-3xl font-extrabold text-purple-700">{{ number_format($totalMes, 1) }}</p>
+            <p class="text-3xl font-extrabold text-purple-700"><span data-offline-stat="totalMes">{{ number_format($totalMes, 1) }}</span></p>
             <p class="text-xs text-gray-500 mt-1">litros este mes</p>
         </div>
 
@@ -76,7 +76,7 @@
                     <i class="fa-solid fa-clipboard-list text-orange-600"></i>
                 </div>
             </div>
-            <p class="text-3xl font-extrabold text-orange-700">{{ $totalRegistros }}</p>
+            <p class="text-3xl font-extrabold text-orange-700"><span data-offline-stat="totalRegistros">{{ $totalRegistros }}</span></p>
             <p class="text-xs text-gray-500 mt-1">total acumulado</p>
         </div>
     </div>
@@ -117,21 +117,21 @@
                     <p class="text-sm">Sin registros este mes</p>
                 </div>
             @else
-                <div class="space-y-3">
+                <div class="space-y-3" data-offline-top>
                     @foreach($topAnimales as $i => $tp)
-                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                    <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200" data-offline-top-row>
                         <span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0
                             {{ $i === 0 ? 'bg-yellow-400 text-white' : ($i === 1 ? 'bg-gray-300 text-gray-700' : ($i === 2 ? 'bg-orange-400 text-white' : 'bg-gray-100 text-gray-600')) }}">
-                            {{ $i + 1 }}
+                            <span data-top-rank>{{ $i + 1 }}</span>
                         </span>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-bold text-gray-800 truncate">
-                                {{ $tp->animal->nombre ?? $tp->animal->codigo ?? '—' }}
+                                <span data-top-animal>{{ $tp->animal->nombre ?? $tp->animal->codigo ?? '—' }}</span>
                             </p>
-                            <p class="text-xs text-gray-500">{{ $tp->total_registros }} registros</p>
+                            <p class="text-xs text-gray-500"><span data-top-count>{{ $tp->total_registros }}</span> registros</p>
                         </div>
                         <span class="text-sm font-extrabold text-purple-700 flex-shrink-0">
-                            {{ number_format($tp->total_litros, 1) }}L
+                            <span data-top-litros>{{ number_format($tp->total_litros, 1) }}</span>L
                         </span>
                     </div>
                     @endforeach
@@ -225,7 +225,7 @@
                             <th class="px-4 py-3 text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-100">
+                    <tbody data-offline-collection="produccion" class="bg-white divide-y divide-gray-100">
                         @foreach($registros as $r)
                         @php
                             $sesionColor = [
@@ -241,30 +241,30 @@
                             ];
                         @endphp
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-4 py-3 font-mono text-xs text-gray-600 font-medium">{{ $r->codigo }}</td>
+                            <td class="px-4 py-3 font-mono text-xs text-gray-600 font-medium"><span data-offline-owner="produccion" data-offline-field="codigo">{{ $r->codigo }}</span></td>
                             <td class="px-4 py-3">
-                                <div class="font-semibold text-gray-800">{{ $r->animal->nombre ?? $r->animal->codigo ?? '—' }}</div>
-                                <div class="text-xs text-gray-500">{{ ucfirst($r->animal->tipo ?? '') }}</div>
+                                <div class="font-semibold text-gray-800"><span data-offline-owner="produccion" data-offline-field="animal_nombre">{{ $r->animal->nombre ?? $r->animal->codigo ?? '—' }}</span></div>
+                                <div class="text-xs text-gray-500"><span data-offline-owner="produccion" data-offline-field="animal_nombre">{{ ucfirst($r->animal->tipo ?? '') }}</span></div>
                             </td>
-                            <td class="px-4 py-3 text-gray-700">{{ $r->finca->nombre ?? '—' }}</td>
-                            <td class="px-4 py-3 text-gray-700">{{ $r->fecha->format('d/m/Y') }}</td>
+                            <td class="px-4 py-3 text-gray-700"><span data-offline-owner="produccion" data-offline-field="finca_nombre">{{ $r->finca->nombre ?? '—' }}</span></td>
+                            <td class="px-4 py-3 text-gray-700"><span data-offline-owner="produccion" data-offline-field="fecha">{{ $r->fecha->format('d/m/Y') }}</span></td>
                             <td class="px-4 py-3">
                                 @if($r->sesion)
                                     <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $sesionColor[$r->sesion] ?? 'bg-gray-100 text-gray-700' }}">
-                                        {{ $r->sesion_formateada }}
+                                        <span data-offline-owner="produccion" data-offline-field="sesion_formateada">{{ $r->sesion_formateada }}</span>
                                     </span>
                                 @else
                                     <span class="text-gray-400 text-xs">—</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-right">
-                                <span class="text-lg font-extrabold text-purple-700">{{ number_format($r->litros, 1) }}</span>
+                                <span class="text-lg font-extrabold text-purple-700"><span data-offline-owner="produccion" data-offline-field="litros">{{ number_format($r->litros, 1) }}</span></span>
                                 <span class="text-xs text-gray-500 ml-0.5">L</span>
                             </td>
                             <td class="px-4 py-3">
                                 @if($r->calidad)
                                     <span class="px-2 py-0.5 rounded-full text-xs font-semibold {{ $calidadColor[$r->calidad] ?? 'bg-gray-100 text-gray-700' }}">
-                                        {{ $r->calidad_formateada }}
+                                        <span data-offline-owner="produccion" data-offline-field="calidad_formateada">{{ $r->calidad_formateada }}</span>
                                     </span>
                                 @else
                                     <span class="text-gray-400 text-xs">—</span>

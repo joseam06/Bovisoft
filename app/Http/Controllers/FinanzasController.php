@@ -28,9 +28,9 @@ class FinanzasController extends Controller
         $fincaId = $request->get('finca_id');
 
         // ── Totales del período ──
-        $queryIngresos = Ingreso::where('user_id', $userId)
+        $queryIngresos = Ingreso::autorizadasPara($userId)
             ->whereBetween('fecha', [$fechaInicio, $fechaFin]);
-        $queryEgresos  = Egreso::where('user_id', $userId)
+        $queryEgresos  = Egreso::autorizadasPara($userId)
             ->whereBetween('fecha', [$fechaInicio, $fechaFin]);
 
         if ($fincaId) {
@@ -40,7 +40,7 @@ class FinanzasController extends Controller
 
         $totalIngresos = (clone $queryIngresos)->sum('monto');
         $totalEgresos  = (clone $queryEgresos)->sum('monto');
-        $balance       = $totalIngresos - $totalEgresos;
+        $balance = \App\Services\Money::decimal(\App\Services\Money::cents($totalIngresos)-\App\Services\Money::cents($totalEgresos));
 
         // ── Ingresos por tipo ──
         $ingresosPorTipo = (clone $queryIngresos)
@@ -55,14 +55,12 @@ class FinanzasController extends Controller
             ->pluck('total', 'categoria');
 
         // ── Últimos movimientos ──
-        $ultimosIngresos = Ingreso::with(['finca', 'animal'])
-            ->where('user_id', $userId)
+        $ultimosIngresos = Ingreso::autorizadasPara($userId)->with(['finca', 'animal'])
             ->orderByDesc('fecha')
             ->limit(5)
             ->get();
 
-        $ultimosEgresos = Egreso::with(['finca', 'animal'])
-            ->where('user_id', $userId)
+        $ultimosEgresos = Egreso::autorizadasPara($userId)->with(['finca', 'animal'])
             ->orderByDesc('fecha')
             ->limit(5)
             ->get();
@@ -99,7 +97,7 @@ class FinanzasController extends Controller
     {
         $userId  = Auth::id();
         $fincas  = Finca::where('user_id', $userId)->where('activa', true)->orderBy('nombre')->get();
-        $animales = Animal::where('user_id', $userId)
+        $animales = Animal::where('user_id', $userId)->whereHas('finca', fn ($q) => $q->delUsuario($userId))
             ->where('estado', 'activo')
             ->with('finca')
             ->orderBy('nombre')
@@ -109,7 +107,7 @@ class FinanzasController extends Controller
 
         // Pre-selección de animal (desde botón "Vender" en show del animal)
         $animalPresel = $request->filled('animal_id')
-            ? Animal::where('user_id', $userId)->find($request->animal_id)
+            ? Animal::where('user_id', $userId)->whereHas('finca', fn ($q) => $q->delUsuario($userId))->find($request->animal_id)
             : null;
 
         $tipoPresel = $request->get('tipo', 'otro');
@@ -121,103 +119,28 @@ class FinanzasController extends Controller
 
     public function storeIngreso(Request $request)
     {
-        $validated = $request->validate([
-            'finca_id'            => 'required|exists:fincas,id',
-            'animal_id'           => 'nullable|exists:animales,id',
-            'tipo'                => 'required|in:venta_animal,venta_leche,subsidio,arrendamiento,otro',
-            'monto'               => 'required|numeric|min:0',
-            'fecha'               => 'required|date|before_or_equal:today',
-            'descripcion'         => 'nullable|string|max:500',
-            'comprador_nombre'    => 'nullable|string|max:255',
-            'comprador_telefono'  => 'nullable|string|max:50',
-            'comprador_documento' => 'nullable|string|max:50',
-            'observaciones'       => 'nullable|string|max:1000',
-        ], [
-            'finca_id.required' => 'Debes seleccionar una finca.',
-            'tipo.required'     => 'Selecciona el tipo de ingreso.',
-            'monto.required'    => 'El monto es obligatorio.',
-            'monto.min'         => 'El monto no puede ser negativo.',
-            'fecha.required'    => 'La fecha es obligatoria.',
-        ]);
-
-        // Verificar propiedad de la finca
-        $finca = Finca::where('id', $validated['finca_id'])
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if (!$finca) {
-            return back()->withErrors(['finca_id' => 'No tienes permiso sobre esta finca.']);
-        }
-
-        $validated['user_id'] = Auth::id();
-        $validated['codigo']  = Ingreso::generarCodigo();
-
-        // ── Si es venta de animal, actualizar su estado ──
-        if ($validated['tipo'] === 'venta_animal' && !empty($validated['animal_id'])) {
-            $animal = Animal::where('id', $validated['animal_id'])
-                ->where('user_id', Auth::id())
-                ->first();
-
-            if ($animal) {
-                // Crear el ingreso primero para obtener su ID
-                $ingreso = Ingreso::create($validated);
-
-                // Actualizar animal: estado vendido + datos de venta
-                $animal->update([
-                    'estado'           => 'vendido',
-                    'fecha_venta'      => $validated['fecha'],
-                    'precio_venta'     => $validated['monto'],
-                    'ingreso_venta_id' => $ingreso->id,
-                    // Si tenía potrero, quitarlo y decrementar contador
-                    'potrero_id'       => null,
-                ]);
-
-                // Decrementar contador de potrero si tenía uno
-                if ($animal->potrero_id) {
-                    \App\Models\Potrero::find($animal->potrero_id)?->decrement('animales_actuales');
-                }
-
-                return redirect()->route('finanzas.index')
-                    ->with('success', 'Venta registrada. ' . ($animal->nombre ?? $animal->codigo) . ' ha sido marcado como vendido.');
-            }
-        }
-
-        Ingreso::create($validated);
-
-        return redirect()->route('finanzas.index')
-            ->with('success', 'Ingreso ' . $validated['codigo'] . ' registrado exitosamente.');
+        $record = null;
+        $result = app(\App\Services\FinancialService::class)->submit($request->user(), 'ingresos', 'create', $request->all(), $record);
+        if ($request->expectsJson()) return response()->json($result, $result['status'] >= 400 ? $result['status'] : 200);
+        if ($result['status'] >= 400) return back()->withErrors($result['errors'] ?? ['movimiento' => 'No se guardó: '.$result['error']])->withInput($request->except('_token'));
+        return redirect()->route('finanzas.index')->with('success', 'Movimiento financiero confirmado.');
     }
 
     public function showIngreso(int $id)
     {
-        $ingreso = Ingreso::with(['finca', 'animal', 'user'])
-            ->where('user_id', Auth::id())
+        $ingreso = Ingreso::autorizadasPara(Auth::id())->with(['finca', 'animal', 'user'])
             ->findOrFail($id);
 
         return view('finanzas.ingresos.show', compact('ingreso'));
     }
 
-    public function destroyIngreso(int $id)
+    public function destroyIngreso(Request $request, int $id)
     {
-        $ingreso = Ingreso::where('user_id', Auth::id())->findOrFail($id);
-
-        // Si la eliminación involucra un animal vendido, revertir el estado
-        if ($ingreso->tipo === 'venta_animal' && $ingreso->animal_id) {
-            $animal = Animal::find($ingreso->animal_id);
-            if ($animal && $animal->ingreso_venta_id === $ingreso->id) {
-                $animal->update([
-                    'estado'           => 'activo',
-                    'fecha_venta'      => null,
-                    'precio_venta'     => null,
-                    'ingreso_venta_id' => null,
-                ]);
-            }
-        }
-
-        $ingreso->delete();
-
-        return redirect()->route('finanzas.index')
-            ->with('success', 'Ingreso eliminado exitosamente.');
+        $record = app(\App\Services\WorkspaceRecords::class)->find($request->user(), 'ingresos', $id);
+        $result = app(\App\Services\FinancialService::class)->submit($request->user(), 'ingresos', 'delete', $request->all(), $record);
+        if ($request->expectsJson()) return response()->json($result, $result['status'] >= 400 ? $result['status'] : 200);
+        if ($result['status'] >= 400) return back()->withErrors($result['errors'] ?? ['movimiento' => 'No se guardó: '.$result['error']])->withInput($request->except('_token'));
+        return redirect()->route('finanzas.index')->with('success', 'Movimiento financiero confirmado.');
     }
 
     // ─── EGRESOS ───
@@ -226,7 +149,7 @@ class FinanzasController extends Controller
     {
         $userId    = Auth::id();
         $fincas    = Finca::where('user_id', $userId)->where('activa', true)->orderBy('nombre')->get();
-        $animales  = Animal::where('user_id', $userId)
+        $animales  = Animal::where('user_id', $userId)->whereHas('finca', fn ($q) => $q->delUsuario($userId))
             ->where('estado', 'activo')
             ->with('finca')
             ->orderBy('nombre')
@@ -246,56 +169,28 @@ class FinanzasController extends Controller
 
     public function storeEgreso(Request $request)
     {
-        $validated = $request->validate([
-            'finca_id'     => 'required|exists:fincas,id',
-            'animal_id'    => 'nullable|exists:animales,id',
-            'categoria'    => 'required|in:salud_animal,compra_animal,insumos_alimentacion,mano_obra,mantenimiento,otro',
-            'monto'        => 'required|numeric|min:0',
-            'fecha'        => 'required|date|before_or_equal:today',
-            'descripcion'  => 'nullable|string|max:500',
-            'observaciones'=> 'nullable|string|max:1000',
-            'salud_id'     => 'nullable|exists:salud,id',
-        ], [
-            'finca_id.required'  => 'Debes seleccionar una finca.',
-            'categoria.required' => 'Selecciona la categoría del gasto.',
-            'monto.required'     => 'El monto es obligatorio.',
-            'monto.min'          => 'El monto no puede ser negativo.',
-            'fecha.required'     => 'La fecha es obligatoria.',
-        ]);
-
-        $finca = Finca::where('id', $validated['finca_id'])
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if (!$finca) {
-            return back()->withErrors(['finca_id' => 'No tienes permiso sobre esta finca.']);
-        }
-
-        $validated['user_id'] = Auth::id();
-        $validated['codigo']  = Egreso::generarCodigo();
-
-        Egreso::create($validated);
-
-        return redirect()->route('finanzas.index')
-            ->with('success', 'Egreso ' . $validated['codigo'] . ' registrado exitosamente.');
+        $record = null;
+        $result = app(\App\Services\FinancialService::class)->submit($request->user(), 'egresos', 'create', $request->all(), $record);
+        if ($request->expectsJson()) return response()->json($result, $result['status'] >= 400 ? $result['status'] : 200);
+        if ($result['status'] >= 400) return back()->withErrors($result['errors'] ?? ['movimiento' => 'No se guardó: '.$result['error']])->withInput($request->except('_token'));
+        return redirect()->route('finanzas.index')->with('success', 'Movimiento financiero confirmado.');
     }
 
     public function showEgreso(int $id)
     {
-        $egreso = Egreso::with(['finca', 'animal', 'salud', 'user'])
-            ->where('user_id', Auth::id())
+        $egreso = Egreso::autorizadasPara(Auth::id())->with(['finca', 'animal', 'salud', 'user'])
             ->findOrFail($id);
 
         return view('finanzas.egresos.show', compact('egreso'));
     }
 
-    public function destroyEgreso(int $id)
+    public function destroyEgreso(Request $request, int $id)
     {
-        $egreso = Egreso::where('user_id', Auth::id())->findOrFail($id);
-        $egreso->delete();
-
-        return redirect()->route('finanzas.index')
-            ->with('success', 'Egreso eliminado exitosamente.');
+        $record = app(\App\Services\WorkspaceRecords::class)->find($request->user(), 'egresos', $id);
+        $result = app(\App\Services\FinancialService::class)->submit($request->user(), 'egresos', 'delete', $request->all(), $record);
+        if ($request->expectsJson()) return response()->json($result, $result['status'] >= 400 ? $result['status'] : 200);
+        if ($result['status'] >= 400) return back()->withErrors($result['errors'] ?? ['movimiento' => 'No se guardó: '.$result['error']])->withInput($request->except('_token'));
+        return redirect()->route('finanzas.index')->with('success', 'Movimiento financiero confirmado.');
     }
 
     // ─── Helpers privados ───
@@ -315,58 +210,62 @@ class FinanzasController extends Controller
     }
 
     private function calcularFlujoCaja(int $userId, ?int $fincaId): array
-{
-    $mesesNombres = [
-        1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr',
-        5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago',
-        9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic',
-    ];
+    {
+        $mesesNombres = [
+            1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr',
+            5 => 'May', 6 => 'Jun', 7 => 'Jul', 8 => 'Ago',
+            9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic',
+        ];
 
-    $meses = [];
-    for ($i = 5; $i >= 0; $i--) {
-        $fecha  = Carbon::now()->subMonths($i);
-        $inicio = $fecha->copy()->startOfMonth();
-        $fin    = $fecha->copy()->endOfMonth();
+        $meses = [];
+        $ranges = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $fecha = Carbon::now()->subMonths($i);
+            $inicio = $fecha->copy()->startOfMonth();
+            $fin = $fecha->copy()->endOfMonth();
 
-        $qIng = Ingreso::where('user_id', $userId)->whereBetween('fecha', [$inicio, $fin]);
-        $qEgr = Egreso::where('user_id',  $userId)->whereBetween('fecha', [$inicio, $fin]);
-
-        if ($fincaId) {
-            $qIng->where('finca_id', $fincaId);
-            $qEgr->where('finca_id', $fincaId);
+            $ranges[] = [$inicio, $fin];
+            $meses[] = [
+                'mes' => $mesesNombres[$fecha->month].' '.$fecha->year,
+                'ingresos' => 0.0,
+                'egresos' => 0.0,
+            ];
         }
 
-        $meses[] = [
-            'mes'      => $mesesNombres[$fecha->month] . ' ' . $fecha->year,
-            'ingresos' => (float) $qIng->sum('monto'),
-            'egresos'  => (float) $qEgr->sum('monto'),
-        ];
-    }
+        foreach (['ingresos' => Ingreso::class, 'egresos' => Egreso::class] as $field => $model) {
+            $query = $model::autorizadasPara($userId);
+            if ($fincaId) {
+                $query->where('finca_id', $fincaId);
+            }
+            foreach ($ranges as $index => [$start, $end]) {
+                $query->selectRaw('COALESCE(SUM(CASE WHEN fecha BETWEEN ? AND ? THEN monto ELSE 0 END), 0) AS m'.$index, [$start, $end]);
+            }
+            $totals = $query->toBase()->first();
+            foreach ($meses as $index => &$month) {
+                $month[$field] = (float) $totals->{'m'.$index};
+            }
+            unset($month);
+        }
 
-    return $meses;
-}
+        return $meses;
+    }
 
     private function calcularBalancePorFinca(int $userId, Carbon $inicio, Carbon $fin): array
     {
         $fincas = Finca::where('user_id', $userId)->get();
+        $ingresos = Ingreso::autorizadasPara($userId)->whereBetween('fecha', [$inicio, $fin])->selectRaw('finca_id, SUM(monto) AS total')->groupBy('finca_id')->toBase()->pluck('total', 'finca_id');
+        $egresos = Egreso::autorizadasPara($userId)->whereBetween('fecha', [$inicio, $fin])->selectRaw('finca_id, SUM(monto) AS total')->groupBy('finca_id')->toBase()->pluck('total', 'finca_id');
         $resultado = [];
 
         foreach ($fincas as $finca) {
-            $ing = Ingreso::where('user_id', $userId)
-                ->where('finca_id', $finca->id)
-                ->whereBetween('fecha', [$inicio, $fin])
-                ->sum('monto');
-
-            $egr = Egreso::where('user_id', $userId)
-                ->where('finca_id', $finca->id)
-                ->whereBetween('fecha', [$inicio, $fin])
-                ->sum('monto');
+            $ing = $ingresos[$finca->id] ?? 0;
+            $egr = $egresos[$finca->id] ?? 0;
 
             $resultado[] = [
-                'finca'     => $finca->nombre,
-                'ingresos'  => (float) $ing,
-                'egresos'   => (float) $egr,
-                'balance'   => (float) ($ing - $egr),
+                'finca' => $finca->nombre,
+                'ingresos' => $ing,
+                'egresos' => $egr,
+                'balance' => \App\Services\Money::decimal(\App\Services\Money::cents($ing) - \App\Services\Money::cents($egr)),
             ];
         }
 

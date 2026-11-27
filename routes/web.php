@@ -9,6 +9,20 @@ use App\Http\Controllers\SaludController;
 use App\Http\Controllers\FinanzasController;
 use App\Http\Controllers\ReportesController;
 use App\Http\Controllers\ProductionSyncController;
+use App\Http\Controllers\OfflineReadController;
+
+Route::get('/offline/produccion', [OfflineReadController::class, 'page'])->name('offline.produccion');
+Route::get('/offline/session', [OfflineReadController::class, 'session']);
+Route::get('/offline/asset-manifest', [OfflineReadController::class, 'assets']);
+Route::redirect('/offline/workspace', '/dashboard');
+Route::get('/offline-shell', [OfflineReadController::class, 'workspace']);
+Route::prefix('api/offline/v1/workspace')->middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'throttle:240,1'])->group(function () {
+    Route::get('views', \App\Http\Controllers\OfflineViewController::class);
+    Route::post('snapshots', [\App\Http\Controllers\WorkspaceSyncController::class, 'snapshot']);
+    Route::get('snapshots/{snapshot}', [\App\Http\Controllers\WorkspaceSyncController::class, 'page'])->whereUuid('snapshot');
+    Route::get('changes', [\App\Http\Controllers\WorkspaceSyncController::class, 'changes']);
+    Route::post('operations', [\App\Http\Controllers\WorkspaceSyncController::class, 'operation']);
+});
 
 Route::prefix('api/offline/v1/produccion')->middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified', 'throttle:60,1'])->group(function () {
     Route::post('snapshots', [ProductionSyncController::class, 'snapshot']);
@@ -42,14 +56,6 @@ Route::get('/api/fincas/mapa', [FincaController::class, 'getFincasParaMapa'])
 // NUEVA API: Potreros por finca (con disponibilidad)
 Route::get('/api/fincas/{finca}/potreros', [PotreroController::class, 'disponiblesPorFinca'])
     ->name('api.fincas.potreros');
-
-
-// Perfil de usuario
-Route::get('/perfil', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-Route::patch('/perfil', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
-Route::patch('/perfil/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
-Route::post('/perfil/foto', [App\Http\Controllers\ProfileController::class, 'updatePhoto'])->name('profile.photo');
-Route::delete('/perfil/foto', [App\Http\Controllers\ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
 
 
 // Rutas de Animales
@@ -175,6 +181,7 @@ Route::prefix('reportes')->name('reportes.')->group(function () {
 // Autenticación con Google (Socialite)
 use App\Http\Controllers\SocialiteController;
 
+Route::get('/auth/google/register', [SocialiteController::class,'registerWithGoogle'])->middleware('throttle:account-security')->name('auth.google.register');
 Route::get('/auth/google',          [SocialiteController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('/auth/google/callback', [SocialiteController::class, 'handleGoogleCallback'])->name('auth.google.callback');
 
@@ -183,5 +190,26 @@ Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
+    if (request()->expectsJson()) return response()->noContent()->header('Cache-Control','no-store, private');
     return redirect('/');
 })->name('logout');
+
+// Unverified new users can correct their address without accessing records.
+Route::middleware(['auth:sanctum',config('jetstream.auth_session')])->group(function(){
+// Perfil de usuario
+Route::get('/perfil', [App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+Route::patch('/perfil', [App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+Route::patch('/perfil/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->middleware('throttle:account-security')->name('profile.password');
+Route::post('/perfil/foto', [App\Http\Controllers\ProfileController::class, 'updatePhoto'])->name('profile.photo');
+Route::delete('/perfil/foto', [App\Http\Controllers\ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
+
+
+
+Route::post('/perfil/seguridad/correo', [App\Http\Controllers\AccountSecurityController::class,'email'])->middleware('throttle:account-security')->name('account.email.request');
+Route::get('/perfil/seguridad/correo/{user}/{nonce}', [App\Http\Controllers\AccountSecurityController::class,'confirmEmail'])->middleware(['signed','throttle:account-security'])->name('account.email.confirm');
+Route::post('/perfil/seguridad/google/vincular', [SocialiteController::class,'link'])->middleware('throttle:account-security')->name('account.google.link');
+Route::post('/perfil/seguridad/google/confirmar', [App\Http\Controllers\AccountSecurityController::class,'confirmGoogle'])->middleware('throttle:account-security')->name('account.google.confirm');
+Route::post('/perfil/seguridad/google/reauth', [SocialiteController::class,'reauthenticate'])->middleware('throttle:account-security')->name('account.google.reauth');
+Route::delete('/perfil/seguridad/google', [App\Http\Controllers\AccountSecurityController::class,'unlinkGoogle'])->middleware('throttle:account-security')->name('account.google.unlink');
+
+});

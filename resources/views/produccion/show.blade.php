@@ -14,7 +14,7 @@
                 <i class="fa-solid fa-arrow-left text-xl"></i>
             </a>
             <div>
-                <h1 class="text-3xl font-bold text-white">{{ $registro->codigo }}</h1>
+                <h1 class="text-3xl font-bold text-white"><span data-offline-owner="produccion" data-offline-field="codigo">{{ $registro->codigo }}</span></h1>
                 <p class="text-red-100 mt-1">Detalle del registro de producción</p>
             </div>
         </div>
@@ -48,24 +48,24 @@
             <dl class="grid grid-cols-2 gap-5 text-sm">
                 <div>
                     <dt class="text-gray-500 font-medium">Código</dt>
-                    <dd class="font-mono font-bold text-gray-800 mt-0.5">{{ $registro->codigo }}</dd>
+                    <dd class="font-mono font-bold text-gray-800 mt-0.5"><span data-offline-owner="produccion" data-offline-field="codigo">{{ $registro->codigo }}</span></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500 font-medium">Fecha</dt>
-                    <dd class="font-bold text-gray-800 mt-0.5">{{ $registro->fecha->format('d/m/Y') }}</dd>
+                    <dd class="font-bold text-gray-800 mt-0.5"><span data-offline-owner="produccion" data-offline-field="fecha">{{ $registro->fecha->format('d/m/Y') }}</span></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500 font-medium">Animal</dt>
                     <dd class="mt-0.5">
                         <a href="{{ route('animales.show', $registro->animal) }}" class="font-bold text-red-600 hover:underline">
-                            {{ $registro->animal->nombre ?? $registro->animal->codigo ?? '—' }}
+                            <span data-offline-owner="produccion" data-offline-field="animal_nombre">{{ $registro->animal->nombre ?? $registro->animal->codigo ?? '—' }}</span>
                         </a>
-                        <span class="text-xs text-gray-500 ml-1">({{ ucfirst($registro->animal->tipo ?? '') }})</span>
+                        <span class="text-xs text-gray-500 ml-1">(<span data-offline-owner="produccion" data-offline-field="animal_nombre">{{ ucfirst($registro->animal->tipo ?? '') }}</span>)</span>
                     </dd>
                 </div>
                 <div>
                     <dt class="text-gray-500 font-medium">Finca</dt>
-                    <dd class="font-bold text-gray-800 mt-0.5">{{ $registro->finca->nombre ?? '—' }}</dd>
+                    <dd class="font-bold text-gray-800 mt-0.5"><span data-offline-owner="produccion" data-offline-field="finca_nombre">{{ $registro->finca->nombre ?? '—' }}</span></dd>
                 </div>
                 <div>
                     <dt class="text-gray-500 font-medium">Sesión</dt>
@@ -73,7 +73,7 @@
                         @if($registro->sesion)
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold
                                 {{ $registro->sesion === 'manana' ? 'bg-yellow-100 text-yellow-800' : ($registro->sesion === 'tarde' ? 'bg-orange-100 text-orange-800' : 'bg-indigo-100 text-indigo-800') }}">
-                                {{ $registro->sesion_formateada }}
+                                <span data-offline-owner="produccion" data-offline-field="sesion_formateada">{{ $registro->sesion_formateada }}</span>
                             </span>
                         @else
                             <span class="text-gray-400">No especificada</span>
@@ -86,7 +86,7 @@
                         @if($registro->calidad)
                             <span class="px-2 py-0.5 rounded-full text-xs font-semibold
                                 {{ $registro->calidad === 'excelente' ? 'bg-green-100 text-green-800' : ($registro->calidad === 'buena' ? 'bg-blue-100 text-blue-800' : ($registro->calidad === 'rechazada' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700')) }}">
-                                {{ $registro->calidad_formateada }}
+                                <span data-offline-owner="produccion" data-offline-field="calidad_formateada">{{ $registro->calidad_formateada }}</span>
                             </span>
                         @else
                             <span class="text-gray-400">Sin clasificar</span>
@@ -95,14 +95,14 @@
                 </div>
                 <div>
                     <dt class="text-gray-500 font-medium">Registrado</dt>
-                    <dd class="text-gray-800 mt-0.5">{{ $registro->created_at->format('d/m/Y H:i') }}</dd>
+                    <dd class="text-gray-800 mt-0.5"><span data-offline-owner="produccion" data-offline-field="created_at">{{ $registro->created_at->format('d/m/Y H:i') }}</span></dd>
                 </div>
             </dl>
 
             @if($registro->observaciones)
             <div class="mt-6 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
                 <p class="text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wider">Observaciones</p>
-                <p class="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">{{ $registro->observaciones }}</p>
+                <p class="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap"><span data-offline-owner="produccion" data-offline-field="observaciones">{{ $registro->observaciones }}</span></p>
             </div>
             @endif
         </div>
@@ -113,11 +113,11 @@
                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Producción registrada</p>
                 <div class="flex items-end justify-center gap-1 mb-2">
                     <span class="text-6xl font-extrabold bg-gradient-to-br from-purple-600 to-red-700 bg-clip-text text-transparent">
-                        {{ number_format($registro->litros, 1) }}
+                        <span data-offline-owner="produccion" data-offline-field="litros">{{ number_format($registro->litros, 1) }}</span>
                     </span>
                     <span class="text-2xl font-bold text-gray-500 mb-2">L</span>
                 </div>
-                <p class="text-sm text-gray-500">litros — {{ $registro->fecha->format('d/m/Y') }}</p>
+                <p class="text-sm text-gray-500">litros — <span data-offline-owner="produccion" data-offline-field="fecha">{{ $registro->fecha->format('d/m/Y') }}</span></p>
             </div>
 
             <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl p-6">
@@ -146,7 +146,7 @@
     @if($historialAnimal->count() > 0)
     <div class="glass-effect border-4 border-white/50 rounded-2xl shadow-xl overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-bold text-gray-800">Otros registros de {{ $registro->animal->nombre ?? $registro->animal->codigo }}</h2>
+            <h2 class="text-lg font-bold text-gray-800">Otros registros de <span data-offline-owner="produccion" data-offline-field="animal_nombre">{{ $registro->animal->nombre ?? $registro->animal->codigo }}</span></h2>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
@@ -160,14 +160,14 @@
                         <th class="px-4 py-2 text-center">Ver</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
+                <tbody data-offline-collection="produccion" data-offline-history class="bg-white divide-y divide-gray-100">
                     @foreach($historialAnimal as $h)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2 font-mono text-xs text-gray-600">{{ $h->codigo }}</td>
-                        <td class="px-4 py-2 text-gray-700">{{ $h->fecha->format('d/m/Y') }}</td>
-                        <td class="px-4 py-2 text-gray-700">{{ $h->sesion_formateada }}</td>
-                        <td class="px-4 py-2 text-right font-bold text-purple-700">{{ number_format($h->litros, 1) }} L</td>
-                        <td class="px-4 py-2 text-gray-700">{{ $h->calidad_formateada }}</td>
+                        <td class="px-4 py-2 font-mono text-xs text-gray-600"><span data-offline-owner="produccion" data-offline-field="codigo">{{ $h->codigo }}</span></td>
+                        <td class="px-4 py-2 text-gray-700"><span data-offline-owner="produccion" data-offline-field="fecha">{{ $h->fecha->format('d/m/Y') }}</span></td>
+                        <td class="px-4 py-2 text-gray-700"><span data-offline-owner="produccion" data-offline-field="sesion_formateada">{{ $h->sesion_formateada }}</span></td>
+                        <td class="px-4 py-2 text-right font-bold text-purple-700"><span data-offline-owner="produccion" data-offline-field="litros">{{ number_format($h->litros, 1) }}</span> L</td>
+                        <td class="px-4 py-2 text-gray-700"><span data-offline-owner="produccion" data-offline-field="calidad_formateada">{{ $h->calidad_formateada }}</span></td>
                         <td class="px-4 py-2 text-center">
                             <a href="{{ route('produccion.show', $h) }}" class="text-blue-600 hover:text-blue-800 font-bold text-xs">Ver →</a>
                         </td>

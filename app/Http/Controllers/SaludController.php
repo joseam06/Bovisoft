@@ -15,7 +15,7 @@ class SaludController extends Controller
 
     public function index()
     {
-        $base = Salud::where('user_id', Auth::id());
+        $base = Salud::where('user_id', Auth::id())->whereHas('finca', fn ($q) => $q->delUsuario(Auth::id()))->whereHas('animal', fn ($q) => $q->where('user_id', Auth::id()));
 
         $estadisticas = [
             'total'          => (clone $base)->count(),
@@ -86,7 +86,8 @@ class SaludController extends Controller
     private function listadoPorCategoria(string $categoria, string $titulo, string $descripcion)
     {
         $query = Salud::with(['animal', 'finca'])
-            ->where('user_id', Auth::id())
+            ->where('user_id', Auth::id())->whereHas('finca', fn ($q) => $q->delUsuario(Auth::id()))
+            ->whereHas('animal', fn ($q) => $q->where('user_id', Auth::id()))
             ->where('categoria', $categoria);
 
         // Filtros (exactamente los mismos que tenía el index original)
@@ -185,50 +186,10 @@ class SaludController extends Controller
 
     // ─── store ─────────────────────────────────────────────────────────────────
 
-    public function store(Request $request)
+    public function store(Request $request, \App\Services\WorkspaceRecords $records)
     {
-        $validated = $request->validate([
-            'animal_id'            => 'required|exists:animales,id',
-            'finca_id'             => 'required|exists:fincas,id',
-            'tipo'                 => 'required|in:vacunacion,vitaminizacion,desparasitacion,bioseguridad,enfermedad,tratamiento,diagnostico,cirugia,revision,sincronizacion,hormonas,protocolo,preparacion_iatf,alerta,control,carencia,otro',
-            'nombre_producto'      => 'required|string|max:255',
-            'enfermedad_prevenida' => 'nullable|string|max:255',
-            'diagnostico'          => 'nullable|string|max:2000',
-            'fecha_aplicacion'     => 'required|date|before_or_equal:today',
-            'dosis'                => 'nullable|numeric|min:0',
-            'unidad_dosis'         => 'nullable|string|max:20',
-            'via_aplicacion'       => 'nullable|string|max:50',
-            'lote_medicamento'     => 'nullable|string|max:100',
-            'laboratorio'          => 'nullable|string|max:255',
-            'veterinario'          => 'nullable|string|max:255',
-            'costo'                => 'nullable|numeric|min:0',
-            'proxima_aplicacion'   => 'nullable|date|after:fecha_aplicacion',
-            'dias_carencia'        => 'nullable|integer|min:0',
-            'estado'               => 'required|in:completado,en_tratamiento,pendiente,cancelado',
-            'observaciones'        => 'nullable|string|max:1000',
-        ]);
-
-        // Verificar que el animal pertenece al usuario
-        Animal::where('id', $validated['animal_id'])
-              ->where('user_id', Auth::id())
-              ->firstOrFail();
-
-        // Calcular fin de carencia
-        if (!empty($validated['dias_carencia']) && $validated['dias_carencia'] > 0) {
-            $validated['fin_carencia'] = Carbon::parse($validated['fecha_aplicacion'])
-                ->addDays((int) $validated['dias_carencia'])
-                ->format('Y-m-d');
-        }
-
-        $validated['user_id'] = Auth::id();
-        $validated['codigo']  = Salud::generarCodigo();
-
-        // La categoría se asigna automáticamente en el modelo (booted)
-        Salud::create($validated);
-
-        return redirect()
-            ->route('salud.index')
-            ->with('success', 'Registro de salud ' . $validated['codigo'] . ' creado exitosamente.');
+        $record = $records->write($request->user(), 'salud', 'create', $request->all());
+        return redirect()->route('salud.index')->with('success', 'Registro de salud '.$record->codigo.' creado exitosamente.');
     }
 
     // ─── show ──────────────────────────────────────────────────────────────────
@@ -236,10 +197,12 @@ class SaludController extends Controller
     public function show(int $id)
     {
         $registro = Salud::with(['animal.finca', 'finca'])
-            ->where('user_id', Auth::id())
+            ->where('user_id', Auth::id())->whereHas('finca', fn ($q) => $q->delUsuario(Auth::id()))
+            ->whereHas('animal', fn ($q) => $q->where('user_id', Auth::id()))
             ->findOrFail($id);
 
-        $historialAnimal = Salud::where('animal_id', $registro->animal_id)
+        $historialAnimal = Salud::where('user_id', Auth::id())->where('animal_id', $registro->animal_id)
+            ->whereHas('finca', fn ($q) => $q->delUsuario(Auth::id()))
             ->where('id', '!=', $id)
             ->orderBy('fecha_aplicacion', 'desc')
             ->limit(10)
@@ -252,7 +215,7 @@ class SaludController extends Controller
 
     public function edit(int $id)
     {
-        $registro = Salud::where('user_id', Auth::id())->findOrFail($id);
+        $registro = Salud::where('user_id', Auth::id())->whereHas('finca', fn ($q) => $q->delUsuario(Auth::id()))->whereHas('animal', fn ($q) => $q->where('user_id', Auth::id()))->findOrFail($id);
         $fincas   = Finca::where('user_id', Auth::id())->orderBy('nombre')->get();
         $animales = Animal::where('user_id', Auth::id())
                         ->where('estado', 'activo')
@@ -271,62 +234,20 @@ class SaludController extends Controller
 
     // ─── update ────────────────────────────────────────────────────────────────
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, int $id, \App\Services\WorkspaceRecords $records)
     {
-        $registro = Salud::where('user_id', Auth::id())->findOrFail($id);
-
-        $validated = $request->validate([
-            'animal_id'            => 'required|exists:animales,id',
-            'finca_id'             => 'required|exists:fincas,id',
-            'tipo'                 => 'required|in:vacunacion,vitaminizacion,desparasitacion,bioseguridad,enfermedad,tratamiento,diagnostico,cirugia,revision,sincronizacion,hormonas,protocolo,preparacion_iatf,alerta,control,carencia,otro',
-            'nombre_producto'      => 'required|string|max:255',
-            'enfermedad_prevenida' => 'nullable|string|max:255',
-            'diagnostico'          => 'nullable|string|max:2000',
-            'fecha_aplicacion'     => 'required|date|before_or_equal:today',
-            'dosis'                => 'nullable|numeric|min:0',
-            'unidad_dosis'         => 'nullable|string|max:20',
-            'via_aplicacion'       => 'nullable|string|max:50',
-            'lote_medicamento'     => 'nullable|string|max:100',
-            'laboratorio'          => 'nullable|string|max:255',
-            'veterinario'          => 'nullable|string|max:255',
-            'costo'                => 'nullable|numeric|min:0',
-            'proxima_aplicacion'   => 'nullable|date|after:fecha_aplicacion',
-            'dias_carencia'        => 'nullable|integer|min:0',
-            'estado'               => 'required|in:completado,en_tratamiento,pendiente,cancelado',
-            'observaciones'        => 'nullable|string|max:1000',
-        ]);
-
-        if (!empty($validated['dias_carencia']) && $validated['dias_carencia'] > 0) {
-            $validated['fin_carencia'] = Carbon::parse($validated['fecha_aplicacion'])
-                ->addDays((int) $validated['dias_carencia'])
-                ->format('Y-m-d');
-        } else {
-            $validated['fin_carencia'] = null;
-        }
-
-        // La categoría se actualizará automáticamente porque el modelo la recalcula en el evento updating (si quieres ese comportamiento).
-        // Si no quieres que se actualice al editar, puedes forzarla manualmente o usar el mismo booted.
-        // Actualmente no hay evento updating, por lo que la categoría no cambiará al editar el tipo. Si quieres que sí lo haga,
-        // agrega static::updating(...) en el modelo. Aquí lo forzamos manualmente:
-        $validated['categoria'] = Salud::getCategoriaPorTipo($validated['tipo']);
-
-        $registro->update($validated);
-
-        return redirect()
-            ->route('salud.show', $registro)
-            ->with('success', 'Registro de salud actualizado exitosamente.');
+        $record = $records->find($request->user(), 'salud', $id);
+        $records->write($request->user(), 'salud', 'update', $request->all(), $record);
+        return redirect()->route('salud.show', $record)->with('success', 'Registro de salud actualizado exitosamente.');
     }
 
     // ─── destroy ───────────────────────────────────────────────────────────────
 
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id, \App\Services\WorkspaceRecords $records)
     {
-        $registro = Salud::where('user_id', Auth::id())->findOrFail($id);
-        $registro->delete();
-
-        return redirect()
-            ->route('salud.index')
-            ->with('success', 'Registro eliminado exitosamente.');
+        $record = $records->find($request->user(), 'salud', $id);
+        $records->write($request->user(), 'salud', 'delete', $request->all(), $record);
+        return redirect()->route('salud.index')->with('success', 'Registro eliminado exitosamente.');
     }
 
     // ─── porAnimal ─────────────────────────────────────────────────────────────
@@ -335,7 +256,8 @@ class SaludController extends Controller
     {
         $animal = Animal::where('user_id', Auth::id())->findOrFail($animalId);
 
-        $registros = Salud::where('animal_id', $animalId)
+        $registros = Salud::where('user_id', Auth::id())->where('animal_id', $animalId)
+            ->whereHas('finca', fn ($q) => $q->delUsuario(Auth::id()))
             ->orderBy('fecha_aplicacion', 'desc')
             ->paginate(15);
 

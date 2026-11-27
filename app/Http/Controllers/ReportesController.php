@@ -115,8 +115,8 @@ class ReportesController extends Controller
         $fincas        = Finca::where('user_id', $userId)->where('activa', true)->orderBy('nombre')->get();
         $totalAnimales = Animal::where('user_id', $userId)->count();
         $totalSalud    = Salud::where('user_id', $userId)->count();
-        $totalIngresos = Ingreso::where('user_id', $userId)->sum('monto');
-        $totalEgresos  = Egreso::where('user_id', $userId)->sum('monto');
+        $totalIngresos = Ingreso::autorizadasPara($userId)->sum('monto');
+        $totalEgresos  = Egreso::autorizadasPara($userId)->sum('monto');
 
         $animales = Animal::where('user_id', $userId)->where('estado', 'activo')->orderBy('codigo')->get();
 
@@ -181,7 +181,7 @@ class ReportesController extends Controller
         $totalRegistros     = $registros->count();
         $vacunaciones       = $registros->where('tipo', 'vacunacion')->count();
         $desparasitaciones  = $registros->where('tipo', 'desparasitacion')->count();
-        $costoTotal         = $registros->sum('costo');
+        $costoTotal         = \App\Services\Money::sum($registros->pluck('costo'));
         $enCarenciaCount    = $registros->filter(fn($r) => $r->en_carencia)->count();
 
         $registrosTratamientos = $registros->where('estado', 'en_tratamiento')->values();
@@ -249,7 +249,7 @@ class ReportesController extends Controller
         $registros            = $query->orderBy('fecha_aplicacion', 'desc')->get();
         $totalVacunaciones    = $registros->where('tipo', 'vacunacion')->count();
         $totalDesparasitaciones = $registros->where('tipo', 'desparasitacion')->count();
-        $costoTotal           = $registros->sum('costo');
+        $costoTotal           = \App\Services\Money::sum($registros->pluck('costo'));
 
         // Proximas dosis en 60 dias
         $proximasDosis = Salud::with(['animal', 'finca'])
@@ -301,7 +301,7 @@ class ReportesController extends Controller
         $activos          = $historial->where('estado', 'en_tratamiento')->values();
         $totalActivos     = $activos->count();
         $totalCompletados = $historial->where('estado', 'completado')->count();
-        $costoTotal       = $historial->sum('costo');
+        $costoTotal       = \App\Services\Money::sum($historial->pluck('costo'));
         $enCarenciaCount  = $historial->filter(fn($r) => $r->en_carencia)->count();
 
         $data = array_merge($this->commonPdfData($f, 'Reporte de Tratamientos'), compact(
@@ -333,16 +333,17 @@ class ReportesController extends Controller
             ->where('user_id', $userId)
             ->firstOrFail();
 
-        $registros = Salud::with('finca')
+        $historyQuery = Salud::with('finca')
             ->where('user_id', $userId)
-            ->where('animal_id', $animal->id)
-            ->orderBy('fecha_aplicacion', 'desc')
-            ->get();
+            ->where('animal_id', $animal->id);
+        if ($f['fincaId']) $historyQuery->where('finca_id',$f['fincaId']);
+        $this->applyDateFilter($historyQuery,'fecha_aplicacion',$f['fechaIni'],$f['fechaFin']);
+        $registros=$historyQuery->orderBy('fecha_aplicacion','desc')->get();
 
         $totalRegistros = $registros->count();
         $vacunaciones   = $registros->where('tipo', 'vacunacion')->count();
         $tratamientos   = $registros->whereIn('tipo', ['tratamiento', 'cirugia', 'revision'])->count();
-        $costoTotal     = $registros->sum('costo');
+        $costoTotal     = \App\Services\Money::sum($registros->pluck('costo'));
 
         $data = array_merge($this->commonPdfData($f, 'Historial Clinico: ' . ($animal->nombre ?? $animal->codigo)), compact(
             'animal', 'registros', 'totalRegistros', 'vacunaciones', 'tratamientos', 'costoTotal'
@@ -365,8 +366,8 @@ class ReportesController extends Controller
     {
         $f = $this->buildFiltros($request);
 
-        $ingQuery = Ingreso::where('user_id', $f['userId']);
-        $egrQuery = Egreso::where('user_id', $f['userId']);
+        $ingQuery = Ingreso::autorizadasPara($f['userId']);
+        $egrQuery = Egreso::autorizadasPara($f['userId']);
 
         if ($f['fincaId']) {
             $ingQuery->where('finca_id', $f['fincaId']);
@@ -378,9 +379,9 @@ class ReportesController extends Controller
 
         $ingresos      = $ingQuery->with('finca')->orderBy('fecha', 'desc')->get();
         $egresos       = $egrQuery->with('finca')->orderBy('fecha', 'desc')->get();
-        $totalIngresos = $ingresos->sum('monto');
-        $totalEgresos  = $egresos->sum('monto');
-        $balance       = $totalIngresos - $totalEgresos;
+        $totalIngresos = \App\Services\Money::sum($ingresos->pluck('monto'));
+        $totalEgresos  = \App\Services\Money::sum($egresos->pluck('monto'));
+        $balance       = \App\Services\Money::decimal(\App\Services\Money::cents($totalIngresos)-\App\Services\Money::cents($totalEgresos));
 
         $costosSaludQuery = Salud::where('user_id', $f['userId'])->whereNotNull('costo');
         if ($f['fincaId']) $costosSaludQuery->where('finca_id', $f['fincaId']);

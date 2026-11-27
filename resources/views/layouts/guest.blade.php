@@ -17,7 +17,7 @@
         @livewireStyles
     </head>
 
-    <body class="min-h-screen bg-gradient-to-r from-red-700 via-red-800 to-black">
+    <body class="bovi-auth min-h-screen bg-gradient-to-r from-red-700 via-red-800 to-black">
         
         <div class="min-h-screen flex items-center justify-center px-4
                     font-sans text-gray-100 antialiased

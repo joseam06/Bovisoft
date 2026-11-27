@@ -9,37 +9,37 @@
             <td width="16%">
                 <div class="kpi-card">
                     <div class="kpi-label">Total Registros</div>
-                    <div class="kpi-value">{{ $totalRegistros }}</div>
+                    <div class="kpi-value"><span data-report-stat="totalRegistros">{{ $totalRegistros }}</span></div>
                 </div>
             </td>
             <td width="16%">
                 <div class="kpi-card blue">
                     <div class="kpi-label">Vacunaciones</div>
-                    <div class="kpi-value">{{ $vacunaciones }}</div>
+                    <div class="kpi-value"><span data-report-stat="vacunaciones">{{ $vacunaciones }}</span></div>
                 </div>
             </td>
             <td width="16%">
                 <div class="kpi-card teal">
                     <div class="kpi-label">Desparasitaciones</div>
-                    <div class="kpi-value">{{ $desparasitaciones }}</div>
+                    <div class="kpi-value"><span data-report-stat="desparasitaciones">{{ $desparasitaciones }}</span></div>
                 </div>
             </td>
             <td width="16%">
                 <div class="kpi-card purple">
                     <div class="kpi-label">Tratamientos</div>
-                    <div class="kpi-value">{{ $tratamientosActivos }}</div>
+                    <div class="kpi-value"><span data-report-stat="tratamientosActivos">{{ $tratamientosActivos }}</span></div>
                 </div>
             </td>
             <td width="16%">
                 <div class="kpi-card orange">
                     <div class="kpi-label">En Carencia</div>
-                    <div class="kpi-value">{{ $enCarenciaCount }}</div>
+                    <div class="kpi-value"><span data-report-stat="enCarenciaCount">{{ $enCarenciaCount }}</span></div>
                 </div>
             </td>
             <td width="16%">
                 <div class="kpi-card purple">
                     <div class="kpi-label">Costo Total</div>
-                    <div class="kpi-value" style="font-size:11px;">${{ number_format($costoTotal, 0, ',', '.') }}</div>
+                    <div class="kpi-value" style="font-size:11px;">$<span data-report-stat="costoTotal">{{ \App\Services\Money::format($costoTotal) }}</span></div>
                 </div>
             </td>
         </tr>
@@ -61,14 +61,14 @@
             <th>Finca</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="alertasVencidas">
         @foreach($alertasVencidas as $a)
         <tr class="danger-row">
-            <td>{{ $a->animal->nombre ?? $a->animal->codigo ?? '—' }}</td>
-            <td>{{ $a->nombre_producto }}</td>
-            <td>{{ $a->proxima_aplicacion?->format('d/m/Y') ?? '—' }}</td>
-            <td><span class="badge badge-red">{{ abs($a->proxima_aplicacion->diffInDays(now())) }} dias</span></td>
-            <td>{{ $a->finca->nombre ?? '—' }}</td>
+            <td><span data-offline-owner="salud" data-offline-field="animal_nombre">{{ $a->animal->nombre ?? $a->animal->codigo ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="nombre_producto">{{ $a->nombre_producto }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="proxima_aplicacion">{{ $a->proxima_aplicacion?->format('d/m/Y') ?? '—' }}</span></td>
+            <td><span class="badge badge-red"><span data-offline-owner="salud" data-offline-field="dias_proxima">{{ abs($a->proxima_aplicacion->diffInDays(now())) }}</span> dias</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="finca_nombre">{{ $a->finca->nombre ?? '—' }}</span></td>
         </tr>
         @endforeach
     </tbody>
@@ -89,14 +89,14 @@
             <th>Finca</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="alertasProximas">
         @foreach($alertasProximas as $a)
         <tr class="highlight-row">
-            <td>{{ $a->animal->nombre ?? $a->animal->codigo ?? '—' }}</td>
-            <td>{{ $a->nombre_producto }}</td>
-            <td>{{ $a->proxima_aplicacion?->format('d/m/Y') ?? '—' }}</td>
-            <td><span class="badge badge-yellow">{{ $a->proxima_aplicacion->diffInDays(now()) }} dias</span></td>
-            <td>{{ $a->finca->nombre ?? '—' }}</td>
+            <td><span data-offline-owner="salud" data-offline-field="animal_nombre">{{ $a->animal->nombre ?? $a->animal->codigo ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="nombre_producto">{{ $a->nombre_producto }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="proxima_aplicacion">{{ $a->proxima_aplicacion?->format('d/m/Y') ?? '—' }}</span></td>
+            <td><span class="badge badge-yellow"><span data-offline-owner="salud" data-offline-field="dias_proxima">{{ $a->proxima_aplicacion->diffInDays(now()) }}</span> dias</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="finca_nombre">{{ $a->finca->nombre ?? '—' }}</span></td>
         </tr>
         @endforeach
     </tbody>
@@ -118,16 +118,16 @@
             <th>Costo</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="registrosTratamientos">
         @foreach($registrosTratamientos as $t)
         <tr>
-            <td style="font-family: monospace; font-size:9px;">{{ $t->codigo }}</td>
-            <td>{{ $t->animal->nombre ?? $t->animal->codigo ?? '—' }}</td>
-            <td>{{ $t->nombre_producto }}</td>
-            <td>{{ $t->diagnostico ?? '—' }}</td>
-            <td>{{ $t->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</td>
-            <td>{{ $t->veterinario ?? '—' }}</td>
-            <td>{{ $t->costo ? '$' . number_format($t->costo, 0, ',', '.') : '—' }}</td>
+            <td style="font-family: monospace; font-size:9px;"><span data-offline-owner="salud" data-offline-field="codigo">{{ $t->codigo }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="animal_nombre">{{ $t->animal->nombre ?? $t->animal->codigo ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="nombre_producto">{{ $t->nombre_producto }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="diagnostico">{{ $t->diagnostico ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="fecha_aplicacion">{{ $t->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="veterinario">{{ $t->veterinario ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="costo">{{ $t->costo ? '$' . number_format($t->costo, 0, ',', '.') : '—' }}</span></td>
         </tr>
         @endforeach
     </tbody>
@@ -155,7 +155,7 @@
             <th>Estado</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="registros">
         @foreach($registros as $r)
         @php
             $enCarenciaFila = $r->en_carencia;
@@ -176,14 +176,14 @@
             };
         @endphp
         <tr @if($enCarenciaFila) style="background-color:#fefce8;" @endif>
-            <td style="font-family: monospace; font-size:9px;">{{ $r->codigo }}</td>
-            <td>{{ $r->animal->nombre ?? $r->animal->codigo ?? '—' }}</td>
-            <td><span class="badge {{ $tipoBadge }}">{{ $tiposLabel[$r->tipo] ?? ucfirst($r->tipo) }}</span></td>
-            <td>{{ $r->nombre_producto }}</td>
-            <td>{{ $r->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</td>
+            <td style="font-family: monospace; font-size:9px;"><span data-offline-owner="salud" data-offline-field="codigo">{{ $r->codigo }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="animal_nombre">{{ $r->animal->nombre ?? $r->animal->codigo ?? '—' }}</span></td>
+            <td><span class="badge {{ $tipoBadge }}"><span data-offline-owner="salud" data-offline-field="tipo">{{ $tiposLabel[$r->tipo] ?? ucfirst($r->tipo) }}</span></span></td>
+            <td><span data-offline-owner="salud" data-offline-field="nombre_producto">{{ $r->nombre_producto }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="fecha_aplicacion">{{ $r->fecha_aplicacion?->format('d/m/Y') ?? '—' }}</span></td>
             <td>
                 @if($r->proxima_aplicacion)
-                    {{ $r->proxima_aplicacion->format('d/m/Y') }}
+                    <span data-offline-owner="salud" data-offline-field="proxima_aplicacion">{{ $r->proxima_aplicacion->format('d/m/Y') }}</span>
                     @if($r->alerta_proxima)
                         <span class="badge badge-red">Pronto</span>
                     @endif
@@ -191,11 +191,11 @@
                     —
                 @endif
             </td>
-            <td>{{ $r->costo ? '$' . number_format($r->costo, 0, ',', '.') : '—' }}</td>
+            <td><span data-offline-owner="salud" data-offline-field="costo">{{ $r->costo ? '$' . number_format($r->costo, 0, ',', '.') : '—' }}</span></td>
             <td>
-                <span class="badge {{ $estadoBadge }}">{{ $estadosLabel[$r->estado] ?? $r->estado }}</span>
+                <span class="badge {{ $estadoBadge }}"><span data-offline-owner="salud" data-offline-field="estado">{{ $estadosLabel[$r->estado] ?? $r->estado }}</span></span>
                 @if($enCarenciaFila)
-                    <br><span class="badge badge-yellow">Carencia {{ $r->dias_carencia_restantes }}d</span>
+                    <br><span class="badge badge-yellow">Carencia <span data-offline-owner="salud" data-offline-field="dias_carencia_restantes">{{ $r->dias_carencia_restantes }}</span>d</span>
                 @endif
             </td>
         </tr>
@@ -204,7 +204,7 @@
     <tfoot>
         <tr>
             <td colspan="6">COSTO TOTAL DEL PERIODO</td>
-            <td>${{ number_format($costoTotal, 0, ',', '.') }}</td>
+            <td>$<span data-report-stat="costoTotal">{{ \App\Services\Money::format($costoTotal) }}</span></td>
             <td></td>
         </tr>
     </tfoot>
@@ -226,14 +226,14 @@
             <th>Dias Restantes</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody data-report-collection="enCarencia">
         @foreach($enCarencia as $c)
         <tr class="highlight-row">
-            <td>{{ $c->animal->nombre ?? $c->animal->codigo ?? '—' }}</td>
-            <td>{{ $c->finca->nombre ?? '—' }}</td>
-            <td>{{ $c->nombre_producto }}</td>
-            <td>{{ $c->fin_carencia?->format('d/m/Y') ?? '—' }}</td>
-            <td><strong>{{ $c->dias_carencia_restantes }} dias</strong></td>
+            <td><span data-offline-owner="salud" data-offline-field="animal_nombre">{{ $c->animal->nombre ?? $c->animal->codigo ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="finca_nombre">{{ $c->finca->nombre ?? '—' }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="nombre_producto">{{ $c->nombre_producto }}</span></td>
+            <td><span data-offline-owner="salud" data-offline-field="fin_carencia">{{ $c->fin_carencia?->format('d/m/Y') ?? '—' }}</span></td>
+            <td><strong><span data-offline-owner="salud" data-offline-field="dias_carencia_restantes">{{ $c->dias_carencia_restantes }}</span> dias</strong></td>
         </tr>
         @endforeach
     </tbody>
@@ -246,12 +246,12 @@
 {{-- ── Resumen ── --}}
 <div class="section-title">Resumen de Costos Sanitarios</div>
 <div class="obs-box">
-    Se registraron <strong>{{ $totalRegistros }}</strong> eventos sanitarios en el periodo,
-    con un costo total de <strong>${{ number_format($costoTotal, 0, ',', '.') }} COP</strong>.
-    Vacunaciones: <strong>{{ $vacunaciones }}</strong> &mdash;
-    Desparasitaciones: <strong>{{ $desparasitaciones }}</strong> &mdash;
-    Tratamientos activos: <strong>{{ $tratamientosActivos }}</strong> &mdash;
-    Animales en carencia: <strong>{{ $enCarenciaCount }}</strong>.
+    Se registraron <strong><span data-report-stat="totalRegistros">{{ $totalRegistros }}</span></strong> eventos sanitarios en el periodo,
+    con un costo total de <strong>$<span data-report-stat="costoTotal">{{ \App\Services\Money::format($costoTotal) }}</span> COP</strong>.
+    Vacunaciones: <strong><span data-report-stat="vacunaciones">{{ $vacunaciones }}</span></strong> &mdash;
+    Desparasitaciones: <strong><span data-report-stat="desparasitaciones">{{ $desparasitaciones }}</span></strong> &mdash;
+    Tratamientos activos: <strong><span data-report-stat="tratamientosActivos">{{ $tratamientosActivos }}</span></strong> &mdash;
+    Animales en carencia: <strong><span data-report-stat="enCarenciaCount">{{ $enCarenciaCount }}</span></strong>.
 </div>
 
 @endsection
