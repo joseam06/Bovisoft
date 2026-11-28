@@ -1,2 +1,4 @@
 User-agent: *
 Disallow:
+
+Sitemap: https://bovisoft.site/sitemap.xml

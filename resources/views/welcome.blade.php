@@ -1,10 +1,46 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="icon" href="/favicon.ico">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BoviSoft - Gestión Inteligente Ganadera</title>
+
+    <!-- Favicons -->
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48 96x96">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+    <!-- SEO principal -->
+    <title>BoviSoft | Software de Gestión Ganadera</title>
+    <meta name="description" content="Gestiona tus fincas, animales, potreros, salud, producción y finanzas con BoviSoft. Software ganadero que funciona con y sin conexión a Internet.">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="BoviSoft">
+    <link rel="canonical" href="https://bovisoft.site/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="BoviSoft">
+    <meta property="og:locale" content="es_CO">
+    <meta property="og:title" content="BoviSoft | Software de Gestión Ganadera">
+    <meta property="og:description" content="Gestiona tus fincas, animales, potreros, salud, producción y finanzas con BoviSoft. Software ganadero que funciona con y sin conexión a Internet.">
+    <meta property="og:url" content="https://bovisoft.site/">
+    <meta property="og:image" content="https://bovisoft.site/images/og-bovisoft.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="BoviSoft - Software de Gestión Ganadera con y sin conexión a Internet">
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="BoviSoft | Software de Gestión Ganadera">
+    <meta name="twitter:description" content="Gestiona tus fincas, animales, potreros, salud, producción y finanzas con BoviSoft. Software ganadero que funciona con y sin conexión a Internet.">
+    <meta name="twitter:image" content="https://bovisoft.site/images/og-bovisoft.png">
+    <meta name="twitter:image:alt" content="BoviSoft - Software de Gestión Ganadera">
+
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css">
     <link rel="stylesheet" href="/vendor/inter/inter.css">
@@ -82,6 +118,49 @@
             animation: gradient-shift 15s ease infinite;
         }
     </style>
+
+
+    <!-- Datos estructurados SEO -->
+    @verbatim
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "WebSite",
+                "@id": "https://bovisoft.site/#website",
+                "name": "BoviSoft",
+                "url": "https://bovisoft.site/",
+                "inLanguage": "es"
+            },
+            {
+                "@type": "WebApplication",
+                "@id": "https://bovisoft.site/#software",
+                "name": "BoviSoft",
+                "url": "https://bovisoft.site/",
+                "description": "Gestiona tus fincas, animales, potreros, salud, producción y finanzas con BoviSoft. Software ganadero que funciona con y sin conexión a Internet.",
+                "applicationCategory": "BusinessApplication",
+                "operatingSystem": "Any",
+                "inLanguage": "es",
+                "image": "https://bovisoft.site/images/og-bovisoft.png",
+                "featureList": [
+                    "Gestión de fincas ganaderas",
+                    "Gestión de animales bovinos",
+                    "Administración de potreros",
+                    "Control sanitario",
+                    "Registro de producción ganadera",
+                    "Gestión de ingresos y egresos",
+                    "Alertas y notificaciones",
+                    "Generación de reportes",
+                    "Funcionamiento sin conexión a Internet",
+                    "Sincronización automática de datos"
+                ]
+            }
+        ]
+    }
+    </script>
+    @endverbatim
+
 </head>
 <body class="bovi-public text-gray-800">
 
@@ -92,7 +171,7 @@
         <div class="flex items-center gap-3">
             <img src="/images/logored.png" alt="Logo Bovisoft" class="w-12 h-12 object-contain" />
                 <div>
-                    <h1 class="text-2xl font-extrabold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent">Bovisoft</h1>
+<p class="text-2xl font-extrabold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent">BoviSoft</p>
                     <p class="text-xs text-gray-500 font-medium">Gestión Ganadera</p>
                 </div>
             </div>
@@ -134,11 +213,11 @@
                 <div class="inline-block px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-sm font-semibold border border-white/20">
                     🐄 Solución integral para ganaderos
                 </div>
-                <h2 class="text-6xl md:text-7xl font-black leading-tight">
-                    La plataforma <span class="stat-number">inteligente</span> para la gestión ganadera
-                </h2>
+                <h1 class="text-6xl md:text-7xl font-black leading-tight">
+                    Software <span class="stat-number">inteligente</span> de gestión ganadera
+                </h1>
                 <p class="text-xl text-red-50 leading-relaxed">
-                    Bovisoft te permite administrar tu finca, animales, producción, ventas y reportes desde un solo lugar de manera eficiente y profesional.
+                    Bovisoft te permite gestionar tus fincas, animales, potreros, salud, producción y finanzas desde una sola plataforma, con y sin conexión a Internet.
                 </p>
                 <div class="flex flex-wrap gap-4 pt-4">
                     <button type="button" data-open="register"
@@ -189,9 +268,9 @@
                 <span class="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-base font-semibold mb-4">
                     Ventajas competitivas
                 </span>
-                <h3 class="text-4xl md:text-5xl font-bold text-white mb-4">¿Por qué usar Bovisoft?</h3>
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">¿Por qué usar Bovisoft?</h2>
                 <p class="text-xl text-gray-300 max-w-2xl mx-auto">
-                    Optimiza tu operación ganadera con tecnología de punta
+                    Tecnología al servicio de los ganaderos y pequeños productores rurales, incluso en zonas con conectividad limitada.
                 </p>
             </div>
             
@@ -247,9 +326,9 @@
             <span class="inline-block px-4 py-2 bg-red-100 text-red-800 rounded-full text-base font-semibold mb-4">
                 Características principales
             </span>
-                <h3 class="text-4xl md:text-5xl font-bold text-white mb-4">Funciones de Bovisoft</h3>
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-4">Funciones de Bovisoft</h2>
                 <p class="text-xl text-gray-300 max-w-2xl mx-auto">
-                    Todo lo que necesitas para gestionar tu operación ganadera
+                    Todas las herramientas que necesitas para la administración de fincas ganaderas y el control de tu ganado bovino.
                 </p>
             </div>
             
@@ -320,11 +399,11 @@
             <div class="inline-block px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold mb-6">
                 ¿Listo para comenzar?
             </div>
-            <h3 class="text-4xl md:text-5xl font-bold mb-6 text-white">Contáctanos</h3>
+            <h2 class="text-4xl md:text-5xl font-bold mb-6 text-white">Contáctanos</h2>
             <p class="text-xl text-gray-300 mb-10">
                 ¿Tienes dudas? ¿Quieres una demo? Estamos listos para ayudarte a transformar tu gestión ganadera.
             </p>
-            <a href="mailto:monterrosa@bovisoft.com" 
+            <a href="mailto:contacto@bovisoft.site"
                class="inline-block px-10 py-4 bg-gradient-to-r from-green-600 to-green-500 text-white font-bold rounded-xl shadow-xl hover:shadow-2xl hover:from-green-700 hover:to-green-600 transition-all transform hover:scale-105">
                 📧 Enviar correo
             </a>
@@ -339,7 +418,7 @@
                 <div class="p-6 bg-gray-50 rounded-xl border border-gray-200">
                     <div class="text-3xl mb-3">✉️</div>
                     <h5 class="font-bold text-gray-900 mb-2">Email</h5>
-                    <p class="text-gray-600">monterrosa@bovisoft.com</p>
+                    <p class="text-gray-600">contacto@bovisoft.site</p>
                 </div>
                 <div class="p-6 bg-gray-50 rounded-xl border border-gray-200">
                     <div class="text-3xl mb-3">📍</div>
@@ -386,7 +465,7 @@
                             <div class="flex items-center gap-3">
                  <img src="/images/logored.png" alt="Logo Bovisoft" class="w-12 h-12 object-contain" />
                  <div class="flex flex-col">
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent">Bovisoft</h1>
+                <p class="text-2xl font-bold bg-gradient-to-r from-red-800 to-red-600 bg-clip-text text-transparent">BoviSoft</p>
                 <p class="text-xs text-gray-400 font-medium">Gestión Ganadera</p>
                 </div>
              <div>      </div>
